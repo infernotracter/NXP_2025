@@ -121,43 +121,75 @@ output_encr = 0  # 右轮编码器滤波
 out_l = 0  # 左轮输出值
 out_r = 0  # 右轮输出值
 
+class Vertical_PID:
+    def __init__(self, Vertical_Kp, Vertical_Kd):
+        self.Vertical_Kp = Vertical_Kp
+        self.Vertical_Kd = Vertical_Kd
+        self.Mid_Angle = 0
+        self.Angle = 0
+        self.gyro_Y = 0
+        self.Vertical_out = 0
+    def Vertical(self, Mid_Angle, Angle, gyro_Y):
+        self.Vertical_out = self.Vertical_Kp * (self.Angle - self.Mid_Angle) + self.Vertical_Kd * self.gyro_Y
+        return self.Vertical_out
 
-class motor_PID:
-    def __init__(self, kp_motor, ki_motor, kd_motor):
-        self.kp_motor = kp_motor  # kp系数
-        self.ki_motor = ki_motor  # ki系数
-        self.kd_motor = kd_motor  # ki系数
-        self.aim_speed = 0  # 期望速度
-        self.speed = 0  # 实际速度
-        self.speed_err = 0  # 误差
-        self.last_speed = 0  # 上次误差
-        self.last_speed2 = 0
-        self.out = 0  # 输出值
 
-    def motor_control(self, aim_speed, speed):
-        self.speed_err = aim_speed - speed  # 计算误差
+class Velocity_PID:
+    def __init__(self, Velocity_KP, Velocity_KI):
+        self.Velocity_KP = Velocity_KP
+        self.Velocity_KI = Velocity_KI
+        self.aim_speed = 0
+        self.encoder_l = 0
+        self.encoder_r = 0
+        self.speed_err = 0
+        self.speed_lowout = 0
+        self.speed_lowout_last = 0
+        self.Velocity_out = 0
+    def Velocity(self, aim_speed, encoder_l, encoder_r):
+        #计算偏差值
+        self.speed_err = (self.encoder_l + self.encoder_r) - self.aim_speed
+        #低通滤波
+        self.speed_lowout = 0.7 * self.speed_err + 0.3 * self.speed_lowout_last
+        self.speed_lowout_last = self.speed_lowout
+        #积分
+        self.encoder_s += self.speed_lowout
+        #积分限幅
+        if self.encoder_s > 20000 :
+            encoder_s = 20000
+        if self.encoder_s < -20000 :
+            encoder_s = -20000
 
-        # 比例项
-        P = self.kp_motor * (self.speed_err - self.last_speed)
-        # 积分项
-        I = self.ki_motor * self.speed_err
-        # 微分项
-        D = self.kd_motor * (self.speed_err - 2 * self.last_speed + self.last_speed2)
+        self.Velocity_out = Velocity_KP * speed_lowout + Velocity_KI * encoder_s
+        return self.Velocity_out
 
-        # 进行增量式PID运算
-        self.out += P + I
 
-        # 保存上次误差
-        self.last_speed = self.speed_err
-        self.last_speed2 = self.last_speed
+class Turn_PID:
+    def __init__(self, Turn_KP, Turn_KD):
+        self.Turn_KP = Turn_KP
+        self.Turn_KD = Turn_KD
+        self.gyro_Z = 0
+        self.aim_turn = 0
+        self.Turn_out = 0
+    def Turn(self, gyro_Z, aim_turn):
+        self.Turn_out = self.Turn_KP * self.aim_turn + self.Turn_KD * self.gyro_Z
+        return self.Turn_out
 
-        # 限幅占空比
-        if self.out > 4500:
-            self.out = 4500
-        elif self.out < -4500:
-            self.out = -4500
 
-        return int(self.out)
+def Control():
+    verticalpid = Vertical_PID(Vertical_Kp = 200, Vertical_Kd = 0.5)
+    velocitypid = Velocity_PID(Velocity_KP = 200, Velocity_KI = 0.5)
+    turnpid = Turn_PID(Turn_KP = 200, Turn_KD = 0.5)
+
+    velocityout = velocitypid.Velocity(aim_speed, encoder_l, encoder_r)
+    Verticalout = verticalpid.Vertical(velocityout + MedAngle, imu_data[5], imu_data[4])
+    turnout = turnpid.Turn(imu_data[6], aim_turn)
+    PWM_out = Verticalout
+    MOTOR_l = PWM_out - turnout
+    MOTOR_r = PWM_out + turnout
+    
+    #之后加上限幅
+
+
 
 # 卡尔曼滤波器参数
 kfp_var_l = {  
@@ -196,16 +228,16 @@ def get_offset(mid_point):
     offset = 64.0 - mid_point
     return offset  
 
-def ccd_image(ccd_data,value):
-    side_flag=0  #边界标识 0代表尚未查到边界，1代表查到左边界
-    for i in range(0,122):
-        sar=abs(ccd_data[i]-ccd_data[i+5])*100/(ccd_data[i]+ccd_data[i+5])
-        if sar>value and side_flag==0:     #如果差和比大于阈值，则记录为边界
-            leftside=i+5
-            side_flag=1
-        if sar>value and side_flag==1:
-            rightside=i+5
-    return leftside,rightside
+# def ccd_image(ccd_data,value):
+#     side_flag=0  #边界标识 0代表尚未查到边界，1代表查到左边界
+#     for i in range(0,122):
+#         sar=abs(ccd_data[i]-ccd_data[i+5])*100/(ccd_data[i]+ccd_data[i+5])
+#         if sar>value and side_flag==0:     #如果差和比大于阈值，则记录为边界
+#             leftside=i+5
+#             side_flag=1
+#         if sar>value and side_flag==1:
+#             rightside=i+5
+#     return leftside,rightside
 
 
 # 用户函数：
@@ -340,8 +372,8 @@ def get_ccd2_mid_point(bin_ccd):
  
     
     
-speed_pid_l = motor_PID(kp_motor=10.0, ki_motor=0.6, kd_motor=0)  # 左电机PID初始化
-speed_pid_r = motor_PID(kp_motor=10.0, ki_motor=0.6, kd_motor=0)
+# speed_pid_l = motor_PID(kp_motor=10.0, ki_motor=0.6, kd_motor=0)  # 左电机PID初始化
+# speed_pid_r = motor_PID(kp_motor=10.0, ki_motor=0.6, kd_motor=0)
 while True:
 
     # 计算路程
@@ -367,8 +399,8 @@ while True:
     output_encr = kalman_filter(kfp_var_r, encr_data)
             
     # 电机PID计算
-    out_l = speed_pid_l.motor_control(aim_speed = aim_speed_l, speed = output_encl)
-    out_r = speed_pid_r.motor_control(aim_speed = aim_speed_r, speed = output_encr)
+    # out_l = speed_pid_l.motor_control(aim_speed = aim_speed_l, speed = output_encl)
+    # out_r = speed_pid_r.motor_control(aim_speed = aim_speed_r, speed = output_encr)
             
     # 电机占空比
     motor_l.duty(out_r)
@@ -380,6 +412,8 @@ while True:
     # 3ms中断标志位
     if(ticker_flag_3ms):
         # menu()                           # 菜单显示
+
+
         ccd_data1 = ccd.get(0)           # 读取ccd1的数据
         ccd_data2 = ccd.get(1)           # 读取ccd2的数据
         imu_data = imu.get()             # 读取陀螺仪的数据
@@ -425,44 +459,7 @@ while True:
         encr_data = encoder_r.get()     # 读取右编码器的数据
         # tof_data = tof.get()            # 读取TOF的数据
         key_data = key.get()            # 读取按键的数据
-        
-        # # 舵机PD控制
-        # out = servo_pid.Direction_pid(error2) + angle  
-        # # 获取舵机角度对应占空比
-        # duty = int(duty_angle(pwm_servo_hz, out))
-        # pwm_servo.duty_u16(duty)
-        
-        
-        # # 左圆环处理
-        # if (flag is '左圆环1') and n == 0 and (distance_T >= 1.3):
-        #     n = 1
-        # if (flag is '左圆环2') and n == 1:
-        #     n = 2
-        #     N = 1
-        # if (n == 2):
-        #     flag is not  '左圆环1'
-        #     # 计算第一个路口距离(距离是固定的)
-        #     distance_lh_1 += (encl_data + encr_data) / 2 / 1024 * 30 / 50 * 0.05 * 3.1415926
-        #     if(distance_l_1 >= 0.28 ):
-        #         n = 3
-        #         N = 2
-        #         distance_l_1 = 0
-        # if (n == 3):
-        #     flag is not  '左圆环1'
-        #     flag is not  '左圆环2'
-        # if (N == 2):
-        #     #环内陀螺仪积分
-        #     grzo_z += imu_data[5]  * 0.002 / 14.3
-        #     if (grzo_z >= 57):
-        #         N = 3
-        #         n = 4
-        # if (n == 4):
-        #     grzo_z = 0
-        #     # 计算补线距离仍是一个路口距离
-        #     distance_l_2 += (encl_data + encr_data) / 2 / 1024 * 30 / 50 * 0.05 * 3.1415926
-        #     if(distance_l_2 >= 0.35):
-        #         n = 5
-        #         N = 0
-        #         distance_l_2 = 0
 
 
+        #之后加入圆环）元素的控制
+        
