@@ -1,0 +1,84 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "E:\\allpy\\CCD_Smart_Car-main\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|E:\\allpy\\CCD_Smart_Car-main\\Get_CCD.py||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Get_CCD.py||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|E:\\allpy\\CCD_Smart_Car-main\\user_main.py||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:user_main.py||{8B382828-6202-11D1-8870-0000F87579D2}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 5,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{3ae79031-e1bc-11d0-8f78-00a0c9110057}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{34e76e81-ee4a-11d0-ae2e-00a0c90fffc3}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{d78612c7-9962-4b83-95d9-268046dad23a}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:283709:0:{1a46fd64-28d5-0019-8eb3-17a02d419b53}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{aa2115a1-9712-457b-9047-dbb71ca2cdd2}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "Get_CCD.py",
+              "DocumentMoniker": "E:\\allpy\\CCD_Smart_Car-main\\Get_CCD.py",
+              "RelativeDocumentMoniker": "Get_CCD.py",
+              "ToolTip": "E:\\allpy\\CCD_Smart_Car-main\\Get_CCD.py",
+              "RelativeToolTip": "Get_CCD.py",
+              "ViewState": "AgIAAA4BAAAAAAAAAAAAABgBAAATAAAAAAAAAA==",
+              "Icon": "00000000-0000-0000-0000-000000000000.000000|iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAQcSURBVFhHvZdfSFtXHMe/916zxpjUUNo1dX1IIaM6LFOwg0Io2ZsOBhs\u002BiE\u002B6l\u002BHDHvogKNuDWqxuTw4cKEzQvinokw8bzGGHFmFj7MFZU5eQzKWtrWFmSWdMmuTsd05O7nLzR1KVfODH\u002BZv7/d3f\u002BZ1fEgXrUTegDgFwkZ0KDWlfrXZ47\u002BWtKw/k1PEwxsiBl79RtyU7c3I0JQOLEketGodFi78fvNlUkRMq2ZmK16mHqFMOZz1bq1a5fCw8Akz2T0ShOO/z9sD0J/54Y1fu0vkdCruD61/8KMciAiemnLiFxm9nbLjEzHKnTjOY8rXsC07swHHivG\u002Bh/u20DSYKcgHNshWUPwJ3RUdYOd4x2SEaP9e9OtURnAVVc\u002BAcSge6IgcCgYBum5ubmJiYgNmcTTCHw4HZ2VmxFovFsLa2hra2NrGWT3fNc9kzUpEDTqcTKysrGB4exszMDPr6\u002BjA\u002BPg6r1YrV1VW0t7djenpazKdSKWxsbKClxVhePjI9wbtaRI7y4UlYyqhQ5ozT09Ojj\u002BkthQ0NDYm1xsZGfY0iw6ampgz7uf3wVwdb3O1g1p27WzTWqegWkIZ48/X1dZAY\u002Bvv7MTo6KkLtcrnQ1NQkd5bnYcgjrmgQ5u8\u002BbvjpAzldeRK63W709vaK0A4ODmJkZAShUAh2u13uOB5RH6g23NSedBzsX/XIaaIw9GTaw6ghfJzCkHLr6uoSa52dnfocJSXb3t5mAwMDhr2P926w0HMX\u002B3v/LRYJOwIvXlwSIS6KQK7CVcLS0hIWFxcxPz\u002BP5eVlTE5OilvCk3NhYUHuylInqmOcBNPcJacJ2jifNziQX17zmZubg9/vl6P/4Rnf3d0tjoRfS54PPFdaW1sRDAblriy6uERR8NnBvsOjJ2FhbQ\u002B8947YeFZE9h2yZ\u002BCBiECpL5YqcVsl8XChOG\u002BrhKpa1KN\u002BEk/li/PzqhZq7Nab98/jn2sWHH1J4mFxX6t3BMZfC6ZHX925CtvE9XQtvr/xiZylW0OVsBwKpXMllElC4zVMa6mxaM0edsxeOZOFi5Sz02JwIMOU2gTTwK1aFFVC4QD9xagWxhh6x8Rh25Qk6oUlUK\u002BS8TbPrmn/olk7gFON0K0xVrjXpSgCnASrEVEQJo8kFxluzzJm/JK6gLXUZeymrUiVfkwFKMmSn0zSAwtFuSVpnCTneMvHEXYOW\u002BmL\u002BPnVFYToJ/ir13Ukg/tlP6EL5xwh4SOUjkyc5vdYHYJpO8IZi3CwCMaidJs36YyX6Vp/Q63HfvnZp8YceDyWpq9K3ansmSdhL5EHxblBOaMmIvVI\u002BKj12dQjn8pUL9SMX0lovvMNT8PysQaMDjy69y1UhVcg8QpmJa0L2HNCaiJK7Y6dhGxq0kfCXruS9F9UY74PG34tKVIe4D\u002BZfh1bhw\u002BGZQAAAABJRU5ErkJggg==",
+              "WhenOpened": "2025-02-16T08:44:14.09Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "user_main.py",
+              "DocumentMoniker": "E:\\allpy\\CCD_Smart_Car-main\\user_main.py",
+              "RelativeDocumentMoniker": "user_main.py",
+              "ToolTip": "E:\\allpy\\CCD_Smart_Car-main\\user_main.py",
+              "RelativeToolTip": "user_main.py",
+              "ViewState": "AgIAACAAAAAAAAAAAAAAACgAAAAJAAAAAAAAAA==",
+              "Icon": "00000000-0000-0000-0000-000000000000.000000|iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAQcSURBVFhHvZdfSFtXHMe/916zxpjUUNo1dX1IIaM6LFOwg0Io2ZsOBhs\u002BiE\u002B6l\u002BHDHvogKNuDWqxuTw4cKEzQvinokw8bzGGHFmFj7MFZU5eQzKWtrWFmSWdMmuTsd05O7nLzR1KVfODH\u002BZv7/d3f\u002BZ1fEgXrUTegDgFwkZ0KDWlfrXZ47\u002BWtKw/k1PEwxsiBl79RtyU7c3I0JQOLEketGodFi78fvNlUkRMq2ZmK16mHqFMOZz1bq1a5fCw8Akz2T0ShOO/z9sD0J/54Y1fu0vkdCruD61/8KMciAiemnLiFxm9nbLjEzHKnTjOY8rXsC07swHHivG\u002Bh/u20DSYKcgHNshWUPwJ3RUdYOd4x2SEaP9e9OtURnAVVc\u002BAcSge6IgcCgYBum5ubmJiYgNmcTTCHw4HZ2VmxFovFsLa2hra2NrGWT3fNc9kzUpEDTqcTKysrGB4exszMDPr6\u002BjA\u002BPg6r1YrV1VW0t7djenpazKdSKWxsbKClxVhePjI9wbtaRI7y4UlYyqhQ5ozT09Ojj\u002BkthQ0NDYm1xsZGfY0iw6ampgz7uf3wVwdb3O1g1p27WzTWqegWkIZ48/X1dZAY\u002Bvv7MTo6KkLtcrnQ1NQkd5bnYcgjrmgQ5u8\u002BbvjpAzldeRK63W709vaK0A4ODmJkZAShUAh2u13uOB5RH6g23NSedBzsX/XIaaIw9GTaw6ghfJzCkHLr6uoSa52dnfocJSXb3t5mAwMDhr2P926w0HMX\u002B3v/LRYJOwIvXlwSIS6KQK7CVcLS0hIWFxcxPz\u002BP5eVlTE5OilvCk3NhYUHuylInqmOcBNPcJacJ2jifNziQX17zmZubg9/vl6P/4Rnf3d0tjoRfS54PPFdaW1sRDAblriy6uERR8NnBvsOjJ2FhbQ\u002B8947YeFZE9h2yZ\u002BCBiECpL5YqcVsl8XChOG\u002BrhKpa1KN\u002BEk/li/PzqhZq7Nab98/jn2sWHH1J4mFxX6t3BMZfC6ZHX925CtvE9XQtvr/xiZylW0OVsBwKpXMllElC4zVMa6mxaM0edsxeOZOFi5Sz02JwIMOU2gTTwK1aFFVC4QD9xagWxhh6x8Rh25Qk6oUlUK\u002BS8TbPrmn/olk7gFON0K0xVrjXpSgCnASrEVEQJo8kFxluzzJm/JK6gLXUZeymrUiVfkwFKMmSn0zSAwtFuSVpnCTneMvHEXYOW\u002BmL\u002BPnVFYToJ/ir13Ukg/tlP6EL5xwh4SOUjkyc5vdYHYJpO8IZi3CwCMaidJs36YyX6Vp/Q63HfvnZp8YceDyWpq9K3ansmSdhL5EHxblBOaMmIvVI\u002BKj12dQjn8pUL9SMX0lovvMNT8PysQaMDjy69y1UhVcg8QpmJa0L2HNCaiJK7Y6dhGxq0kfCXruS9F9UY74PG34tKVIe4D\u002BZfh1bhw\u002BGZQAAAABJRU5ErkJggg==",
+              "WhenOpened": "2025-02-15T10:16:10.467Z",
+              "EditorCaption": ""
+            }
+          ]
+        },
+        {
+          "DockedWidth": 105,
+          "SelectedChildIndex": -1,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{0c720079-b2d5-4f29-840e-382783199460}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
