@@ -339,20 +339,41 @@ def get_ccd2_mid_point(bin_ccd):
             break
     
     # ccd2左圆环补线
+    
+
+    #右边的线补左边的线
     if (n == 2):
         left_point_2 = right_point_2 - 55
-    if (N == 2):
+
+    #左边线补右边线
+    if (n == 3):
         right_point_2 = left_point_2 + 68
-    if (n == 4):
+
+    #圆环内丢线补线
+    if (n == 5):
         left_point_2 = right_point_2 - 55
+
+    #出环右边线丢失
+    if (n == 6):
+        right_point_2 = left_point_2 + 68
+    
+
+    #找到右边线,让右边线补左边线直行出环
+    if(n == 7):
+        left_point_2 = right_point_2 - 55
+
     
         
     # ccd2右圆环补线
     if (m == 2):
         right_point_2 = left_point_2 + 55
-    if (M == 2):
+    if (m == 3):
         left_point_2 = right_point_2 - 68
-    if (m == 4):
+    if (m == 5):
+        right_point_2 = left_point_2 + 55
+    if (m == 6):
+        left_point_2 = right_point_2 - 68
+    if (m == 7):
         right_point_2 = left_point_2 + 55
         
    
@@ -362,11 +383,96 @@ def get_ccd2_mid_point(bin_ccd):
     last_mid_point_2 = int(mid_point_2)
     # 返回当前中点  
     return mid_point_2
- 
+
+#ccd2为近端ccd   ccd1为远端
+flag=False   #斑马线标志
+zebra = 0    #斑马线个数
+def search_element():
+    global error2
+    global right_point_1
+    global left_point_1
+    global left_point_2
+    global right_point_2
+    global flag,zebra
+    global ccd_data2
+
+
+    #斑马线检测
+    for i in range(54, len(ccd_data2) - 54):
+        if (abs(ccd_data2[i] - ccd_data2[i + 2]) >= 50):
+            zebra += 1
+    if zebra >= 8:
+        flag = True
+    else:
+        zebra = 0
+
+
+    #远端左边丢线状态
+    if(left_point_1<7) and (79<=right_point_1<=99)and (abs(right_point_1-right_point_2)<=10):
+        n=1
+    #近端左边丢线，用右边线补左线
+    if(left_point_2<7) and (79<=right_point_2<=99)and(abs(right_point_1-right_point_2)<=10)and n==1:
+        n=2
+    #近端ccd找到左边线的最大值，让左边线补右边线,使其行驶一段时间,直到找到右边线，则说明进入圆环
+    if(20<=left_point_2<=42)and (abs(right_point_1-right_point_2)<=10) and n==2:
+        n=3
+        while True:
+             if(88<=right_point_2<=108):
+                  break;
+    #能找到左右边线，说明已进入圆环
+    if(20<=left_point_2<=42) and (88<=right_point_2<=108)and n==3:
+        n=4
+        step_error=error2
+    #在圆环中，左边线可能丢线,让右边线补左边线
+    if(left_point_2<10)and (79<=right_point_2<=99)and (n==4):
+        n=5
+    else:n=4
+    #此时已出圆环,右边线会丢失,让error2暂时变为之前的赛道误差
+    if(20<=left_point_2<=42) and (right_point_2>=110) and (n>=4):
+        n=6
+        while (n==6):
+             error2=step_error
+    #找到右边线，让右边线补左边线,直行出环
+    if(88<=right_point_2<=108)and n==6:
+        n=7
+
+#    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#    下面是右圆环
+
+
+    #远端右边丢线状态
+    if(right_point_1>108) and (29<=left_point_1<=49)and (abs(left_point_1-left_point_2)<=10):
+        m=1
+    #近端右边丢线，用左边线补右线
+    if(right_point_2>108) and (29<=left_point_2<=49)and(abs(left_point_1-left_point_2)<=10)and m==1:
+        m=2
+    #近端ccd找到右边线的最大值，让右边线补左边线,使其行驶一段时间,直到找到左边线，则说明进入圆环
+    if(79<=right_point_2<=104)and (abs(left_point_1-left_point_2)<=10) and m==2:
+        m=3
+        while True:
+             if(29<=left_point_2<=49):
+                  break;
+    #能找到左右边线，说明已进入圆环
+    if(20<=left_point_2<=42) and (88<=right_point_2<=108)and m==3:
+        m=4
+        step_error=error2
+    #在圆环中，右边线可能丢线
+    if(right_point_2>108)and (20<=left_point_2<=49)and (m==4):
+        m=5
+    else:m=4
+    #此时已出圆环,左边线会丢失,让error2暂时变为之前的赛道误差
+    if(left_point_2<11) and (78<=right_point_2<=108) and (m>=4):
+        m=6
+        while (m==6):
+             error2=step_error
+    #找到左边线，让左边线补右边线,直行出环
+    if(29<=left_point_2<=49)and m==6:
+        m=7
     
     
 # speed_pid_l = motor_PID(kp_motor=10.0, ki_motor=0.6, kd_motor=0)  # 左电机PID初始化
 # speed_pid_r = motor_PID(kp_motor=10.0, ki_motor=0.6, kd_motor=0)
+s_t=Turn_PID(Turn_KP=10.0,Turn_KD=0.6)   #p d待测
 while True:
 
     # 计算路程
@@ -383,9 +489,16 @@ while True:
         pit3.stop()    # pit3关闭
         break          # 跳出判断
 
-    #速度控制
-    aim_speed_l = T
-    aim_speed_r = T #原代码这里有对舵机的方向再来输出，咱现在不需要
+    #速度控制   转向系数待测
+    if(error2>=10.0):   #左转
+        aim_speed_l=T-(s_t.Turn(gyro_Z,error2)*4)
+        aim_speed_r=T+(s_t.Turn(gyro_Z,error2)*4)
+    if (-10.0 <= error2 <= 10.0):  #直行
+        aim_speed_l = T+(s_t.Turn(gyro_Z,0)*4)     # 无差速状态
+        aim_speed_r = T+(s_t.Turn(gyro_Z,0)*4)
+    if (error2 <= -10.0):   #右转
+        aim_speed_l = T - (s_t.Turn(gyro_Z,error2) * 4) 
+        aim_speed_r = T + (s_t.Turn(gyro_Z,error2) * 4)    
 
     # 编码器卡尔曼滤波
     output_encl = kalman_filter(kfp_var_l, encl_data)
