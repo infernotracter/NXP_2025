@@ -126,6 +126,7 @@ out_r = 0  # 右轮输出值
 MedAngle = 0
 n = 0 #元素判断用
 m = 0
+turn_k = 1 #直接传error2后的比例
 
 
 # 直立算法   修改self.Angle - self.Mid_Angle为self.Mid_Angle - self.Angle
@@ -514,16 +515,19 @@ while True:
         pit3.stop()    # pit3关闭
         break          # 跳出判断
 
+    # 编码器卡尔曼滤波
+    output_encl = kalman_filter(kfp_var_l, encl_data)
+    output_encr = kalman_filter(kfp_var_r, encr_data)
+
     #------------------------------------------------------------------------
     #\\\\\\\\\\\\\\PID核心控制\\\\\\\\\\\\
     #------------------------------------------------------------------------
     #turn_kd(比较重要，能起到修正作用，使其走直线) 与 velicity_kp 是一个数量级（大小差不多）
     #turn_kp主要作用是放大
-    velocityout = velocitypid.Velocity(aim_speed, encoder_l, encoder_r)
+    velocityout = velocitypid.Velocity(aim_speed, output_encl, output_encr)
     Verticalout = verticalpid.Vertical(velocityout + MedAngle, imu_data[5], imu_data[4])
-    #之后加上对aim_turn的修改
     if abs(error2 >= 10.0):
-        turnout = turnpid.Turn(imu_data[6], aim_turn)
+        turnout = turnpid.Turn(imu_data[6], error2 * turn_k) #turn_k  需要根据实际情况修改
     else:
         turnout = 0
     PWM_out = Verticalout
@@ -541,9 +545,6 @@ while True:
     #     aim_speed_l = T - (s_t.Turn(gyro_Z, error2) * 4)
     #     aim_speed_r = T + (s_t.Turn(gyro_Z, error2) * 4)
 
-    # 编码器卡尔曼滤波
-    output_encl = kalman_filter(kfp_var_l, encl_data)
-    output_encr = kalman_filter(kfp_var_r, encr_data)
 
     # 电机PID计算
     # out_l = speed_pid_l.motor_control(aim_speed = aim_speed_l, speed = output_encl)
