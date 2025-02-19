@@ -1,0 +1,4 @@
+如需更新下载算法 从最新版本的库中获得
+
+IAR的下载算法在 逐飞科技RT1021库\Projecct\IAR\flashloader目录下
+MDK的下载算法在 逐飞科技RT1021库\Projecct\MDK\FLM目录下
