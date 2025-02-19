@@ -519,11 +519,11 @@ while True:
     output_encl = kalman_filter(kfp_var_l, encl_data)
     output_encr = kalman_filter(kfp_var_r, encr_data)
 
+    #turn_kd(比较重要，能起到修正作用，使其走直线) 与 velicity_kp 是一个数量级（大小差不多）
+    #turn_kp主要作用是放大
     #------------------------------------------------------------------------
     #\\\\\\\\\\\\\\PID核心控制\\\\\\\\\\\\
     #------------------------------------------------------------------------
-    #turn_kd(比较重要，能起到修正作用，使其走直线) 与 velicity_kp 是一个数量级（大小差不多）
-    #turn_kp主要作用是放大
     velocityout = velocitypid.Velocity(aim_speed, output_encl, output_encr)
     Verticalout = verticalpid.Vertical(velocityout + MedAngle, imu_data[5], imu_data[4])
     if abs(error2 >= 10.0):

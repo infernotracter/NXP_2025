@@ -1,0 +1,229 @@
+C251 COMPILER V5.60.0,  LQ_PID                                                             25/04/23  12:03:53  PAGE 1   
+
+
+C251 COMPILER V5.60.0, COMPILATION OF MODULE LQ_PID
+OBJECT MODULE PLACED IN .\Objects\LQ_PID.obj
+COMPILER INVOKED BY: C:\Keil5\load\C251\BIN\C251.EXE user\LQ_PID.c LARGE INTR2 BROWSE INCDIR(.\user;.\user\Dianci) DEBUG
+                    - PRINT(.\Listings\LQ_PID.lst) TABS(2) OBJECT(.\Objects\LQ_PID.obj) 
+
+stmt  level    source
+
+    1          /*!
+    2            * @file     LQ_PID.c
+    3            *
+    4            * @brief    PID控制
+    5            *
+    6            * @company  北京龙邱智能科技
+    7            *
+    8            * @author   LQ-005
+    9            *
+   10            * @note     Tab键 4个空格
+   11            *
+   12            * @version  V1.0
+   13            *
+   14            * @par URL  http://shop36265907.taobao.com
+   15            *           http://www.lqist.cn
+   16            *
+   17            * @date     2020年6月5日
+   18            */ 
+   19          
+   20            
+   21          
+   22          #include "LQ_PID.h"
+   23          #include "include.h"
+   24          int speed_jifen;
+   25          float speed_p=12,speed_i=0.05;  //速度pid参数     12  0.05
+   26          float dir_p=160,dir_d=80;     //方向外环pid参数     12  0.12(纯陀螺仪参数）    
+   27          float dirn_p=0.28,dirn_d=0.08;       //方向内环pid参数      0.28 0.08
+   28          
+   29          /*!
+   30            * @brief    限幅函数
+   31            *
+   32            * @param    amt   ： 参数
+   33            * @param    low   ： 最低值
+   34            * @param    high  ： 最高值
+   35            *
+   36            * @return   无
+   37            *
+   38            * @note     无
+   39            *
+   40            * @see      无
+   41            *
+   42            * @date     2020/6/8
+   43            */
+   44          float constrain_float(float amt, float low, float high)
+   45          {
+   46   1        return ((amt)<(low)?(low):((amt)>(high)?(high):(amt)));
+   47   1      }
+   48          
+   49          
+   50          
+   51          
+   52          /*!
+   53            * @brief    pid参数初始化函数
+   54            *
+   55            * @param    无
+   56            *
+   57            * @return   无
+   58            *
+C251 COMPILER V5.60.0,  LQ_PID                                                             25/04/23  12:03:53  PAGE 2   
+
+   59            * @note     无
+   60            *
+   61            * @see      无
+   62            *
+   63            * @date     2020/6/8
+   64            */
+   65          void PidInit(pid_param_t * pid)
+   66          {
+   67   1        pid->kp        = 0;
+   68   1        pid->ki        = 0;
+   69   1        pid->kd        = 0;
+   70   1        pid->imax      = 0;
+   71   1        pid->out_p     = 0;
+   72   1        pid->out_i     = 0;
+   73   1        pid->out_d     = 0;
+   74   1        pid->out       = 0;
+   75   1        pid->integrator= 0;
+   76   1        pid->last_error= 0;
+   77   1        pid->last_derivative   = 0;
+   78   1        pid->last_t    = 0;
+   79   1      }
+   80          
+   81          
+   82          /*!
+   83            * @brief    pid位置式控制器输出
+   84            *
+   85            * @param    pid     pid参数
+   86            * @param    error   pid输入误差
+   87            *
+   88            * @return   PID输出结果
+   89            *
+   90            * @note     无
+   91            *
+   92            * @see      无
+   93            *
+   94            * @date     2020/6/8
+   95            */
+   96          float PidLocCtrl(pid_param_t * pid, float error)
+   97          {
+   98   1        /* 累积误差 */
+   99   1        pid->integrator += error;
+  100   1      
+  101   1        /* 误差限幅 */
+  102   1        constrain_float(pid->integrator, -pid->imax, pid->imax);
+  103   1      
+  104   1      
+  105   1        pid->out_p = pid->kp * error;
+  106   1        pid->out_i = pid->ki * pid->integrator;
+  107   1        pid->out_d = pid->kd * (error - pid->last_error);
+  108   1      
+  109   1        pid->last_error = error;
+  110   1      
+  111   1        pid->out = pid->out_p + pid->out_i + pid->out_d;
+  112   1      
+  113   1        return pid->out;
+  114   1      }
+  115          
+  116          
+  117          /*!
+  118            * @brief    pid增量式控制器输出
+  119            *
+  120            * @param    pid     pid参数
+  121            * @param    error   pid输入误差
+  122            *
+  123            * @return   PID输出结果   注意输出结果已经包涵了上次结果
+  124            *
+C251 COMPILER V5.60.0,  LQ_PID                                                             25/04/23  12:03:53  PAGE 3   
+
+  125            * @note     无
+  126            *
+  127            * @see      无
+  128            *
+  129            * @date     2020/6/8
+  130            */
+  131          float PidIncCtrl(pid_param_t * pid, float error)
+  132          {
+  133   1      
+  134   1        pid->out_p = pid->kp * (error - pid->last_error);
+  135   1        pid->out_i = pid->ki * error;
+  136   1        pid->out_d = pid->kd * ((error - pid->last_error) - pid->last_derivative);
+  137   1      
+  138   1        pid->last_derivative = error - pid->last_error;
+  139   1        pid->last_error = error;
+  140   1      
+  141   1        pid->out += pid->out_p + pid->out_i + pid->out_d;
+  142   1        return pid->out;
+  143   1      }
+  144          
+  145          int speedcontrol(int ECPULSE,int aim_speed)
+  146          {
+  147   1         int out,Error;
+  148   1        Error=aim_speed-ECPULSE;
+  149   1        speed_jifen+=Error;
+  150   1        if(speed_jifen>300)speed_jifen=300;
+  151   1        if(speed_jifen<-300)speed_jifen=-300;
+  152   1      out=(int)(Error*speed_p+speed_jifen*speed_i);
+  153   1      return out;
+  154   1      }
+  155          int dircontrol(int chazhi)
+  156          {
+  157   1        int out_dw;
+  158   1        static int last_chazhi;
+  159   1        out_dw=(int)(chazhi*dir_p+(chazhi-last_chazhi)*dir_d);
+  160   1        last_chazhi=chazhi;
+  161   1        return out_dw;
+  162   1      }
+  163          int diranglecontrol(int out_dw)
+  164          {
+  165   1        int out_dn,error;
+  166   1        static int last_error;
+  167   1        error=(out_dw-gyroz1);
+  168   1        out_dn=(int)(error*dirn_p+(error-last_error)*dirn_d);
+  169   1        last_error=error;
+  170   1        return out_dn;
+  171   1      }
+  172          
+  173          //int dircontrol(int chazhi)
+  174          //{
+  175          //  int out;
+  176          //  static int last_chazhi;
+  177          //  out=(int)(chazhi*dir_p-gyroz1*dir_d);
+  178          //  last_chazhi=chazhi;
+  179          //  return out;
+  180          //}
+  181            
+  182            
+  183            
+  184            
+  185            
+  186            
+  187            
+  188          
+  189          
+
+C251 COMPILER V5.60.0,  LQ_PID                                                             25/04/23  12:03:53  PAGE 4   
+
+
+Module Information          Static   Overlayable
+------------------------------------------------
+  code size            =       836     ------
+  ecode size           =    ------     ------
+  data size            =    ------     ------
+  idata size           =    ------     ------
+  pdata size           =    ------     ------
+  xdata size           =        30          8
+  xdata-const size     =    ------     ------
+  edata size           =    ------     ------
+  bit size             =    ------     ------
+  ebit size            =    ------     ------
+  bitaddressable size  =    ------     ------
+  ebitaddressable size =    ------     ------
+  far data size        =    ------     ------
+  huge data size       =    ------     ------
+  const size           =    ------     ------
+  hconst size          =        54     ------
+End of Module Information.
+
+
+C251 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
