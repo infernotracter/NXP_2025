@@ -33,6 +33,20 @@ encoder_r = encoder("D2", "D3")
 # high_level_us = 1300
 # dir = 1
 
+# 实例化 lcd 模块
+cs = Pin('C5', Pin.OUT, pull=Pin.PULL_UP_47K, value=1)
+cs.high()
+cs.low()
+rst = Pin('B9', Pin.OUT, pull=Pin.PULL_UP_47K, value=1)
+dc = Pin('B8', Pin.OUT, pull=Pin.PULL_UP_47K, value=1)
+blk = Pin('C4', Pin.OUT, pull=Pin.PULL_UP_47K, value=1)
+drv = LCD_Drv(SPI_INDEX=1, BAUDRATE=60000000, DC_PIN=dc,
+              RST_PIN=rst, LCD_TYPE=LCD_Drv.LCD200_TYPE)
+lcd = LCD(drv)
+lcd.color(0xFFFF, 0x0000)
+lcd.mode(2)
+lcd.clear(0x0000)
+
 # 实例化 IMU660RA 模块
 imu = IMU660RA()
 
@@ -52,15 +66,11 @@ ccd = TSL1401(3)
 # 实例化 KEY_HANDLER 模块
 key = KEY_HANDLER(10)
 
-ticker_flag = False
-
-
 # 定义一个回调函数
+ticker_flag = False
 def time_pit_handler(time):
     global ticker_flag
     ticker_flag = True
-
-
 # 实例化 PIT ticker 模块
 pit1 = ticker(1)
 pit1.capture_list(ccd, tof, encoder_l, encoder_r)
@@ -68,15 +78,11 @@ pit1.callback(time_pit_handler)
 pit1.start(5)
 
 
-ticker_flag_3ms = False
 # 定义一个回调函数
-
-
+ticker_flag_3ms = False
 def time_pit_3ms_handler(time):
     global ticker_flag_3ms
     ticker_flag_3ms = True
-
-
 # 实例化 PIT ticker 模块
 pit2 = ticker(2)
 pit2.capture_list(imu, key)
@@ -84,15 +90,11 @@ pit2.callback(time_pit_3ms_handler)
 pit2.start(3)
 
 
-ticker_flag_1000ms = False
 # 定义一个回调函数
-
-
+ticker_flag_1000ms = False
 def time_pit_1000ms_handler(time):
     global ticker_flag_1000ms
     ticker_flag_1000ms = True
-
-
 # 实例化 PIT ticker 模块
 pit3 = ticker(3)
 pit3.capture_list()
@@ -116,7 +118,7 @@ Mid_point2 = 0  # ccd2的中点
 error1 = 0  # ccd1的误差
 error2 = 0  # ccd2的误差
 # out = 0  # 舵机输出值
-aim_speed = 100 #之后要可以使用KEY手动修改
+aim_speed = 100  # 之后要可以使用KEY手动修改
 aim_speed_l = 0  # 左轮期望速度
 aim_speed_r = 0  # 右轮期望速度
 output_encl = 0  # 左轮编码器滤波
@@ -124,9 +126,9 @@ output_encr = 0  # 右轮编码器滤波
 out_l = 0  # 左轮输出值
 out_r = 0  # 右轮输出值
 MedAngle = 0
-n = 0 #元素判断用
+n = 0  # 元素判断用
 m = 0
-turn_k = 1 #直接传error2后的比例
+turn_k = 1  # 直接传error2后的比例
 
 
 # 直立算法   修改self.Angle - self.Mid_Angle为self.Mid_Angle - self.Angle
@@ -140,10 +142,13 @@ class Vertical_PID:
         self.Vertical_out = 0  # 输出值
 
     def Vertical(self, Mid_Angle, Angle, gyro_Y):
-        self.Vertical_out = self.Vertical_Kp * (Mid_Angle - Angle) + self.Vertical_Kd * gyro_Y
+        self.Vertical_out = self.Vertical_Kp * \
+            (Mid_Angle - Angle) + self.Vertical_Kd * gyro_Y
         return self.Vertical_out
 
 # 速度环
+
+
 class Velocity_PID:
     def __init__(self, Velocity_KP, Velocity_KI):
         self.Velocity_KP = Velocity_KP
@@ -170,10 +175,13 @@ class Velocity_PID:
         if self.encoder_s < -20000:
             self.encoder_s = -20000
 
-        self.Velocity_out = self.Velocity_KP * self.speed_lowout + self.Velocity_KI * self.encoder_s
+        self.Velocity_out = self.Velocity_KP * \
+            self.speed_lowout + self.Velocity_KI * self.encoder_s
         return self.Velocity_out
 
 # 转向环  添加了走直线的指令，走直线时抑制拐弯
+
+
 class Turn_PID:
     def __init__(self, Turn_KP, Turn_KD):
         self.Turn_KP = Turn_KP
@@ -183,14 +191,14 @@ class Turn_PID:
         self.Turn_out = 0
 
     def Turn(self, gyro_Z, aim_turn):
-        #不需要用   实际值 - 目标值  因为陀螺仪测量偏航角的误差非常大
+        # 不需要用   实际值 - 目标值  因为陀螺仪测量偏航角的误差非常大
         if self.aim_turn == 0:
             self.Turn_out = self.Turn_KD * gyro_Z
         else:
             self.Turn_out = self.Turn_KP * aim_turn + self.Turn_KD * self.gyro_Z
             return self.Turn_out
 
-#目前这一部分加入到主函数里去了，应该会方便点
+# 目前这一部分加入到主函数里去了，应该会方便点
 #
 #
 # def Control():
@@ -423,7 +431,7 @@ def search_element():
         zebra = 0
 
     # 远端左边丢线状态
-    if (left_point_1 < 7) and (30 <= left_point_2 <= 42)and (79 <= right_point_1 <= 99) and (abs(right_point_1-right_point_2) <= 10):
+    if (left_point_1 < 7) and (30 <= left_point_2 <= 42) and (79 <= right_point_1 <= 99) and (abs(right_point_1-right_point_2) <= 10):
         n = 1
     # 近端左边丢线，用右边线补左线
     if (left_point_2 < 7) and (79 <= right_point_2 <= 99) and (abs(right_point_1-right_point_2) <= 10) and n == 1:
@@ -488,74 +496,76 @@ def search_element():
         m = 8
 
 
+main_point_item = 30
+main_menu_flag = 1
+car_go_flag = 0
+speed_flag = 0
+element_flag = 0
+turn_pd_flag = 0
+vertical_pd_flag = 0
+motor_pi_flag = 0
+ccd_image_flag = 0
+parameter_flag = 0
+screen_off_flag = 0
+save_para_flag = 0
 
-main_point_item=30
-main_menu_flag=1
-car_go_flag=0
-speed_flag=0
-element_flag=0
-turn_pd_flag=0
-vertical_pd_flag=0
-motor_pi_flag=0
-ccd_image_flag=0
-parameter_flag=0
-screen_off_flag=0
-save_para_flag=0
+
 def menu():
-    global main_menu_flag,car_go_flag,speed_flag,element_flag,turn_pd_flag,vertical_pd_flag,motor_pi_flag,ccd_image_flag,screen_off_flag,save_para_flag
-    if (main_menu_flag==1):
+    global main_menu_flag, car_go_flag, speed_flag, element_flag, turn_pd_flag, vertical_pd_flag, motor_pi_flag, ccd_image_flag, screen_off_flag, save_para_flag
+    if (main_menu_flag == 1):
         main_menu()
-    if (car_go_flag==1):
+    if (car_go_flag == 1):
         sec_menu_01()
-    if (speed_flag==1):
+    if (speed_flag == 1):
         sec_menu_02()
-    if (element_flag==1):
+    if (element_flag == 1):
         sec_menu_03()
-    if (turn_pd_flag==1):
+    if (turn_pd_flag == 1):
         sec_menu_04()
-    if (vertical_pd_flag==1):
+    if (vertical_pd_flag == 1):
         sec_menu_05()
-    if (motor_pi_flag==1):
+    if (motor_pi_flag == 1):
         sec_menu_06()
-    if (ccd_image_flag==1):
+    if (ccd_image_flag == 1):
         sec_menu_07()
-    if (parameter_flag==1):
+    if (parameter_flag == 1):
         sec_menu_08()
-    if (screen_off_flag==1):
+    if (screen_off_flag == 1):
         sec_menu_09()
-    if (save_para_flag==1):
+    if (save_para_flag == 1):
         sec_menu_10()
 
     gc.collect()
-def main_menu():    #一级菜单
-    global main_point_item,main_menu_flag,car_go_flag,speed_flag,element_flag,turn_pd_flag,vertical_pd_flag,motor_pi_flag,ccd_image_flag,screen_off_flag,save_para_flag
-    lcd.str24(60,0,"main_menu",0x07E0)
-    lcd.str16(16,30,"car_go",0xFFFF)
-    lcd.str16(16,46,"speed",0xFFFF)
-    lcd.str16(16,62,"element",0xFFFF)
-    lcd.str16(16,78,"turn_pd",0xFFFF)
-    lcd.str16(16,94,"vertical_pd",0xFFFF)
-    lcd.str16(16,110,"motor_pi",0xFFFF)
-    lcd.str16(16,126,"ccd_image",0xFFFF)
-    lcd.str16(16,142,"parameter",0xFFFF)
-    lcd.str16(16,158,"screen_off",0xFFFF)
-    lcd.str16(16,174,"save_para",0xFFFF)
 
 
-    lcd.str12(0,main_point_item,">",0xF800)
+def main_menu():  # 一级菜单
+    global main_point_item, main_menu_flag, car_go_flag, speed_flag, element_flag, turn_pd_flag, vertical_pd_flag, motor_pi_flag, ccd_image_flag, screen_off_flag, save_para_flag
+    lcd.str24(60, 0, "main_menu", 0x07E0)
+    lcd.str16(16, 30, "car_go", 0xFFFF)
+    lcd.str16(16, 46, "speed", 0xFFFF)
+    lcd.str16(16, 62, "element", 0xFFFF)
+    lcd.str16(16, 78, "turn_pd", 0xFFFF)
+    lcd.str16(16, 94, "vertical_pd", 0xFFFF)
+    lcd.str16(16, 110, "motor_pi", 0xFFFF)
+    lcd.str16(16, 126, "ccd_image", 0xFFFF)
+    lcd.str16(16, 142, "parameter", 0xFFFF)
+    lcd.str16(16, 158, "screen_off", 0xFFFF)
+    lcd.str16(16, 174, "save_para", 0xFFFF)
+
+    lcd.str12(0, main_point_item, ">", 0xF800)
     if key_data[0]:
-        main_point_item+=16
+        main_point_item += 16
         key.clear(1)
         if main_point_item == 190:
             main_point_item = 30
 
     if key_data[1]:
-        main_point_item-=16
+        main_point_item -= 16
         key.clear(2)
         if main_point_item == 14:
             main_point_item = 174
 
-    if main_point_item ==30 and key_data[2]:
+    if main_point_item == 30 and key_data[2]:
         main_menu_flag = 0
         car_go_flag = 1
         main_point_item = 30
@@ -607,59 +617,62 @@ def main_menu():    #一级菜单
         key.clear(3)
 
     gc.collect()
-def sec_menu_01():
-    global aim_speed,speed_flag,main_menu_flag
-    lcd.str24(60,0,"car_go",0x07E0)
-    lcd.str16(16,30,"return",0xFFFF)
-    lcd.str16(16,46,"It's mygo",0xFFFF)
 
+
+def sec_menu_01():
+    global aim_speed, speed_flag, main_menu_flag
+    lcd.str24(60, 0, "car_go", 0x07E0)
+    lcd.str16(16, 30, "return", 0xFFFF)
+    lcd.str16(16, 46, "It's mygo", 0xFFFF)
 
     lcd.str12(0, main_point_item, ">", 0xF800)
     if key_data[0]:
-        main_point_item+=16
+        main_point_item += 16
         key.clear(1)
-        if main_point_item ==62:
+        if main_point_item == 62:
             main_point_item = 30
     if key_data[1]:
-        main_point_item-=16
+        main_point_item -= 16
         key.clear(2)
         if main_point_item == 14:
             main_point_item = 46
-    if key_data[2] and main_point_item==30:
+    if key_data[2] and main_point_item == 30:
         car_go_flag = 0
         main_menu_flag = 1
         key.clear(3)
-        main_point_item =30
-    if key_data[2] and main_point_item==46:
-        aim_speed=100
+        main_point_item = 30
+    if key_data[2] and main_point_item == 46:
+        aim_speed = 100
         key.clear(3)
 
     gc.collect()
+
+
 def sec_menu_02():
-    global speed_flag,main_menu_flag,aim_speed_l,aim_speed_r
-    lcd.str24(60,0,"speed",0x07E0)
-    lcd.str16(16,62,"return",0xFFFF)
-    lcd.str16(16,30,"aim_speed_l={}".format(aim_speed_l),0xFFFF)
-    lcd.str16(16,46,"aim_speed_r={}".format(aim_speed_r),0xFFFF)
+    global speed_flag, main_menu_flag, aim_speed_l, aim_speed_r
+    lcd.str24(60, 0, "speed", 0x07E0)
+    lcd.str16(16, 62, "return", 0xFFFF)
+    lcd.str16(16, 30, "aim_speed_l={}".format(aim_speed_l), 0xFFFF)
+    lcd.str16(16, 46, "aim_speed_r={}".format(aim_speed_r), 0xFFFF)
 
     if key_data[0]:
-        main_point_item+=16
+        main_point_item += 16
         key.clear(1)
         if main_point_item == 78:
             main_point_item = 30
 
     if key_data[1]:
-        main_point_item-=16
+        main_point_item -= 16
         key.clear(2)
         if main_point_item == 14:
             main_point_item = 62
 
-    if main_point_item ==30:
+    if main_point_item == 30:
         if key_data[2]:
             aim_speed_l += 5
             key.clear(3)
         if key_data[3]:
-            aim_speed_l -=5
+            aim_speed_l -= 5
             key.clear(4)
 
     if main_point_item == 46:
@@ -669,7 +682,7 @@ def sec_menu_02():
         if key_data[3]:
             aim_speed_r -= 5
             key.clear(4)
-    if main_point_item ==62 and key_data[2]:
+    if main_point_item == 62 and key_data[2]:
         main_menu_flag = 1
         speed_flag = 0
         main_point_item = 30
@@ -677,7 +690,8 @@ def sec_menu_02():
 
     gc.collect()
 
-def sec_menu_03():     #目前没用
+
+def sec_menu_03():  # 目前没用
     lcd.str24(60, 0, "element", 0x07E0)  # 二级菜单标题
     lcd.str16(16, 30, "return", 0xFFFF)  # 返回主菜单
 
@@ -694,30 +708,30 @@ def sec_menu_03():     #目前没用
 
     gc.collect()
 
+
 def sec_menu_04():
-    global main_point_item,main_menu_flag,turn_pd_flag,Turn_KP,Turn_KD
-    lcd.str24(60,0,"turn_pd",0x07E0)
-    lcd.str16(16,30,"Turn_KP={}".format(Turn_KP),0xFFFF)
-    lcd.str16(16,46,"Turn_Kp+/- 0.01",0xFFFF)
-    lcd.str16(16,62,"Turn_Kp+/- 0.1",0xFFFF)
-    lcd.str16(16,78,"Turn_KD={}".format(Turn_KD),0xFFFF)
-    lcd.str16(16,94,"Turn_KD+/- 0.01",0xFFFF)
-    lcd.str16(16,110,"Turn_KD+/- 0.1",0xFFFF)
+    global main_point_item, main_menu_flag, turn_pd_flag, turnpid.Turn_KP, Turn_KD
+    lcd.str24(60, 0, "turn_pd", 0x07E0)
+    lcd.str16(16, 30, "Turn_KP={}".format(Turn_KP), 0xFFFF)
+    lcd.str16(16, 46, "Turn_Kp+/- 0.01", 0xFFFF)
+    lcd.str16(16, 62, "Turn_Kp+/- 0.1", 0xFFFF)
+    lcd.str16(16, 78, "Turn_KD={}".format(Turn_KD), 0xFFFF)
+    lcd.str16(16, 94, "Turn_KD+/- 0.01", 0xFFFF)
+    lcd.str16(16, 110, "Turn_KD+/- 0.1", 0xFFFF)
 
-
-    lcd.str16(16,126,"return",0xFFFF)
+    lcd.str16(16, 126, "return", 0xFFFF)
 
     if key_data[0]:
-        main_point_item+=16
+        main_point_item += 16
         key.clear(1)
         if main_point_item == 142:
             main_point_item = 30
 
     if key_data[1]:
-        main_point_item-=16
+        main_point_item -= 16
         key.clear(2)
         if main_point_item == 14:
-            main_point_item =126
+            main_point_item = 126
 
     if main_point_item == 46:
         if key_data[2]:
@@ -756,28 +770,28 @@ def sec_menu_04():
 
     gc.collect()
 
+
 def sec_menu_05():
-    global vertical_pd_flag,main_menu_flag,main_point_item,Vertical_Kp,Vertical_Kd
-    lcd.str24(60,0,"vertical_pd",0x07E0)
-    lcd.str16(16,30,"vertical_kp={}".format(Vertical_Kp),0xFFFF)
-    lcd.str16(16,46,"vertical_kp +/- 0.01",0xFFFF)
-    lcd.str16(16,62,"vertical_kp +/- 0.1",0xFFFF)
-    lcd.str16(16,78,"vertical_kd={}".format(Vertical_Kp),0xFFFF)
-    lcd.str16(16,94,"vertical_kd +/- 0.01",0xFFFF)
-    lcd.str16(16,110,"vertical_kd +/- 0.1",0xFFFF)
+    global vertical_pd_flag, main_menu_flag, main_point_item, Vertical_Kp, Vertical_Kd
+    lcd.str24(60, 0, "vertical_pd", 0x07E0)
+    lcd.str16(16, 30, "vertical_kp={}".format(Vertical_Kp), 0xFFFF)
+    lcd.str16(16, 46, "vertical_kp +/- 0.01", 0xFFFF)
+    lcd.str16(16, 62, "vertical_kp +/- 0.1", 0xFFFF)
+    lcd.str16(16, 78, "vertical_kd={}".format(Vertical_Kp), 0xFFFF)
+    lcd.str16(16, 94, "vertical_kd +/- 0.01", 0xFFFF)
+    lcd.str16(16, 110, "vertical_kd +/- 0.1", 0xFFFF)
 
-
-    lcd.str16(16,126,"return",0xFFFF)
+    lcd.str16(16, 126, "return", 0xFFFF)
     if key_data[0]:
-        main_point_item+=16
+        main_point_item += 16
         key.clear(1)
         if main_point_item == 142:
             main_point_item = 30
     if key_data[1]:
-        main_point_item-=16
+        main_point_item -= 16
         key.clear(2)
         if main_point_item == 14:
-            main_point_item =126
+            main_point_item = 126
     if main_point_item == 46:
         if key_data[2]:
             Vertical_Kp += 0.01
@@ -808,36 +822,35 @@ def sec_menu_05():
             key.clear(4)
     if main_point_item == 126:
         if key_data[2]:
-            vertical_pd_flag =0
+            vertical_pd_flag = 0
             main_menu_flag = 1
             main_point_item = 30
             key.clear(3)
 
-
     gc.collect()
 
+
 def sec_menu_06():
-    global main_point_item,main_menu_flag,motor_pi_flag,Velocity_KP,Velocity_KI
-    lcd.str24(60,0,"motor_pi",0x07E0)
-    lcd.str16(16,30,"velocity_Kp={}".format(Velocity_KP),0xFFFF)
-    lcd.str16(16,46,"velocity_Kp+/- 0.01",0xFFFF)
-    lcd.str16(16,62,"velocity_Kp+/- 0.1",0xFFFF)
-    lcd.str16(16,78,"velocity_Ki={}".format(Velocity_KI),0xFFFF)
-    lcd.str16(16,94,"velocity_Ki+/- 0.01",0xFFFF)
-    lcd.str16(16,110,"velocity_Ki+/- 0.1",0xFFFF)
+    global main_point_item, main_menu_flag, motor_pi_flag, Velocity_KP, Velocity_KI
+    lcd.str24(60, 0, "motor_pi", 0x07E0)
+    lcd.str16(16, 30, "velocity_Kp={}".format(Velocity_KP), 0xFFFF)
+    lcd.str16(16, 46, "velocity_Kp+/- 0.01", 0xFFFF)
+    lcd.str16(16, 62, "velocity_Kp+/- 0.1", 0xFFFF)
+    lcd.str16(16, 78, "velocity_Ki={}".format(Velocity_KI), 0xFFFF)
+    lcd.str16(16, 94, "velocity_Ki+/- 0.01", 0xFFFF)
+    lcd.str16(16, 110, "velocity_Ki+/- 0.1", 0xFFFF)
 
-
-    lcd.str16(16,126,"return",0xFFFF)
+    lcd.str16(16, 126, "return", 0xFFFF)
     if key_data[0]:
-        main_point_item+=16
+        main_point_item += 16
         key.clear(1)
         if main_point_item == 142:
             main_point_item = 30
     if key_data[1]:
-        main_point_item-=16
+        main_point_item -= 16
         key.clear(2)
         if main_point_item == 14:
-            main_point_item =126
+            main_point_item = 126
     if main_point_item == 46:
         if key_data[2]:
             Velocity_KP += 0.01
@@ -868,31 +881,33 @@ def sec_menu_06():
             key.clear(4)
     if main_point_item == 126:
         if key_data[2]:
-            motor_pd_flag =0
+            motor_pd_flag = 0
             main_menu_flag = 1
             main_point_item = 30
             key.clear(3)
 
     gc.collect()
 
+
 def sec_menu_07():
-    global main_point_item,main_menu_flag,ccd_image_flag,ccd_data1,ccd_data2
-    lcd.str24(60,0,"ccd,image",0x07E0)
-    lcd.str16(16,30,"return",0xFFFF)
+    global main_point_item, main_menu_flag, ccd_image_flag, ccd_data1, ccd_data2
+    lcd.str24(60, 0, "ccd,image", 0x07E0)
+    lcd.str16(16, 30, "return", 0xFFFF)
     lcd.wave(0, 64, 128, 64, ccd_data1)
     lcd.wave(0, 64, 128, 64, ccd_data2)
-    lcd.line(64, 64, 64, 192,color=0x001F,thick=1)
+    lcd.line(64, 64, 64, 192, color=0x001F, thick=1)
     if key_data[2]:
-        ccd_image_flag=0
+        ccd_image_flag = 0
         main_menu_flag = 1
         key.clear(3)
 
     gc.collect()
 
+
 def sec_menu_08():
-    global main_point_item,parameter_flag,error1,error2
-    global Mid_point1,Mid_point2,tof_data,out_l,out_r,encl_data,encr_data
-    global left_point_1,right_point_1,left_point_2,right_point_2
+    global main_point_item, parameter_flag, error1, error2
+    global Mid_point1, Mid_point2, tof_data, out_l, out_r, encl_data, encr_data
+    global left_point_1, right_point_1, left_point_2, right_point_2
     lcd.str24(60, 0, "parameter", 0x07E0)  # 二级菜单标题
     lcd.str16(16, 30, "return", 0xFFFF)  # 返回主菜单
 
@@ -901,16 +916,24 @@ def sec_menu_08():
     lcd.str16(16, 78, "out_r = {:<4d}".format(out_r), 0xFFFF)  # 右环pid输出
     lcd.str16(16, 94, "encl = {:<4d}".format(encl_data), 0xFFFF)  # 左编码器值
     lcd.str16(16, 110, "encr = {:<4d}".format(encr_data), 0xFFFF)  # 右编码器值
-    lcd.str16(16, 126, "Mid_point1 = {:<.2f}".format(Mid_point1), 0xFFFF)  # ccd1中点
-    lcd.str16(16, 142, "Mid_point2 = {:<.2f}".format(Mid_point2), 0xFFFF)  # ccd2中点
+    lcd.str16(16, 126, "Mid_point1 = {:<.2f}".format(
+        Mid_point1), 0xFFFF)  # ccd1中点
+    lcd.str16(16, 142, "Mid_point2 = {:<.2f}".format(
+        Mid_point2), 0xFFFF)  # ccd2中点
     lcd.str16(16, 158, "error1 = {:<.2f}".format(error1), 0xFFFF)  # ccd1误差
     lcd.str16(16, 174, "error2 = {:<.2f}".format(error2), 0xFFFF)  # ccd2误差
-    lcd.str16(16, 190, "left_point_1 = {:<3d}".format(left_point_1), 0xFFFF)  # 上摄像头左边点
-    lcd.str16(16, 206, "right_point_1 = {:<3d}".format(right_point_1), 0xFFFF)  # 上摄像头右边点
-    lcd.str16(16, 222, "left_point_2 = {:<3d}".format(left_point_2), 0xFFFF)  # 下摄像头左边点
-    lcd.str16(16, 238, "right_point_2 = {:<3d}".format(right_point_2), 0xFFFF)  # 下摄像头右边点
-    lcd.str16(16, 254, "width_1 = {:<3d}".format(right_point_1 - left_point_1), 0xFFFF)  # ccd1计算赛道宽度
-    lcd.str16(16, 270, "width_2 = {:<3d}".format(right_point_2 - left_point_2), 0xFFFF)  # ccd2计算赛道宽度
+    lcd.str16(16, 190, "left_point_1 = {:<3d}".format(
+        left_point_1), 0xFFFF)  # 上摄像头左边点
+    lcd.str16(16, 206, "right_point_1 = {:<3d}".format(
+        right_point_1), 0xFFFF)  # 上摄像头右边点
+    lcd.str16(16, 222, "left_point_2 = {:<3d}".format(
+        left_point_2), 0xFFFF)  # 下摄像头左边点
+    lcd.str16(16, 238, "right_point_2 = {:<3d}".format(
+        right_point_2), 0xFFFF)  # 下摄像头右边点
+    lcd.str16(16, 254, "width_1 = {:<3d}".format(
+        right_point_1 - left_point_1), 0xFFFF)  # ccd1计算赛道宽度
+    lcd.str16(16, 270, "width_2 = {:<3d}".format(
+        right_point_2 - left_point_2), 0xFFFF)  # ccd2计算赛道宽度
 
     if main_point_item == 30:
         if key_data[2]:
@@ -920,9 +943,11 @@ def sec_menu_08():
 
     gc.collect()
 
+
 def sec_menu_09():
     lcd.clear(0x0000)
     return
+
 
 def sec_menu_10():
     write_flash()  # 写入缓冲区
@@ -936,7 +961,7 @@ def sec_menu_10():
 
 # 写入缓冲区
 def write_flash():
-    global Turn_KP,Turn_KD,Velocity_KP,Velocity_KI,aim_speed_l,aim_speed_r
+    global Turn_KP, Turn_KD, Velocity_KP, Velocity_KI, aim_speed_l, aim_speed_r
     os.chdir("/flash")  # 切换到 /flash 目录
     try:
         # 通过 try 尝试打开文件 因为 r+ 读写模式不会新建文件
@@ -973,7 +998,6 @@ def write_flash():
     user_file.close()
 
 
-
 # speed_pid_l = motor_PID(kp_motor=10.0, ki_motor=0.6, kd_motor=0)  # 左电机PID初始化
 # speed_pid_r = motor_PID(kp_motor=10.0, ki_motor=0.6, kd_motor=0)
 verticalpid = Vertical_PID(Vertical_Kp=180.0, Vertical_Kd=2.3)
@@ -990,7 +1014,7 @@ while True:
     # else:
     #     motor_l.duty(out_r)
     #     motor_r.duty(out_l)
-        
+
     motor_l.duty(out_r)
     motor_r.duty(out_l)
 
@@ -1005,20 +1029,22 @@ while True:
     output_encl = kalman_filter(kfp_var_l, encl_data)
     output_encr = kalman_filter(kfp_var_r, encr_data)
 
-    #turn_kd(比较重要，能起到修正作用，使其走直线) 与 velicity_kp 是一个数量级（大小差不多）
-    #turn_kp主要作用是放大
-    #------------------------------------------------------------------------
-    #\\\\\\\\\\\\\\PID核心控制\\\\\\\\\\\\
-    #------------------------------------------------------------------------
+    # turn_kd(比较重要，能起到修正作用，使其走直线) 与 velicity_kp 是一个数量级（大小差不多）
+    # turn_kp主要作用是放大
+    # ------------------------------------------------------------------------
+    # \\\\\\\\\\\\\\PID核心控制\\\\\\\\\\\\
+    # ------------------------------------------------------------------------
     velocityout = velocitypid.Velocity(aim_speed, output_encl, output_encr)
-    Verticalout = verticalpid.Vertical(velocityout + MedAngle, imu_data[5], imu_data[4])
+    Verticalout = verticalpid.Vertical(
+        velocityout + MedAngle, imu_data[5], imu_data[4])
     if abs(error2 >= 10.0):
-        turnout = turnpid.Turn(imu_data[6], error2 * turn_k) #turn_k  需要根据实际情况修改
+        # turn_k  需要根据实际情况修改
+        turnout = turnpid.Turn(imu_data[6], error2 * turn_k)
     else:
         turnout = 0
     PWM_out = Verticalout
-    MOTOR_l = PWM_out - turnout # * 4
-    MOTOR_r = PWM_out + turnout # * 4
+    MOTOR_l = PWM_out - turnout  # * 4
+    MOTOR_r = PWM_out + turnout  # * 4
 
     # # 速度控制   转向系数待测
     # if (error2 >= 10.0):  # 左转
@@ -1030,7 +1056,6 @@ while True:
     # if (error2 <= -10.0):  # 右转
     #     aim_speed_l = T - (s_t.Turn(gyro_Z, error2) * 4)
     #     aim_speed_r = T + (s_t.Turn(gyro_Z, error2) * 4)
-
 
     # 电机PID计算
     # out_l = speed_pid_l.motor_control(aim_speed = aim_speed_l, speed = output_encl)
