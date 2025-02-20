@@ -147,8 +147,6 @@ class Vertical_PID:
         return self.Vertical_out
 
 # 速度环
-
-
 class Velocity_PID:
     def __init__(self, Velocity_KP, Velocity_KI):
         self.Velocity_KP = Velocity_KP
@@ -180,8 +178,6 @@ class Velocity_PID:
         return self.Velocity_out
 
 # 转向环  添加了走直线的指令，走直线时抑制拐弯
-
-
 class Turn_PID:
     def __init__(self, Turn_KP, Turn_KD):
         self.Turn_KP = Turn_KP
