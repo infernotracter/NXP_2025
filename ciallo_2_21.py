@@ -217,6 +217,12 @@ class angle_ring:
         self.error_last = self.err
         return self.out
 
+
+speed_pid = speed_ring(ki = 0.6, kp = 10.0)
+angle_pid = angle_ring(ki = 0.6, kd = 10.0)
+gyro_pid = gyro_ring(ki = 0.6, kp = 10.0)
+
+
 # 卡尔曼滤波器参数
 kfp_var_l = {
     'P': 1,      # 估算方差
@@ -997,12 +1003,7 @@ def write_flash():
     # 最后将文件关闭即可
     user_file.close()
 
-
-# speed_pid_l = motor_PID(kp_motor=10.0, ki_motor=0.6, kd_motor=0)  # 左电机PID初始化
-# speed_pid_r = motor_PID(kp_motor=10.0, ki_motor=0.6, kd_motor=0)
-speed_pid = speed_ring(ki = 0.6, kp = 10.0)
-angle_pid = angle_ring(ki = 0.6, kd = 10.0)
-gyro_pid = gyro_ring(ki = 0.6, kp = 10.0)
+#\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 while True:
 
     # # 计算路程
