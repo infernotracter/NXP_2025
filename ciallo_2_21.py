@@ -101,6 +101,40 @@ pit3.capture_list()
 pit3.callback(time_pit_1000ms_handler)
 pit3.start(1000)
 
+# 定义一个回调函数
+ticker_flag_2ms = False
+def time_pit_2ms_handler(time):
+    global ticker_flag_2ms
+    ticker_flag_2ms = True
+# 实例化 PIT ticker 模块
+pit4 = ticker(4)
+pit4.capture_list()
+pit4.callback(time_pit_2ms_handler)
+pit4.start(10)
+
+# 定义一个回调函数
+ticker_flag_10ms = False
+def time_pit_10ms_handler(time):
+    global ticker_flag_10ms
+    ticker_flag_10ms = True
+# 实例化 PIT ticker 模块
+pit5 = ticker(5)
+pit5.capture_list()
+pit5.callback(time_pit_10ms_handler)
+pit5.start(10)
+
+
+# 定义一个回调函数
+ticker_flag_50ms = False
+def time_pit_50ms_handler(time):
+    global ticker_flag_50ms
+    ticker_flag_50ms = True
+# 实例化 PIT ticker 模块
+pit6 = ticker(6)
+pit6.capture_list()
+pit6.callback(time_pit_50ms_handler)
+pit6.start(50)
+
 
 # 初始化变量
 ccd_data1 = [0] * 128  # ccd1原始数组
@@ -130,7 +164,7 @@ n = 0  # 元素判断用
 m = 0
 turn_k = 1  # 直接传error2后的比例
 
-def my_limit(value, minn, maxn);
+def my_limit(value, minn, maxn):
     if value < minn:
         value = minn
     if value > maxn:
@@ -138,56 +172,50 @@ def my_limit(value, minn, maxn);
 
 # 速度环
 class speed_ring:
-    def __init__(self):
-        self.kp = 0.5
-        self.ki = 0.1
-        self.kd = 0.1
-        self.error = 0
-        self.error_last = 0
-        self.error_pre = 0
-        self.output = 0
+    def __init__(self, kp, ki):
+        self.kp = kp
+        self.ki = ki
+        self.err = 0
+        self.err_last = 0
+        self.out = 0
         self.increment = 0
     def pid_standard_integral(self, aim_speed, speed):
-        self.error = aim_speed - speed
-        self.increment += self.error * self.ki
+        self.err = aim_speed - speed
+        self.increment += self.err * self.ki
         my_limit(self.increment, -2000, 2000) # 限幅
         self.out = self.kp * self.err + self.increment
-        self.error_last = self.error
+        self.err_last = self.err
         return self.out
+
 # 角速度环
 class gyro_ring:
-    def __init__(self):
-        self.kp = 0.5
-        self.ki = 0.1
-        self.kd = 0.1
-        self.error = 0
-        self.error_last = 0
-        self.error_pre = 0
-        self.output = 0
+    def __init__(self, kp, ki):
+        self.kp = kp
+        self.ki = ki
+        self.err = 0
+        self.err_last = 0
+        self.out = 0
         self.increment = 0
-    def pid_standard_integral(self, aim_gyro, speed):
-        self.error = aim_gyro - speed
-        self.increment += self.error * self.ki
+    def pid_standard_integral(self, aim_gyro, gyro):
+        self.err = aim_gyro - gyro
+        self.increment += self.err * self.ki
         my_limit(self.increment, -2000, 2000) # 限幅
         self.out = self.kp * self.err + self.increment
-        self.error_last = self.error
+        self.err_last = self.err
         return self.out
 # 角度环
 class angle_ring:
-    def __init__(self):
-        self.kp = 0.5
-        self.ki = 0.1
-        self.kd = 0.1
-        self.error = 0
-        self.error_last = 0
-        self.error_pre = 0
-        self.output = 0
-        self.increment = 0
-    def pid_standard_integral(self, aim_speed, speed):
-        self.error = aim_speed - speed
-        self.output = self.kp * self.err + self.kd * (self.err - self.error_last)
-        self.error_last = self.error
-        return self.output
+    def __init__(self, kp, kd):
+        self.kp = kp
+        self.kd = kd
+        self.err = 0
+        self.err_last = 0
+        self.out = 0
+    def pid_standard_integral(self, aim_angle, angle):
+        self.err = aim_angle - angle
+        self.out = self.kp * self.err + self.kd * (self.err - self.error_last)
+        self.error_last = self.err
+        return self.out
 
 # 卡尔曼滤波器参数
 kfp_var_l = {
@@ -972,9 +1000,9 @@ def write_flash():
 
 # speed_pid_l = motor_PID(kp_motor=10.0, ki_motor=0.6, kd_motor=0)  # 左电机PID初始化
 # speed_pid_r = motor_PID(kp_motor=10.0, ki_motor=0.6, kd_motor=0)
-verticalpid = Vertical_PID(Vertical_Kp=180.0, Vertical_Kd=2.3)
-velocitypid = Velocity_PID(Velocity_KP=0.6, Velocity_KI=0.003)
-turnpid = Turn_PID(Turn_KP=10.0, Turn_KD=0.6)  # p d待测
+speed_pid = speed_ring(ki = 0.6, kp = 10.0)
+angle_pid = angle_ring(ki = 0.6, kd = 10.0)
+gyro_pid = gyro_ring(ki = 0.6, kp = 10.0)
 while True:
 
     # # 计算路程
@@ -1001,41 +1029,6 @@ while True:
     output_encl = kalman_filter(kfp_var_l, encl_data)
     output_encr = kalman_filter(kfp_var_r, encr_data)
 
-    # turn_kd(比较重要，能起到修正作用，使其走直线) 与 velicity_kp 是一个数量级（大小差不多）
-    # turn_kp主要作用是放大
-    # ------------------------------------------------------------------------
-    # \\\\\\\\\\\\\\PID核心控制\\\\\\\\\\\\
-    # ------------------------------------------------------------------------
-    velocityout = velocitypid.Velocity(aim_speed, output_encl, output_encr)
-    Verticalout = verticalpid.Vertical(
-        velocityout + MedAngle, imu_data[5], imu_data[4])
-    if abs(error2 >= 10.0):
-        # turn_k  需要根据实际情况修改
-        turnout = turnpid.Turn(imu_data[6], error2 * turn_k)
-    else:
-        turnout = 0
-    PWM_out = Verticalout
-    MOTOR_l = PWM_out - turnout  # * 4
-    MOTOR_r = PWM_out + turnout  # * 4
-
-    # # 速度控制   转向系数待测
-    # if (error2 >= 10.0):  # 左转
-    #     aim_speed_l = T-(s_t.Turn(gyro_Z, error2)*4)
-    #     aim_speed_r = T+(s_t.Turn(gyro_Z, error2)*4)
-    # if (-10.0 <= error2 <= 10.0):  # 直行
-    #     aim_speed_l = T+(s_t.Turn(gyro_Z, 0)*4)     # 无差速状态
-    #     aim_speed_r = T+(s_t.Turn(gyro_Z, 0)*4)
-    # if (error2 <= -10.0):  # 右转
-    #     aim_speed_l = T - (s_t.Turn(gyro_Z, error2) * 4)
-    #     aim_speed_r = T + (s_t.Turn(gyro_Z, error2) * 4)
-
-    # 电机PID计算
-    # out_l = speed_pid_l.motor_control(aim_speed = aim_speed_l, speed = output_encl)
-    # out_r = speed_pid_r.motor_control(aim_speed = aim_speed_r, speed = output_encr)
-
-    # 电机占空比
-    # motor_l.duty(out_r)
-    # motor_r.duty(out_l)
 
     # 3ms中断标志位
     if (ticker_flag_3ms):
@@ -1091,3 +1084,9 @@ while True:
         # 之后加入圆环）元素的控制
 
         ticker_flag = False
+    
+    if (ticker_flag_2ms):
+        # turn_kd(比较重要，能起到修正作用，使其走直线) 与 velicity_kp 是一个数量级（大小差不多）
+        # turn_kp主要作用是放大
+        speed_pid.pid_standard_integral(aim_speed, (output_encl + output_encr) / 2)
+        ticker_flag_2ms = False
