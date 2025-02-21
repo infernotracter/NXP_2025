@@ -227,6 +227,36 @@ speed_pid = speed_ring(ki = 0.6, kp = 10.0)
 angle_pid = angle_ring(ki = 0.6, kd = 10.0)
 gyro_pid = gyro_ring(ki = 0.01, kp = 1.0)
 
+class dir_out_ring:
+    def __init__(self, kp, kd):
+        self.kp = kp
+        self.kd = kd
+        self.err = 0
+        self.err_last = 0
+        self.out = 0
+    def pid_standard_integral(self, aim_dir, dir):
+        self.err = aim_dir - dir
+        self.out = self.kp * self.err + self.kd * (self.err - self.err_last)
+        self.err_last = self.err
+        return self.out
+
+class dir_in_ring:
+    def __init__(self, kp, ki):
+        self.kp = kp
+        self.ki = ki
+        self.err = 0
+        self.err_last = 0
+        self.increment = 0
+        self.out = 0
+    def pid_standard_integral(self, aim_dir, dir):
+        self.err = aim_dir - dir
+        self.increment += self.err * self.ki
+        my_limit(self.increment, -2000, 2000) # 限幅
+        self.out = self.kp * self.err + self.increment
+        self.err_last = self.err
+        # my_limit(self.out, -500, 500)
+        return self.out
+
 # 加速度计计算俯仰角（单位：弧度）
 def calculate_pitch(ax, ay, az, gy, dt, prev_pitch, alpha=0.98):
     pitch_acc = math.atan2(ax, math.sqrt(ay**2 + az**2))  # 使用 ax 和 ay/az 的组合
@@ -1025,9 +1055,6 @@ while True:
         pit1.stop()    # pit1关闭
         pit2.stop()    # pit2关闭
         pit3.stop()    # pit3关闭
-        pit4.stop()    # pit4关闭
-        pit5.stop()    # pit5关闭
-        pit6.stop()    # pit6关闭
         break          # 跳出判断
 
     # 编码器卡尔曼滤波
