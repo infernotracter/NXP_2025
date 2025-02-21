@@ -1026,6 +1026,9 @@ while True:
         pit1.stop()    # pit1关闭
         pit2.stop()    # pit2关闭
         pit3.stop()    # pit3关闭
+        pit4.stop()    # pit4关闭
+        pit5.stop()    # pit5关闭
+        pit6.stop()    # pit6关闭
         break          # 跳出判断
 
     # 编码器卡尔曼滤波
