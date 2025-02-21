@@ -80,7 +80,7 @@ def time_pit_pid_handler(time):
     global ticker_flag_2ms,ticker_flag_10ms,ticker_flag_50ms,pit_cont0
     pit_cont0 +=1
     if(pit_cont0 == 2):
-      tick_flag_2ms = True
+      ticker_flag_2ms = True
     if(pit_cont0 == 10):
       ticker_flag_10ms = True
     if(pit_cont0 == 50):
@@ -102,8 +102,6 @@ pit1.callback(time_pit_3ms_handler)
 pit1.start(3)
 
 
-
-
 def time_pit_5ms_handler(time):
     global ticker_flag_5ms
     ticker_flag_5ms = True
@@ -111,10 +109,8 @@ def time_pit_5ms_handler(time):
 # 实例化 PIT ticker 模块
 pit2 = ticker(2)
 pit2.capture_list(ccd, encoder_l, encoder_r)
-pit2.callback(time_pit_handler)
+pit2.callback(time_pit_5ms_handler)
 pit2.start(5)
-
-
 
 
 pit_cont3 = 0
@@ -129,10 +125,6 @@ pit3 = ticker(3)
 pit3.capture_list(ccd,imu)
 pit3.callback(time_pit_turnpid_handler)
 pit3.start(1)
-
-
-
-
 
 
 # 初始化变量
@@ -226,6 +218,36 @@ class angle_ring:
 speed_pid = speed_ring(ki = 0.6, kp = 10.0)
 angle_pid = angle_ring(ki = 0.6, kd = 10.0)
 gyro_pid = gyro_ring(ki = 0.01, kp = 1.0)
+
+class dir_out_ring:
+    def __init__(self, kp, kd):
+        self.kp = kp
+        self.kd = kd
+        self.err = 0
+        self.err_last = 0
+        self.out = 0
+    def pid_standard_integral(self, aim_dir, dir):
+        self.err = aim_dir - dir
+        self.out = self.kp * self.err + self.kd * (self.err - self.err_last)
+        self.err_last = self.err
+        return self.out
+
+class dir_in_ring:
+    def __init__(self, kp, ki):
+        self.kp = kp
+        self.ki = ki
+        self.err = 0
+        self.err_last = 0
+        self.increment = 0
+        self.out = 0
+    def pid_standard_integral(self, aim_dir, dir):
+        self.err = aim_dir - dir
+        self.increment += self.err * self.ki
+        my_limit(self.increment, -2000, 2000) # 限幅
+        self.out = self.kp * self.err + self.increment
+        self.err_last = self.err
+        # my_limit(self.out, -500, 500)
+        return self.out
 
 # 加速度计计算俯仰角（单位：弧度）
 def calculate_pitch(ax, ay, az, gy, dt, prev_pitch, alpha=0.98):
@@ -1025,9 +1047,6 @@ while True:
         pit1.stop()    # pit1关闭
         pit2.stop()    # pit2关闭
         pit3.stop()    # pit3关闭
-        pit4.stop()    # pit4关闭
-        pit5.stop()    # pit5关闭
-        pit6.stop()    # pit6关闭
         break          # 跳出判断
 
     # 编码器卡尔曼滤波
@@ -1107,8 +1126,7 @@ while True:
     if (ticker_flag_50ms):
         angle_pid.pid_standard_integral(speed_pid.out + MedAngle, current_pitch)
         ticker_flag_50ms= False
-    # tun_kd(比较重要，能起到修正作用，使其走直线) 与 velicity_kp 是一个数量级（大小差不多）
-    # turn_kp主要作用是放大
+
     if(ticker_flag_4ms):
         ticker_flag_4ms = False
 
