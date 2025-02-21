@@ -6,7 +6,7 @@ from seekfree import *
 from math import *
 import gc
 import time
-# import math
+import math
 import os
 import io
 
@@ -163,6 +163,7 @@ MedAngle = 0
 n = 0  # 元素判断用
 m = 0
 turn_k = 1  # 直接传error2后的比例
+current_pitch = 0  # 当前俯仰角
 
 def my_limit(value, minn, maxn):
     if value < minn:
@@ -218,15 +219,28 @@ class angle_ring:
         self.out = 0
     def pid_standard_integral(self, aim_angle, angle):
         self.err = aim_angle - angle
-        self.out = self.kp * self.err + self.kd * (self.err - self.error_last)
-        self.error_last = self.err
+        self.out = self.kp * self.err + self.kd * (self.err - self.err_last)
+        self.err_last = self.err
         return self.out
 
-
+# PID实例化
 speed_pid = speed_ring(ki = 0.6, kp = 10.0)
 angle_pid = angle_ring(ki = 0.6, kd = 10.0)
 gyro_pid = gyro_ring(ki = 0.6, kp = 10.0)
 
+# 加速度计计算俯仰角（单位：弧度）
+def calculate_pitch(ax, ay, az, gy, dt, prev_pitch, alpha=0.98):
+    pitch_acc = math.atan2(ax, math.sqrt(ay**2 + az**2))  # 使用 ax 和 ay/az 的组合
+    
+    # 转换为角度（可选）
+    pitch_acc_deg = math.degrees(pitch_acc)
+    
+    # 陀螺仪积分计算角度变化
+    pitch_gyro = prev_pitch + gy * dt  # gy 是绕Y轴的角速度（单位：度/秒）
+    
+    # 互补滤波融合
+    pitch = alpha * pitch_gyro + (1 - alpha) * pitch_acc_deg
+    return pitch
 
 # 卡尔曼滤波器参数
 kfp_var_l = {
@@ -260,13 +274,11 @@ def kalman_filter(kfp, input):
 
     return kfp['Output']
 
-
 # 偏差计算
 def get_offset(mid_point):
     # 计算误差并返回结果
     offset = 64.0 - mid_point
     return offset
-
 
 # 用户函数：
 # 二值化处理
@@ -279,7 +291,6 @@ def ccd_image_value(ccd_data, value):
         else:
             ccd_value[i] = 0          # 小于为0
     return ccd_value
-
 
 # 获得动态阈值
 def ccd_get_threshold(ccd_data):
@@ -294,7 +305,6 @@ def ccd_get_threshold(ccd_data):
     threshold = (value_max + value_min) / 2      # 计算阈值
     threshold = min(max(75, threshold), 255)     # 阈值限幅在75-256之间
     return threshold
-
 
 # ccd滤波
 def ccd_filter(ccd_n):
@@ -312,13 +322,11 @@ def ccd_filter(ccd_n):
             elif image_value2[i] == 0 and image_value2[i - 1] == 1 and image_value2[i + 1] == 1:
                 image_value2[i] = 1  # 如果当前为0，前后都为1，则将当前设置为1
 
-
 # 得到中点
 left_point_1 = False
 right_point_1 = False
 last_mid_point_1 = 0  # 上次中点，应在函数外部初始化
 mid_point_1 = 60      # 当前中点，应在函数外部初始化
-
 
 def get_ccd1_mid_point(bin_ccd):
     global last_mid_point_1, mid_point_1, left_point_1, right_point_1
@@ -1056,8 +1064,21 @@ while True:
         error2 = get_offset(Mid_point2)
 
         # 元素识别
-        search_element()
+        # search_element()
 
+        # 读取IMU数据（假设 imu_data 包含 [ax, ay, az, gx, gy, gz]）
+        ax = imu_data[0]
+        ay = imu_data[1]
+        az = imu_data[2]
+        gy = imu_data[4]  # Y轴角速度
+        
+        # 计算时间间隔（假设3ms中断）
+        dt = 0.003
+        
+        # 计算俯仰角
+        current_pitch = calculate_pitch(ax, ay, az, gy, dt, prev_pitch)
+        prev_pitch = current_pitch  # 更新历史值
+        
         gc.collect()
         ticker_flag_3ms = False
 
@@ -1081,7 +1102,7 @@ while True:
         ticker_flag = False
     
     if (ticker_flag_2ms):
-        gyro_pid.pid_standard_integral(angle_pid.out, imu_data[])
+        gyro_pid.pid_standard_integral(angle_pid.out, imu_data[4])
         ticker_flag_2ms = False
 
     if (ticker_flag_10ms):
@@ -1091,5 +1112,5 @@ while True:
         ticker_flag_10ms = False
 
     if (ticker_flag_50ms):
-        angle_pid.pid_standard_integral(speed_pid.out + MedAngle, Angle)
+        angle_pid.pid_standard_integral(speed_pid.out, current_pitch)
         ticker_flag_50ms = False

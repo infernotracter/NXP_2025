@@ -31,8 +31,9 @@ NXP
    └─ 陀螺仪环（内环）实时修正
 最终电机输出 = 角速度环输出 ± 转向控制输出
 ```
-![CSDN图标](https://mmbiz.qpic.cn/mmbiz_png/6qJsrrDdiaicrBbicu77lA9YJuoIjIA7yDaAgnpxznB1g15mtuTPJUNdJdt4lMn9UbNYSyUbBFZ1coNS6A8HefhJw/640?wx_fmt=png&from=appmsg&tp=webp&wxfrom=5&wx_lazy=1&wx_co=1 "CSDN图标")
-![](https://mmbiz.qpic.cn/mmbiz_png/6qJsrrDdiaicrBbicu77lA9YJuoIjIA7yDaHAIoERJTEYLnGt7ickrhbxe5UsbKGfU7IyaDibwhGs925G5VCooR5l7g/640?wx_fmt=png&from=appmsg&tp=webp&wxfrom=5&wx_lazy=1&wx_co=1)
+#### 3. **原理**
+- ![](https://mmbiz.qpic.cn/mmbiz_png/6qJsrrDdiaicrBbicu77lA9YJuoIjIA7yDaAgnpxznB1g15mtuTPJUNdJdt4lMn9UbNYSyUbBFZ1coNS6A8HefhJw/640?wx_fmt=png&from=appmsg&tp=webp&wxfrom=5&wx_lazy=1&wx_co=1)
+- ![](https://mmbiz.qpic.cn/mmbiz_png/6qJsrrDdiaicrBbicu77lA9YJuoIjIA7yDaHAIoERJTEYLnGt7ickrhbxe5UsbKGfU7IyaDibwhGs925G5VCooR5l7g/640?wx_fmt=png&from=appmsg&tp=webp&wxfrom=5&wx_lazy=1&wx_co=1)
 ---
 
 ### **与之前伪代码的关键差异**
