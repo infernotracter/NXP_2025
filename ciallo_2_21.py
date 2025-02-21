@@ -226,7 +226,7 @@ class angle_ring:
 # PID实例化
 speed_pid = speed_ring(ki = 0.6, kp = 10.0)
 angle_pid = angle_ring(ki = 0.6, kd = 10.0)
-gyro_pid = gyro_ring(ki = 0.6, kp = 10.0)
+gyro_pid = gyro_ring(ki = 0.01, kp = 1.0)
 
 # 加速度计计算俯仰角（单位：弧度）
 def calculate_pitch(ax, ay, az, gy, dt, prev_pitch, alpha=0.98):
@@ -1106,11 +1106,12 @@ while True:
         ticker_flag_2ms = False
 
     if (ticker_flag_10ms):
-        # turn_kd(比较重要，能起到修正作用，使其走直线) 与 velicity_kp 是一个数量级（大小差不多）
-        # turn_kp主要作用是放大
         speed_pid.pid_standard_integral(aim_speed, (output_encl + output_encr) / 2)
         ticker_flag_10ms = False
 
     if (ticker_flag_50ms):
-        angle_pid.pid_standard_integral(speed_pid.out, current_pitch)
+        angle_pid.pid_standard_integral(speed_pid.out + MedAngle, current_pitch)
         ticker_flag_50ms = False
+
+    # tun_kd(比较重要，能起到修正作用，使其走直线) 与 velicity_kp 是一个数量级（大小差不多）
+    # turn_kp主要作用是放大
