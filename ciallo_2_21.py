@@ -185,6 +185,7 @@ class speed_ring:
         my_limit(self.increment, -2000, 2000) # 限幅
         self.out = self.kp * self.err + self.increment
         self.err_last = self.err
+        my_limit(self.out, -500, 500)
         return self.out
 
 # 角速度环
@@ -202,6 +203,10 @@ class gyro_ring:
         my_limit(self.increment, -2000, 2000) # 限幅
         self.out = self.kp * self.err + self.increment
         self.err_last = self.err
+        if self.out >= 0:
+            self.out += 100
+        else:
+            self.out -= 100
         return self.out
 # 角度环
 class angle_ring:
@@ -1005,18 +1010,7 @@ def write_flash():
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 while True:
-
-    # # 计算路程
-    # distance_T += (encl_data + encr_data) / 2 / 1024 * 30 / 50 * 0.05 * 3.1415926
-
-    # if (distance_T >= 27):
-    #     motor_l.duty(0)
-    #     motor_r.duty(0)
-    # else:
-    #     motor_l.duty(out_r)
-    #     motor_r.duty(out_l)
-
-    motor_l.duty(out_r)
+    motor_l.duty(gyro_pid.out)
     motor_r.duty(out_l)
 
     # 拨码开关关中断
@@ -1087,7 +1081,15 @@ while True:
         ticker_flag = False
     
     if (ticker_flag_2ms):
+        gyro_pid.pid_standard_integral(angle_pid.out, imu_data[])
+        ticker_flag_2ms = False
+
+    if (ticker_flag_10ms):
         # turn_kd(比较重要，能起到修正作用，使其走直线) 与 velicity_kp 是一个数量级（大小差不多）
         # turn_kp主要作用是放大
         speed_pid.pid_standard_integral(aim_speed, (output_encl + output_encr) / 2)
-        ticker_flag_2ms = False
+        ticker_flag_10ms = False
+
+    if (ticker_flag_50ms):
+        angle_pid.pid_standard_integral(speed_pid.out + MedAngle, Angle)
+        ticker_flag_50ms = False
