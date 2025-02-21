@@ -980,7 +980,7 @@ def sec_menu_10():
 
 # 写入缓冲区
 def write_flash():
-    global angle_pid.kp, angle_pid.kd, speed_pid.kp, speed_pid.ki, aim_speed_l, aim_speed_r
+    global aim_speed_l, aim_speed_r
     os.chdir("/flash")  # 切换到 /flash 目录
     try:
         # 通过 try 尝试打开文件 因为 r+ 读写模式不会新建文件
