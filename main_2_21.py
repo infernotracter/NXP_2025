@@ -1025,8 +1025,8 @@ def write_flash():
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 while True:
-    motor_l.duty(gyro_pid.out)
-    motor_r.duty(out_l)
+    motor_l.duty(gyro_pid.out - dir_in.out)
+    motor_r.duty(gyro_pid.out + dir_in.out)
 
     # 拨码开关关中断
     if end_switch.value() == 0:
@@ -1094,6 +1094,7 @@ while True:
 
     
     if (ticker_flag_2ms):
+        kalman_filter_gyro(kfp_var_gyro, imu_data[4])
         gyro_pid.pid_standard_integral(angle_pid.out, imu_data[4])
         ticker_flag_2ms = False
 
