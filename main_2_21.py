@@ -65,75 +65,74 @@ ccd = TSL1401(3)
 
 # 实例化 KEY_HANDLER 模块
 key = KEY_HANDLER(10)
-
-# 定义一个回调函数
-ticker_flag = False
-def time_pit_handler(time):
-    global ticker_flag
-    ticker_flag = True
-# 实例化 PIT ticker 模块
-pit1 = ticker(1)
-pit1.capture_list(ccd, tof, encoder_l, encoder_r)
-pit1.callback(time_pit_handler)
-pit1.start(5)
-
-
-# 定义一个回调函数
-ticker_flag_3ms = False
-def time_pit_3ms_handler(time):
-    global ticker_flag_3ms
-    ticker_flag_3ms = True
-# 实例化 PIT ticker 模块
-pit2 = ticker(2)
-pit2.capture_list(imu, key)
-pit2.callback(time_pit_3ms_handler)
-pit2.start(3)
-
-
-# 定义一个回调函数
-ticker_flag_1000ms = False
-def time_pit_1000ms_handler(time):
-    global ticker_flag_1000ms
-    ticker_flag_1000ms = True
-# 实例化 PIT ticker 模块
-pit3 = ticker(3)
-pit3.capture_list()
-pit3.callback(time_pit_1000ms_handler)
-pit3.start(1000)
+#零号ticker记数，用于三个pid
+pit_cont0 = 0
 
 # 定义一个回调函数
 ticker_flag_2ms = False
-def time_pit_2ms_handler(time):
-    global ticker_flag_2ms
-    ticker_flag_2ms = True
-# 实例化 PIT ticker 模块
-pit4 = ticker(4)
-pit4.capture_list()
-pit4.callback(time_pit_2ms_handler)
-pit4.start(10)
-
-# 定义一个回调函数
+ticker_flag_3ms = False
+ticker_flag_4ms = False
+ticker_flag_5ms = False
+ticker_flag_8ms = False
 ticker_flag_10ms = False
-def time_pit_10ms_handler(time):
-    global ticker_flag_10ms
-    ticker_flag_10ms = True
-# 实例化 PIT ticker 模块
-pit5 = ticker(5)
-pit5.capture_list()
-pit5.callback(time_pit_10ms_handler)
-pit5.start(10)
-
-
-# 定义一个回调函数
 ticker_flag_50ms = False
-def time_pit_50ms_handler(time):
-    global ticker_flag_50ms
-    ticker_flag_50ms = True
+def time_pit_pid_handler(time):
+    global ticker_flag_2ms,ticker_flag_10ms,ticker_flag_50ms,pit_cont0
+    pit_cont0 +=1
+    if(pit_cont0 == 2):
+      tick_flag_2ms = True
+    if(pit_cont0 == 10):
+      ticker_flag_10ms = True
+    if(pit_cont0 == 50):
+      ticker_flag_50ms = True
+    if(pit_cont0 >50):
+      pit_cont0 =1
 # 实例化 PIT ticker 模块
-pit6 = ticker(6)
-pit6.capture_list()
-pit6.callback(time_pit_50ms_handler)
-pit6.start(50)
+pit0 = ticker(0)
+pit0.capture_list(ccd,imu,key,encoder_l,encoder_r)
+pit0.callback(time_pit_pid_handler)
+pit0.start(1)
+
+def time_pit_3ms_handler(time):
+    global ticker_flag_3ms
+    ticker_flag_3ms = True
+pit1 = ticker(1)
+pit1.capture_list(imu, key)
+pit1.callback(time_pit_3ms_handler)
+pit1.start(3)
+
+
+
+
+def time_pit_5ms_handler(time):
+    global ticker_flag_5ms
+    ticker_flag_5ms = True
+    
+# 实例化 PIT ticker 模块
+pit2 = ticker(2)
+pit2.capture_list(ccd, encoder_l, encoder_r)
+pit2.callback(time_pit_handler)
+pit2.start(5)
+
+
+
+
+pit_cont3 = 0
+def time_pit_turnpid_handler(time):
+    global ticker_flag_4ms,ticker_flag_8ms
+    pit_cont3 += 1
+    if(pit_cont3 == 4):
+      ticker_flag_4ms = True
+    if(pit_cont3 == 8):
+      ticker_flag_8ms = True
+pit3 = ticker(3)
+pit3.capture_list(ccd,imu)
+pit3.callback(time_pit_turnpid_handler)
+pit3.start(1)
+
+
+
+
 
 
 # 初始化变量
@@ -1035,7 +1034,6 @@ while True:
     output_encl = kalman_filter(kfp_var_l, encl_data)
     output_encr = kalman_filter(kfp_var_r, encr_data)
 
-
     # 3ms中断标志位
     if (ticker_flag_3ms):
         # menu()                           # 菜单显示
@@ -1085,36 +1083,34 @@ while True:
         gc.collect()
         ticker_flag_3ms = False
 
-    # 1s中断标志位
-    if (ticker_flag_1000ms):
-        ccd_data1 = [0] * 128          # 清空ccd1原始数据
-        ccd_data2 = [0] * 128          # 清空ccd2原始数据
-        image_value1 = [0] * 128       # 清空ccd1二值化数据
-        image_value2 = [0] * 128       # 清空ccd2二值化数据
-        ticker_flag_1000ms = False
-
-    # 10ms中断标志位
-    if (ticker_flag):
+ 
+    if (ticker_flag_5ms):
         encl_data = encoder_l.get()     # 读取左编码器的数据
         encr_data = encoder_r.get()     # 读取右编码器的数据
-        # tof_data = tof.get()            # 读取TOF的数据
         key_data = key.get()            # 读取按键的数据
+        #原函数此时为圆环处理
+        ticker_flag_5ms = False
 
-        # 之后加入圆环）元素的控制
-
-        ticker_flag = False
     
     if (ticker_flag_2ms):
         gyro_pid.pid_standard_integral(angle_pid.out, imu_data[4])
         ticker_flag_2ms = False
 
     if (ticker_flag_10ms):
+        encl_data = encoder_l.get()     # 读取左编码器的数据
+        encr_data = encoder_r.get()     # 读取右编码器的数据
+        # tof_data = tof.get()            # 读取TOF的数据
+        key_data = key.get()            # 读取按键的数据
         speed_pid.pid_standard_integral(aim_speed, (output_encl + output_encr) / 2)
         ticker_flag_10ms = False
 
     if (ticker_flag_50ms):
         angle_pid.pid_standard_integral(speed_pid.out + MedAngle, current_pitch)
-        ticker_flag_50ms = False
-
+        ticker_flag_50ms= False
     # tun_kd(比较重要，能起到修正作用，使其走直线) 与 velicity_kp 是一个数量级（大小差不多）
     # turn_kp主要作用是放大
+    if(ticker_flag_4ms):
+        ticker_flag_4ms = False
+
+    if(ticker_flag_8ms):
+        ticker_flag_8ms = False
