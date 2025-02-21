@@ -132,7 +132,6 @@ ccd_data1 = [0] * 128  # ccd1原始数组
 ccd_data2 = [0] * 128  # ccd2原始数组
 encl_data = 0  # 左编码器数据
 encr_data = 0  # 右数据编码器
-# tof_data = 0  # TOF数据
 key_data = [0] * 4  # 按键数据
 threshold1 = 0  # ccd1阈值
 threshold2 = 0  # ccd2阈值
@@ -153,7 +152,7 @@ out_r = 0  # 右轮输出值
 MedAngle = 0
 n = 0  # 元素判断用
 m = 0
-turn_k = 1  # 直接传error2后的比例
+error_k = 1  # 直接传error2后的比例
 current_pitch = 0  # 当前俯仰角
 
 def my_limit(value, minn, maxn):
@@ -215,9 +214,9 @@ class angle_ring:
         return self.out
 
 # PID实例化
-speed_pid = speed_ring(ki = 0.6, kp = 10.0)
-angle_pid = angle_ring(ki = 0.6, kd = 10.0)
-gyro_pid = gyro_ring(ki = 0.01, kp = 1.0)
+speed_pid = speed_ring(kp = 10.0, ki = 0.6)
+angle_pid = angle_ring(kp = 10.0, kd = 0.6)
+gyro_pid = gyro_ring(kp = 1.0, ki = 0.01)
 
 class dir_out_ring:
     def __init__(self, kp, kd):
@@ -249,6 +248,9 @@ class dir_in_ring:
         # my_limit(self.out, -500, 500)
         return self.out
 
+dir_in = dir_in_ring(kp = 10.0, ki = 0.6)
+dir_out = dir_out_ring(kp = 10.0, kd = 0.6)
+
 # 加速度计计算俯仰角（单位：弧度）
 def calculate_pitch(ax, ay, az, gy, dt, prev_pitch, alpha=0.98):
     pitch_acc = math.atan2(ax, math.sqrt(ay**2 + az**2))  # 使用 ax 和 ay/az 的组合
@@ -263,36 +265,20 @@ def calculate_pitch(ax, ay, az, gy, dt, prev_pitch, alpha=0.98):
     pitch = alpha * pitch_gyro + (1 - alpha) * pitch_acc_deg
     return pitch
 
-# 卡尔曼滤波器参数
-kfp_var_l = {
-    'P': 1,      # 估算方差
-    'G': 0.0,    # 卡尔曼增益
-    'Q': 0.001,  # 过程噪声,Q增大,动态响应变快,收敛稳定性变坏
-    'R': 0.38,   # 测量噪声,R增大,动态响应变慢,收敛稳定性变好
-    'Output': 0  # 卡尔曼滤波器输出
-}
-kfp_var_r = {
-    'P': 1,      # 估算方差
-    'G': 0.0,    # 卡尔曼增益
-    'Q': 0.001,  # 过程噪声,Q增大,动态响应变快,收敛稳定性变坏
-    'R': 0.35,   # 测量噪声,R增大,动态响应变慢,收敛稳定性变好
-    'Output': 0  # 卡尔曼滤波器输出
+# 定义陀螺仪卡尔曼滤波器参数
+kfp_var_gyro = {
+    'P': 1,
+    'G': 0.0,
+    'Q': 0.001,  # 过程噪声（调整滤波响应速度）
+    'R': 0.5,    # 测量噪声（调整对原始数据的信任度）
+    'Output': 0
 }
 
-
-def kalman_filter(kfp, input):
-    # 估算方差方程
-    kfp['P'] = kfp['P'] + kfp['Q']
-
-    # 卡尔曼增益方程
+def kalman_filter_gyro(kfp, input):
+    kfp['P'] += kfp['Q']
     kfp['G'] = kfp['P'] / (kfp['P'] + kfp['R'])
-
-    # 更新最优值方程
-    kfp['Output'] = kfp['Output'] + kfp['G'] * (input - kfp['Output'])
-
-    # 更新方差方程
-    kfp['P'] = (1 - kfp['G']) * kfp['P']
-
+    kfp['Output'] += kfp['G'] * (input - kfp['Output'])
+    kfp['P'] *= (1 - kfp['G'])
     return kfp['Output']
 
 # 偏差计算
@@ -1049,10 +1035,6 @@ while True:
         pit3.stop()    # pit3关闭
         break          # 跳出判断
 
-    # 编码器卡尔曼滤波
-    output_encl = kalman_filter(kfp_var_l, encl_data)
-    output_encr = kalman_filter(kfp_var_r, encr_data)
-
     # 3ms中断标志位
     if (ticker_flag_3ms):
         # menu()                           # 菜单显示
@@ -1118,7 +1100,6 @@ while True:
     if (ticker_flag_10ms):
         encl_data = encoder_l.get()     # 读取左编码器的数据
         encr_data = encoder_r.get()     # 读取右编码器的数据
-        # tof_data = tof.get()            # 读取TOF的数据
         key_data = key.get()            # 读取按键的数据
         speed_pid.pid_standard_integral(aim_speed, (output_encl + output_encr) / 2)
         ticker_flag_10ms = False
@@ -1128,7 +1109,9 @@ while True:
         ticker_flag_50ms= False
 
     if(ticker_flag_4ms):
+        dir_in.pid_standard_integral(dir_out.out, imu[4])
         ticker_flag_4ms = False
 
     if(ticker_flag_8ms):
+        dir_out.pid_standard_integral(0, (error1 + error2) * error_k)
         ticker_flag_8ms = False
