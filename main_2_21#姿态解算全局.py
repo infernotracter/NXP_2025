@@ -10,6 +10,9 @@ import math
 import os
 import io
 
+# 单位换算用
+ACC_SPL = 4096.0
+GYRO_SPL = 16.4
 
 # 蜂鸣器初始化
 buzzer = Pin('C9', Pin.OUT, pull=Pin.PULL_UP_47K, value=0)
@@ -70,7 +73,7 @@ pit_cont0 = 0
 
 # 定义一个回调函数
 ticker_flag_2ms = False
-ticker_flag_3ms = False
+ticker_flag_1ms = False
 ticker_flag_4ms = False
 ticker_flag_5ms = False
 ticker_flag_8ms = False
@@ -93,13 +96,13 @@ pit0.capture_list(ccd,imu,key,encoder_l,encoder_r)
 pit0.callback(time_pit_pid_handler)
 pit0.start(1)
 
-def time_pit_3ms_handler(time):
-    global ticker_flag_3ms
-    ticker_flag_3ms = True
+def time_pit_1ms_handler(time):
+    global ticker_flag_1ms
+    ticker_flag_1ms = True
 pit1 = ticker(1)
 pit1.capture_list(imu, key)
-pit1.callback(time_pit_3ms_handler)
-pit1.start(3)
+pit1.callback(time_pit_1ms_handler)
+pit1.start(1) # 之前为3，现在改为1
 
 
 def time_pit_5ms_handler(time):
@@ -256,7 +259,7 @@ q1 = q2 = q3 = 0.0
 I_ex = I_ey = I_ez = 0.0
 imu_kp = 1.5       # 比例增益（调整滤波响应速度）
 imu_ki = 0.0005    # 积分增益（调整积分速度）
-delta_T = 0.003    # 采样周期（与3ms中断对应）
+delta_T = 0.001    # 采样周期（与1ms中断对应）
 current_pitch = 0  # 当前俯仰角
 current_roll = 0   # 当前横滚角
 current_yaw = 0    # 当前偏航角
@@ -334,6 +337,33 @@ def kalman_filter_gyro(kfp, input):
     kfp['Output'] += kfp['G'] * (input - kfp['Output'])
     kfp['P'] *= (1 - kfp['G'])
     return kfp['Output']
+
+# 零飘定义
+gyrooffsetx = 0
+gyrooffsety = 0
+gyrooffsetz = 0
+accoffsetx = 0
+accoffsety = 0
+accoffsetz = 0
+OFFSETNUM = 1000
+
+def imuoffsetinit():
+    for _ in range(OFFSETNUM):
+        imu.get()
+        gyrooffsetx += imu_data[0]
+        gyrooffsety += imu_data[1]
+        gyrooffsetz += imu_data[2]
+        accoffsetx += imu_data[3]
+        accoffsety += imu_data[4]
+        accoffsetz += imu_data[5]
+    gyrooffsetx /= OFFSETNUM
+    gyrooffsety /= OFFSETNUM
+    gyrooffsetz /= OFFSETNUM
+    accoffsetx /= OFFSETNUM
+    accoffsety /= OFFSETNUM
+    accoffsetz /= OFFSETNUM
+    return gyrooffsetx, gyrooffsety, gyrooffsetz, accoffsetx, accoffsety, accoffsetz
+
 
 # 偏差计算
 def get_offset(mid_point):
@@ -619,7 +649,7 @@ def menu():
 
 
 def main_menu():  # 一级菜单
-    global main_point_item, main_menu_flag, car_go_flag, speed_flag, element_flag, angle_pd_flag, speed_pi_flag, gyro_pi_flag, ccd_image_flag, screen_off_flag, save_para_flag
+    global main_point_item, main_menu_flag, car_go_flag, speed_flag, element_flag, angle_pd_flag, speed_pi_flag, gyro_pi_flag, ccd_image_flag, screen_off_flag, save_para_flag, parameter_flag
     lcd.str24(60, 0, "main_menu", 0x07E0)
     lcd.str16(16, 30, "car_go", 0xFFFF)
     lcd.str16(16, 46, "speed", 0xFFFF)
@@ -700,7 +730,7 @@ def main_menu():  # 一级菜单
 
 
 def sec_menu_01():
-    global aim_speed, speed_flag, main_menu_flag
+    global aim_speed, speed_flag, main_menu_flag, car_go_flag
     lcd.str24(60, 0, "car_go", 0x07E0)
     lcd.str16(16, 30, "return", 0xFFFF)
     lcd.str16(16, 46, "It's mygo", 0xFFFF)
@@ -985,7 +1015,7 @@ def sec_menu_07():
 
 
 def sec_menu_08():
-    global main_point_item, parameter_flag, error1, error2
+    global main_point_item, parameter_flag,main_menu_flag, error1, error2
     global Mid_point1, Mid_point2, tof_data, out_l, out_r, encl_data, encr_data
     global left_point_1, right_point_1, left_point_2, right_point_2
     lcd.str24(60, 0, "parameter", 0x07E0)  # 二级菜单标题
@@ -1030,6 +1060,7 @@ def sec_menu_09():
 
 
 def sec_menu_10():
+    global main_menu_item
     write_flash()  # 写入缓冲区
 
     buzzer.value(1)  # 蜂鸣器开
@@ -1078,9 +1109,38 @@ def write_flash():
     user_file.close()
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+imuoffsetinit()   # 零飘校准
 while True:
     motor_l.duty(gyro_pid.out - dir_in.out)
     motor_r.duty(gyro_pid.out + dir_in.out)
+
+    ccd_data1 = ccd.get(0)           # 读取ccd1的数据
+    ccd_data2 = ccd.get(1)           # 读取ccd2的数据
+
+    # 计算动态阈值
+    threshold1 = ccd_get_threshold(ccd_data1)
+    threshold2 = ccd_get_threshold(ccd_data2)
+
+    # 对ccd数据二值化处理
+    image_value1 = ccd_image_value(ccd_data1, threshold1)
+    image_value2 = ccd_image_value(ccd_data2, threshold2)
+
+    # ccd滤波
+    ccd_filter(1), ccd_filter(2)
+
+    # 数组会存储最近十次的中线位置，并保证更新
+    # 这个mid_line_long 的计算方法是，目前中线占10%权重，历史中线占90%权重，最后+n补充，目前n=0
+    # 看看之后加不加    (●'◡'●)
+    # 进行中点计算
+    Mid_point1 = get_ccd1_mid_point(image_value1)
+    Mid_point2 = get_ccd2_mid_point(image_value2)
+
+    # 进行偏差计算
+    error1 = get_offset(Mid_point1)
+    error2 = get_offset(Mid_point2)
+
+    # 元素识别
+    # search_element()
 
     # 拨码开关关中断
     if end_switch.value() == 0:
@@ -1089,53 +1149,32 @@ while True:
         pit3.stop()    # pit3关闭
         break          # 跳出判断
 
-    # 3ms中断标志位
-    if (ticker_flag_3ms):
-        # menu()                           # 菜单显示
-
-        ccd_data1 = ccd.get(0)           # 读取ccd1的数据
-        ccd_data2 = ccd.get(1)           # 读取ccd2的数据
+    # 1ms中断标志位
+    if (ticker_flag_1ms):
         imu_data = imu.get()             # 读取陀螺仪的数据
-
-        # 计算动态阈值
-        threshold1 = ccd_get_threshold(ccd_data1)
-        threshold2 = ccd_get_threshold(ccd_data2)
-
-        # 对ccd数据二值化处理
-        image_value1 = ccd_image_value(ccd_data1, threshold1)
-        image_value2 = ccd_image_value(ccd_data2, threshold2)
-
-        # ccd滤波
-        ccd_filter(1), ccd_filter(2)
-
-        # 数组会存储最近十次的中线位置，并保证更新
-        # 这个mid_line_long 的计算方法是，目前中线占10%权重，历史中线占90%权重，最后+n补充，目前n=0
-        # 看看之后加不加    (●'◡'●)
-        # 进行中点计算
-        Mid_point1 = get_ccd1_mid_point(image_value1)
-        Mid_point2 = get_ccd2_mid_point(image_value2)
-
-        # 进行偏差计算
-        error1 = get_offset(Mid_point1)
-        error2 = get_offset(Mid_point2)
-
-        # 元素识别
-        # search_element()
-        # 读取IMU数据（假设imu_data包含[ax, ay, az, gx, gy, gz]）
-        imu_data = imu.get()  
+        # 采样周期（与3ms中断对应）
+        # delta_T = 0.003
+        # 卡尔曼滤波
+        kalman_filter_gyro(kfp_var_gyro, imu_data[0])
+        kalman_filter_gyro(kfp_var_gyro, imu_data[1])
+        kalman_filter_gyro(kfp_var_gyro, imu_data[2])
+        # 单位转换
+        imu_data[0] /= ACC_SPL
+        imu_data[1] /= ACC_SPL
+        imu_data[2] /= ACC_SPL
+        imu_data[3] /= GYRO_SPL
+        imu_data[4] /= GYRO_SPL
+        imu_data[5] /= GYRO_SPL
         ax = imu_data[0]
         ay = imu_data[1]
         az = imu_data[2]
         gx = imu_data[3]  # 陀螺仪X轴（可能需要根据坐标系调整）
         gy = imu_data[4]  # 陀螺仪Y轴
         gz = imu_data[5]  # 陀螺仪Z轴
-        # 采样周期（与3ms中断对应）
-        # delta_T = 0.003
-        # 执行四元数更新
         quaternion_update(ax, ay, az, gx, gy, gz)
 
         gc.collect()
-        ticker_flag_3ms = False
+        ticker_flag_1ms = False
 
  
     if (ticker_flag_5ms):
@@ -1147,11 +1186,12 @@ while True:
 
     
     if (ticker_flag_2ms):
-        kalman_filter_gyro(kfp_var_gyro, imu_data[4])
+
         gyro_pid.pid_standard_integral(angle_pid.out, imu_data[4])
         ticker_flag_2ms = False
 
     if (ticker_flag_10ms):
+        # menu()                           # 菜单显示
         encl_data = encoder_l.get()     # 读取左编码器的数据
         encr_data = encoder_r.get()     # 读取右编码器的数据
         key_data = key.get()            # 读取按键的数据
