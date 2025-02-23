@@ -109,8 +109,10 @@ if (ticker_flag_3ms):
 class QuaternionFilter:
     def __init__(self, kp=1.5, ki=0.0005, dt=0.003):
         # 四元数状态
-        self.q = [1.0, 0.0, 0.0, 0.0]  # q0, q1, q2, q3
-        
+        self.q0 = 1.0
+        self.q1 = 0.0
+        self.q2 = 0.0
+        self.q3 = 0.0
         # 滤波器参数
         self.kp = kp      # 比例增益
         self.ki = ki      # 积分增益
@@ -144,7 +146,6 @@ class QuaternionFilter:
         az /= norm
 
         # ---- 预测重力方向 ----
-        q0, q1, q2, q3 = self.q
         vx = 2 * (q1*q3 - q0*q2)
         vy = 2 * (q0*q1 + q2*q3)
         vz = q0**2 - q1**2 - q2**2 + q3**2
@@ -171,23 +172,41 @@ class QuaternionFilter:
         q2_temp = ( q0*gy - q1*gz + q3*gx) * half_dt
         q3_temp = ( q0*gz + q1*gy - q2*gx) * half_dt
         
-        self.q = [
-            q0 + q0_temp,
-            q1 + q1_temp,
-            q2 + q2_temp,
-            q3 + q3_temp
-        ]
+        # 更新四元数
+        self.q0 += q0_temp
+        self.q1 += q1_temp
+        self.q2 += q2_temp
+        self.q3 += q3_temp
 
         # 归一化
-        norm = math.sqrt(sum(x**2 for x in self.q))
-        self.q = [x/norm for x in self.q]
+        norm = math.sqrt(q0**2 + q1**2 + q2**2 + q3**2)
+        self.q0 /= norm
+        self.q1 /= norm
+        self.q2 /= norm
+        self.q3 /= norm
 
         # ---- 计算欧拉角 ----
-        q0, q1, q2, q3 = self.q
         self.pitch = math.degrees(math.asin(2*(q0*q2 - q1*q3)))
         self.roll = math.degrees(math.atan2(2*(q0*q1 + q2*q3), 1 - 2*(q1**2 + q2**2)))
         self.yaw = math.degrees(math.atan2(2*(q0*q3 + q1*q2), 1 - 2*(q2**2 + q3**2)))
 
-    def get_euler(self):
-        """ 获取欧拉角 (degrees) """
-        return self.pitch, self.roll, self.yaw
+    # def get_euler(self):
+    #     """ 获取欧拉角 (degrees) """
+    #     return self.pitch, self.roll, self.yaw
+
+# 、、、、、、、、、、、实例
+# 初始化
+imu_filter = QuaternionFilter(kp=1.5, ki=0.0005, dt=0.003)
+
+# 在数据采集循环中
+while True:
+    # 读取传感器数据（示例值）
+    accel = [0.1, 0.2, 0.98]    # 单位g
+    gyro = [0.5, -1.2, 0.3]     # 单位deg/s
+    
+    # 更新滤波器
+    imu_filter.update(accel, gyro)
+    
+    # 获取当前姿态
+    pitch, roll, yaw = imu_filter.get_euler()
+    print(f"Pitch: {pitch:.2f}°, Roll: {roll:.2f}°, Yaw: {yaw:.2f}°")
