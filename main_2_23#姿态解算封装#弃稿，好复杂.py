@@ -47,8 +47,8 @@ lcd.color(0xFFFF, 0x0000)
 lcd.mode(2)
 lcd.clear(0x0000)
 
-# 实例化 IMU660RA 模块
-imu = IMU660RA()
+# 实例化 IMU963RA 模块
+imu = IMU963RA()
 
 # 核心板上的LED
 led1 = Pin('C4', Pin.OUT, pull=Pin.PULL_UP_47K, value=True)
@@ -252,6 +252,15 @@ dir_out = dir_out_ring(kp = 10.0, kd = 0.6)
 
 class QuaternionFilter:
     def __init__(self, kp=1.5, ki=0.0005, dt=0.003):
+        global imu_data
+        # 定义陀螺仪卡尔曼滤波器参数
+        self.kfp_var_gyro = {
+            'P': 1,
+            'G': 0.0,
+            'Q': 0.001,  # 过程噪声（调整滤波响应速度）
+            'R': 0.5,    # 测量噪声（调整对原始数据的信任度）
+            'Output': 0
+        }
         # 四元数状态
         self.q0 = 1.0
         self.q1 = 0.0
@@ -334,6 +343,17 @@ class QuaternionFilter:
         self.roll = math.degrees(math.atan2(2*(self.q0*self.q1 + self.q2*self.q3), 1 - 2*(self.q1**2 + self.q2**2)))
         self.yaw = math.degrees(math.atan2(2*(self.q0*self.q3 + self.q1*self.q2), 1 - 2*(self.q2**2 + self.q3**2)))
 
+    def filter(self, gyro):
+        """ 陀螺仪卡尔曼滤波 """
+         self.kalman_filter_gyro(self.kfp_var_gyro, gyro[3])
+
+    def kalman_filter_gyro(kfp, input):
+        kfp['P'] += kfp['Q']
+        kfp['G'] = kfp['P'] / (kfp['P'] + kfp['R'])
+        kfp['Output'] += kfp['G'] * (input - kfp['Output'])
+        kfp['P'] *= (1 - kfp['G'])
+        return kfp['Output']
+
     # def get_euler(self):
     #     """ 获取欧拉角 (degrees) """
     #     return self.pitch, self.roll, self.yaw
@@ -341,21 +361,9 @@ class QuaternionFilter:
 #实例化QuaternionFilter
 imu_filter = QuaternionFilter(kp=1.5, ki=0.0005, dt=0.003)
 
-# 定义陀螺仪卡尔曼滤波器参数
-kfp_var_gyro = {
-    'P': 1,
-    'G': 0.0,
-    'Q': 0.001,  # 过程噪声（调整滤波响应速度）
-    'R': 0.5,    # 测量噪声（调整对原始数据的信任度）
-    'Output': 0
-}
 
-def kalman_filter_gyro(kfp, input):
-    kfp['P'] += kfp['Q']
-    kfp['G'] = kfp['P'] / (kfp['P'] + kfp['R'])
-    kfp['Output'] += kfp['G'] * (input - kfp['Output'])
-    kfp['P'] *= (1 - kfp['G'])
-    return kfp['Output']
+
+
 
 # 偏差计算
 def get_offset(mid_point):
