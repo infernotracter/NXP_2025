@@ -153,7 +153,6 @@ MedAngle = 0
 n = 0  # 元素判断用
 m = 0
 error_k = 1  # 直接传error2后的比例
-current_pitch = 0  # 当前俯仰角
 
 def my_limit(value, minn, maxn):
     if value < minn:
@@ -251,19 +250,74 @@ class dir_in_ring:
 dir_in = dir_in_ring(kp = 10.0, ki = 0.6)
 dir_out = dir_out_ring(kp = 10.0, kd = 0.6)
 
-# 加速度计计算俯仰角（单位：弧度）
-def calculate_pitch(ax, ay, az, gy, dt, prev_pitch, alpha=0.98):
-    pitch_acc = math.atan2(ax, math.sqrt(ay**2 + az**2))  # 使用 ax 和 ay/az 的组合
+# 四元数姿态解算相关变量
+q0 = 1.0
+q1 = q2 = q3 = 0.0
+I_ex = I_ey = I_ez = 0.0
+imu_kp = 1.5       # 比例增益（调整滤波响应速度）
+imu_ki = 0.0005    # 积分增益（调整积分速度）
+delta_T = 0.003    # 采样周期（与3ms中断对应）
+current_pitch = 0  # 当前俯仰角
+current_roll = 0   # 当前横滚角
+current_yaw = 0    # 当前偏航角
+
+# 姿态角度计算函数
+def quaternion_update(ax, ay, az, gx, gy, gz):
+    global q0, q1, q2, q3, I_ex, I_ey, I_ez, current_pitch, current_roll, current_yaw
     
-    # 转换为角度（可选）
-    pitch_acc_deg = math.degrees(pitch_acc)
-    
-    # 陀螺仪积分计算角度变化
-    pitch_gyro = prev_pitch + gy * dt  # gy 是绕Y轴的角速度（单位：度/秒）
-    
-    # 互补滤波融合
-    pitch = alpha * pitch_gyro + (1 - alpha) * pitch_acc_deg
-    return pitch
+    # 归一化加速度计数据
+    norm = math.sqrt(ax**2 + ay**2 + az**2)
+    if norm == 0:
+        return
+    ax /= norm
+    ay /= norm
+    az /= norm
+
+    # 计算预测的重力方向
+    vx = 2 * (q1*q3 - q0*q2)
+    vy = 2 * (q0*q1 + q2*q3)
+    vz = q0*q0 - q1*q1 - q2*q2 + q3*q3
+
+    # 计算误差（叉积）
+    ex = (ay * vz - az * vy)
+    ey = (az * vx - ax * vz)
+    ez = (ax * vy - ay * vx)
+
+    # 误差积分
+    I_ex += ex * imu_ki
+    I_ey += ey * imu_ki
+    I_ez += ez * imu_ki
+
+    # 调整陀螺仪数据（弧度制）
+    gx = math.radians(gx) + imu_kp * ex + I_ex
+    gy = math.radians(gy) + imu_kp * ey + I_ey
+    gz = math.radians(gz) + imu_kp * ez + I_ez
+
+    # 四元数积分（一阶龙格库塔法）
+    half_T = 0.5 * delta_T
+    q0_temp = (-q1*gx - q2*gy - q3*gz) * half_T
+    q1_temp = ( q0*gx + q2*gz - q3*gy) * half_T
+    q2_temp = ( q0*gy - q1*gz + q3*gx) * half_T
+    q3_temp = ( q0*gz + q1*gy - q2*gx) * half_T
+
+    # 更新四元数
+    q0 += q0_temp
+    q1 += q1_temp
+    q2 += q2_temp
+    q3 += q3_temp
+
+    # 四元数归一化
+    norm = math.sqrt(q0**2 + q1**2 + q2**2 + q3**2)
+    q0 /= norm
+    q1 /= norm
+    q2 /= norm
+    q3 /= norm
+
+    # 计算欧拉角
+    current_pitch = math.degrees(math.asin(2 * (q0*q2 - q1*q3)))
+    current_roll = math.degrees(math.atan2(2*(q0*q1 + q2*q3), 1 - 2*(q1**2 + q2**2)))
+    current_yaw = math.degrees(math.atan2(2*(q0*q3 + q1*q2), 1 - 2*(q2**2 + q3**2)))
+
 
 # 定义陀螺仪卡尔曼滤波器参数
 kfp_var_gyro = {
@@ -1067,20 +1121,19 @@ while True:
 
         # 元素识别
         # search_element()
-
-        # 读取IMU数据（假设 imu_data 包含 [ax, ay, az, gx, gy, gz]）
+        # 读取IMU数据（假设imu_data包含[ax, ay, az, gx, gy, gz]）
+        imu_data = imu.get()  
         ax = imu_data[0]
         ay = imu_data[1]
         az = imu_data[2]
-        gy = imu_data[4]  # Y轴角速度
-        
-        # 计算时间间隔（假设3ms中断）
-        dt = 0.003
-        
-        # 计算俯仰角
-        current_pitch = calculate_pitch(ax, ay, az, gy, dt, prev_pitch)
-        prev_pitch = current_pitch  # 更新历史值
-        
+        gx = imu_data[3]  # 陀螺仪X轴（可能需要根据坐标系调整）
+        gy = imu_data[4]  # 陀螺仪Y轴
+        gz = imu_data[5]  # 陀螺仪Z轴
+        # 采样周期（与3ms中断对应）
+        # delta_T = 0.003
+        # 执行四元数更新
+        quaternion_update(ax, ay, az, gx, gy, gz)
+
         gc.collect()
         ticker_flag_3ms = False
 
