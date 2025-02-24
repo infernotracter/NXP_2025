@@ -4,7 +4,7 @@ from matplotlib.animation import FuncAnimation
 from collections import deque
 
 # 配置串口参数
-SERIAL_PORT = 'COM7'  # 根据实际情况修改
+SERIAL_PORT = 'COM9'  # 根据实际情况修改
 BAUD_RATE = 115200
 PLOT_RANGE = 10000
 # 初始化数据存储
