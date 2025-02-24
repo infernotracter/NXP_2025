@@ -66,21 +66,12 @@ pit1.start(1)
 # 或者像本示例一样 使用一个 IO 控制停止 Ticker 后再使用 Stop/Restart backend 按钮
 # V1.1.2 以上版本则可以直接通过 Stop/Restart backend 按钮停止 Ticker
 
-# 定义陀螺仪卡尔曼滤波器参数
-kfp_var_gyro = {
-    'P': 1,
-    'G': 0.0,
-    'Q': 0.001,  # 过程噪声（调整滤波响应速度）
-    'R': 0.5,    # 测量噪声（调整对原始数据的信任度）
-    'Output': 0
-}
 
-def kalman_filter_gyro(kfp, input):
-    kfp['P'] += kfp['Q']
-    kfp['G'] = kfp['P'] / (kfp['P'] + kfp['R'])
-    kfp['Output'] += kfp['G'] * (input - kfp['Output'])
-    kfp['P'] *= (1 - kfp['G'])
-    return kfp['Output']
+def my_limit(value, minn, maxn):
+    if value < minn:
+        value = minn
+    if value > maxn:
+        value = maxn
 
 # 四元数姿态解算相关变量
 q0 = 1.0
@@ -119,6 +110,11 @@ def quaternion_update(ax, ay, az, gx, gy, gz):
     I_ex += ex * imu_ki
     I_ey += ey * imu_ki
     I_ez += ez * imu_ki
+
+    # 限幅
+    my_limit(I_ex, -100, 100)
+    my_limit(I_ey, -100, 100)
+    my_limit(I_ez, -100, 100)
 
     # 调整陀螺仪数据（弧度制）
     gx = math.radians(gx) + imu_kp * ex + I_ex
@@ -198,11 +194,11 @@ while True:
         # 低通滤波处理（加速度计）
         alpha = 0.2
         for i in range(3):
-            imu_data[i] = (imu_data[i] - [accoffsetx, accoffsety, accoffsetz][i]) / ACC_SPL * alpha + imu_data[i] * (1 - alpha)
+            imu_data[i] = (imu_data[i] - [accoffsetx, accoffsety, accoffsetz][i] / ACC_SPL) * alpha + imu_data[i] * (1 - alpha)
         
         # 陀螺仪单位转换（减去偏移后除以灵敏度）
         for i in range(3, 6):
-            imu_data[i] = (imu_data[i] - [gyrooffsetx, gyrooffsety, gyrooffsetz][i-3]) / GYRO_SPL
+            imu_data[i] = math.radians((imu_data[i] - [gyrooffsetx, gyrooffsety, gyrooffsetz][i-3]) / GYRO_SPL)
         
         # 四元数更新（使用解包后的变量）
         ax, ay, az = imu_data[0], imu_data[1], imu_data[2]
