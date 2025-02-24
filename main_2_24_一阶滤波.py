@@ -100,29 +100,12 @@ while True:
         
         # 低通滤波处理（加速度计）
         alpha = 0.2 # 0.35
-<<<<<<< HEAD
-        imu.accX = (imu_data[0] - accoffsetx) / ACC_SPL * alpha + imu.accX * (1 - alpha)
-        imu.accY = (imu_data[1] - accoffsety) / ACC_SPL * alpha + imu.accY * (1 - alpha)
-        imu.accZ = (imu_data[2] - accoffsetz) / ACC_SPL * alpha + imu.accZ * (1 - alpha)
-        imu.gyroX = radians((imu_data[3] - gyrooffsetx) / GYRO_SPL)
-        imu.gyroY = radians((imu_data[4] - gyrooffsety) / GYRO_SPL)
-        imu.gyroZ = radians((imu_data[5] - gyrooffsetz) / GYRO_SPL)
-        # ax = imu.accX
-        # ay = imu.accY
-        # az = imu.accZ
-        # gx = imu.gyroX  # 陀螺仪X轴（可能需要根据坐标系调整）
-        # gy = imu.gyroY  # 陀螺仪Y轴
-        # gz = imu.gyroZ  # 陀螺仪Z轴
-        # quaternion_update(ax, ay, az, gx, gy, gz)
-        # 输出单行数据，格式：acc_x,acc_y,acc_z,gyro_x,gyro_y,gyro_z,mag_x,mag_y,mag_z
-=======
         for i in range(3):
-            imu_data[i] = (imu_data[i] - [accoffsetx, accoffsety, accoffsetz][i] / ACC_SPL) * alpha + imu_data[i] * (1 - alpha)
+            imu_data[i] = (imu_data[i] - [accoffsetx, accoffsety, accoffsetz][i]) / ACC_SPL * alpha + imu_data[i] * (1 - alpha)
         
         # 陀螺仪单位转换（减去偏移后除以灵敏度）
         for i in range(3, 6):
             imu_data[i] = math.radians((imu_data[i] - [gyrooffsetx, gyrooffsety, gyrooffsetz][i-3]) / GYRO_SPL)
->>>>>>> 4bd7b1b10499b8561840faba53e562034cbc30c1
         print(f"{imu_data[0]},{imu_data[1]},{imu_data[2]},{imu_data[3]},{imu_data[4]},{imu_data[5]},{imu_data[6]},{imu_data[7]},{imu_data[8]}")
         ticker_flag = False
     if end_switch.value() != end_state:
