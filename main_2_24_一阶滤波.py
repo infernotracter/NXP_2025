@@ -162,12 +162,12 @@ OFFSETNUM = 1000
 def imuoffsetinit():
     for _ in range(OFFSETNUM):
         imu.get()
-        gyrooffsetx += imu_data[0]
-        gyrooffsety += imu_data[1]
-        gyrooffsetz += imu_data[2]
-        accoffsetx += imu_data[3]
-        accoffsety += imu_data[4]
-        accoffsetz += imu_data[5]
+        accoffsetx += imu_data[0]
+        accoffsety += imu_data[1]
+        accoffsetz += imu_data[2]
+        gyrooffsetx += imu_data[3]
+        gyrooffsety += imu_data[4]
+        gryooffsetz += imu_data[5]
     gyrooffsetx /= OFFSETNUM
     gyrooffsety /= OFFSETNUM
     gyrooffsetz /= OFFSETNUM
@@ -183,18 +183,18 @@ while True:
         # 通过 get 接口读取数据
         imu_data = imu.get()
         alpha = 0.2 # 0.35
-        imu_data[0] = (imu_data[0] - accoffsetx) / ACC_SPL * alpha + imu_data[0] * (1 - alpha)
-        imu_data[1] = (imu_data[1] - accoffsety) / ACC_SPL * alpha + imu_data[1] * (1 - alpha)
-        imu_data[2] = (imu_data[2] - accoffsetz) / ACC_SPL * alpha + imu_data[2] * (1 - alpha)
-        imu_data[3] = (imu_data[3] - gyrooffsetx) / GYRO_SPL
-        imu_data[4] = (imu_data[4] - gyrooffsety) / GYRO_SPL
-        imu_data[5] = (imu_data[5] - gyrooffsetz) / GYRO_SPL
-        # ax = imu_data[0]
-        # ay = imu_data[1]
-        # az = imu_data[2]
-        # gx = imu_data[3]  # 陀螺仪X轴（可能需要根据坐标系调整）
-        # gy = imu_data[4]  # 陀螺仪Y轴
-        # gz = imu_data[5]  # 陀螺仪Z轴
+        imu.accX = (imu_data[0] - accoffsetx) / ACC_SPL * alpha + imu.accX * (1 - alpha)
+        imu.accY = (imu_data[1] - accoffsety) / ACC_SPL * alpha + imu.accY * (1 - alpha)
+        imu.accZ = (imu_data[2] - accoffsetz) / ACC_SPL * alpha + imu.accZ * (1 - alpha)
+        imu.gyroX = radians((imu_data[3] - gyrooffsetx) / GYRO_SPL)
+        imu.gyroY = radians((imu_data[4] - gyrooffsety) / GYRO_SPL)
+        imu.gyroZ = radians((imu_data[5] - gyrooffsetz) / GYRO_SPL)
+        # ax = imu.accX
+        # ay = imu.accY
+        # az = imu.accZ
+        # gx = imu.gyroX  # 陀螺仪X轴（可能需要根据坐标系调整）
+        # gy = imu.gyroY  # 陀螺仪Y轴
+        # gz = imu.gyroZ  # 陀螺仪Z轴
         # quaternion_update(ax, ay, az, gx, gy, gz)
         # 输出单行数据，格式：acc_x,acc_y,acc_z,gyro_x,gyro_y,gyro_z,mag_x,mag_y,mag_z
         print(f"{imu_data[0]},{imu_data[1]},{imu_data[2]},{imu_data[3]},{imu_data[4]},{imu_data[5]},{imu_data[6]},{imu_data[7]},{imu_data[8]}")

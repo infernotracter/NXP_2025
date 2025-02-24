@@ -7,6 +7,7 @@
     <list default="true" id="471d0767-923c-4465-84cd-e0b4f4d3f92e" name="更改" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.name" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.name" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main_2_24_一阶滤波.py" beforeDir="false" afterPath="$PROJECT_DIR$/main_2_24_一阶滤波.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -63,6 +64,7 @@
       <workItem from="1739420319658" duration="55000" />
       <workItem from="1740316280934" duration="2062000" />
       <workItem from="1740381285591" duration="7000" />
+      <workItem from="1740382595909" duration="5129000" />
     </task>
     <servers />
   </component>
