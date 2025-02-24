@@ -160,14 +160,15 @@ accoffsetz = 0
 OFFSETNUM = 1000
 
 def imuoffsetinit():
+    global accoffsetx,accoffsety,accoffsetz,gyrooffsetx,gyrooffsety,gyrooffsetz,OFFSETNUM
     for _ in range(OFFSETNUM):
         imu.get()
-        gyrooffsetx += imu_data[0]
-        gyrooffsety += imu_data[1]
-        gyrooffsetz += imu_data[2]
-        accoffsetx += imu_data[3]
-        accoffsety += imu_data[4]
-        accoffsetz += imu_data[5]
+        accoffsetx += imu_data[0]
+        accoffsety += imu_data[1]
+        accoffsetz += imu_data[2]
+        gyrooffsetx += imu_data[3]
+        gyrooffsety += imu_data[4]
+        gyrooffsetz += imu_data[5]
     gyrooffsetx /= OFFSETNUM
     gyrooffsety /= OFFSETNUM
     gyrooffsetz /= OFFSETNUM

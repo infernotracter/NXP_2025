@@ -77,6 +77,7 @@ accoffsetz = 0
 OFFSETNUM = 1000
 
 def imuoffsetinit():
+    global accoffsetx,accoffsety,accoffsetz,gyrooffsetx,gyrooffsety,gyrooffsetz,OFFSETNUM
     for _ in range(OFFSETNUM):
         imu.get()
         accoffsetx += imu_data[0]
@@ -84,7 +85,7 @@ def imuoffsetinit():
         accoffsetz += imu_data[2]
         gyrooffsetx += imu_data[3]
         gyrooffsety += imu_data[4]
-        gryooffsetz += imu_data[5]
+        gyrooffsetz += imu_data[5]
     gyrooffsetx /= OFFSETNUM
     gyrooffsety /= OFFSETNUM
     gyrooffsetz /= OFFSETNUM
@@ -93,6 +94,7 @@ def imuoffsetinit():
     accoffsetz /= OFFSETNUM
     return gyrooffsetx, gyrooffsety, gyrooffsetz, accoffsetx, accoffsety, accoffsetz
 # 辅助滤波
+imuoffsetinit()
 last_imu_data = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 tmp_imu_data = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 while True:
@@ -101,7 +103,7 @@ while True:
         imu_data = [float(x) for x in imu.get()]
         
         # 低通滤波处理（加速度计）
-        alpha = 0.8 # 0.65
+        alpha = 0.2 # 0.65
         for i in range(3):
             tmp_imu_data[i] = imu_data[i]
             imu_data[i] = (imu_data[i] - [accoffsetx, accoffsety, accoffsetz][i]) / ACC_SPL * alpha + last_imu_data[i] * (1 - alpha)
@@ -117,6 +119,3 @@ while True:
         print("Ticker stop.")
         break
     gc.collect()
-
-
-
