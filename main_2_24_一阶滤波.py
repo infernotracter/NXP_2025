@@ -92,16 +92,20 @@ def imuoffsetinit():
     accoffsety /= OFFSETNUM
     accoffsetz /= OFFSETNUM
     return gyrooffsetx, gyrooffsety, gyrooffsetz, accoffsetx, accoffsety, accoffsetz
-
+# 辅助滤波
+last_imu_data = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+tmp_imu_data = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 while True:
     if (ticker_flag and ticker_count % 1 == 0):
         # 获取数据并强制转换为浮点数列表
         imu_data = [float(x) for x in imu.get()]
         
         # 低通滤波处理（加速度计）
-        alpha = 0.2 # 0.35
+        alpha = 0.8 # 0.65
         for i in range(3):
-            imu_data[i] = (imu_data[i] - [accoffsetx, accoffsety, accoffsetz][i]) / ACC_SPL * alpha + imu_data[i] * (1 - alpha)
+            tmp_imu_data[i] = imu_data[i]
+            imu_data[i] = (imu_data[i] - [accoffsetx, accoffsety, accoffsetz][i]) / ACC_SPL * alpha + last_imu_data[i] * (1 - alpha)
+            last_imu_data[i] = tmp_imu_data[i]
         
         # 陀螺仪单位转换（减去偏移后除以灵敏度）
         for i in range(3, 6):
