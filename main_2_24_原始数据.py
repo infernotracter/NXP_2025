@@ -26,7 +26,7 @@ from seekfree import IMU963RA
 
 # 包含 gc 类
 import gc
-import math
+
 # 开发板上的 C19 是拨码开关
 end_switch = Pin('C19', Pin.IN, pull=Pin.PULL_UP_47K, value = True)
 end_state = end_switch.value()
@@ -35,10 +35,6 @@ end_state = end_switch.value()
 # 参数是采集周期 调用多少次 capture 更新一次数据
 # 可以不填 默认参数为 1 调整这个参数相当于调整采集分频
 imu = IMU963RA()
-
-# 单位换算用
-ACC_SPL = 4096.0
-GYRO_SPL = 16.4
 
 ticker_flag = False
 ticker_count = 0
@@ -66,63 +62,13 @@ pit1.start(1)
 # 或者像本示例一样 使用一个 IO 控制停止 Ticker 后再使用 Stop/Restart backend 按钮
 # V1.1.2 以上版本则可以直接通过 Stop/Restart backend 按钮停止 Ticker
 
-
-# 零飘定义
-gyrooffsetx = 0
-gyrooffsety = 0
-gyrooffsetz = 0
-accoffsetx = 0
-accoffsety = 0
-accoffsetz = 0
-OFFSETNUM = 1000
-
-def imuoffsetinit():
-    for _ in range(OFFSETNUM):
-        imu.get()
-        accoffsetx += imu_data[0]
-        accoffsety += imu_data[1]
-        accoffsetz += imu_data[2]
-        gyrooffsetx += imu_data[3]
-        gyrooffsety += imu_data[4]
-        gryooffsetz += imu_data[5]
-    gyrooffsetx /= OFFSETNUM
-    gyrooffsety /= OFFSETNUM
-    gyrooffsetz /= OFFSETNUM
-    accoffsetx /= OFFSETNUM
-    accoffsety /= OFFSETNUM
-    accoffsetz /= OFFSETNUM
-    return gyrooffsetx, gyrooffsety, gyrooffsetz, accoffsetx, accoffsety, accoffsetz
-
 while True:
     if (ticker_flag and ticker_count % 1 == 0):
-        # 获取数据并强制转换为浮点数列表
-        imu_data = [float(x) for x in imu.get()]
-        
-        # 低通滤波处理（加速度计）
-        alpha = 0.2 # 0.35
-<<<<<<< HEAD
-        imu.accX = (imu_data[0] - accoffsetx) / ACC_SPL * alpha + imu.accX * (1 - alpha)
-        imu.accY = (imu_data[1] - accoffsety) / ACC_SPL * alpha + imu.accY * (1 - alpha)
-        imu.accZ = (imu_data[2] - accoffsetz) / ACC_SPL * alpha + imu.accZ * (1 - alpha)
-        imu.gyroX = radians((imu_data[3] - gyrooffsetx) / GYRO_SPL)
-        imu.gyroY = radians((imu_data[4] - gyrooffsety) / GYRO_SPL)
-        imu.gyroZ = radians((imu_data[5] - gyrooffsetz) / GYRO_SPL)
-        # ax = imu.accX
-        # ay = imu.accY
-        # az = imu.accZ
-        # gx = imu.gyroX  # 陀螺仪X轴（可能需要根据坐标系调整）
-        # gy = imu.gyroY  # 陀螺仪Y轴
-        # gz = imu.gyroZ  # 陀螺仪Z轴
-        # quaternion_update(ax, ay, az, gx, gy, gz)
+        # 通过 capture 接口更新数据 但在这个例程中被 ticker 模块接管了
+        # imu.capture()
+        # 通过 get 接口读取数据
+        imu_data = imu.get()
         # 输出单行数据，格式：acc_x,acc_y,acc_z,gyro_x,gyro_y,gyro_z,mag_x,mag_y,mag_z
-=======
-        for i in range(3):
-            imu_data[i] = (imu_data[i] - [accoffsetx, accoffsety, accoffsetz][i] / ACC_SPL) * alpha + imu_data[i] * (1 - alpha)
-        
-        # 陀螺仪单位转换（减去偏移后除以灵敏度）
-        for i in range(3, 6):
-            imu_data[i] = math.radians((imu_data[i] - [gyrooffsetx, gyrooffsety, gyrooffsetz][i-3]) / GYRO_SPL)
->>>>>>> 4bd7b1b10499b8561840faba53e562034cbc30c1
         print(f"{imu_data[0]},{imu_data[1]},{imu_data[2]},{imu_data[3]},{imu_data[4]},{imu_data[5]},{imu_data[6]},{imu_data[7]},{imu_data[8]}")
         ticker_flag = False
     if end_switch.value() != end_state:
@@ -130,6 +76,5 @@ while True:
         print("Ticker stop.")
         break
     gc.collect()
-
 
 
