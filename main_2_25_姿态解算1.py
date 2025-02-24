@@ -193,16 +193,17 @@ while True:
         
         # 低通滤波处理（加速度计）
         alpha = 0.2
-        for i in range(3):
-            imu_data[i] = (imu_data[i] - [accoffsetx, accoffsety, accoffsetz][i] / ACC_SPL) * alpha + imu_data[i] * (1 - alpha)
-        
+        imu.accX = (imu_data[0] - accoffsetx / ACC_SPL) * alpha + imu.accX * (1 - alpha)
+        imu.accY = (imu_data[1] - accoffsety / ACC_SPL) * alpha + imu.accY * (1 - alpha)
+        imu.accZ = (imu_data[2] - accoffsetz / ACC_SPL) * alpha + imu.accZ * (1 - alpha)
+
         # 陀螺仪单位转换（减去偏移后除以灵敏度）
-        for i in range(3, 6):
-            imu_data[i] = math.radians((imu_data[i] - [gyrooffsetx, gyrooffsety, gyrooffsetz][i-3]) / GYRO_SPL)
-        
+        imu.gyroX = math.radians((imu_data[3] - gyrooffsetx) / GYRO_SPL)
+        imu.gyroY = math.radians((imu_data[4] - gyrooffsety) / GYRO_SPL)
+        imu.gyroZ = math.radians((imu_data[5] - gyrooffsetz) / GYRO_SPL)
         # 四元数更新（使用解包后的变量）
-        ax, ay, az = imu_data[0], imu_data[1], imu_data[2]
-        gx, gy, gz = imu_data[3], imu_data[4], imu_data[5]
+        ax, ay, az = imu.accX, imu.accY, imu.accZ
+        gx, gy, gz = imu.gyroX, imu.gyroY, imu.gyroZ
         quaternion_update(ax, ay, az, gx, gy, gz)
         
         # 输出姿态角
