@@ -85,7 +85,7 @@ current_roll = 0   # 当前横滚角
 current_yaw = 0    # 当前偏航角
 
 # 姿态角度计算函数
-def quaternion_update(ax, ay, az, gx, gy, gz):
+def quaternion_update(ax, ay, az, gx, gy, gz, mx, my, mz):
     global q0, q1, q2, q3, I_ex, I_ey, I_ez, current_pitch, current_roll, current_yaw
     
     if ax == 0 or ay == 0 or az == 0:
@@ -109,6 +109,42 @@ def quaternion_update(ax, ay, az, gx, gy, gz):
     ey = (az * vx - ax * vz)
     ez = (ax * vy - ay * vx)
 
+    # ============== 新增磁力计处理部分 ==============
+    # 磁力计归一化
+    mag_norm = math.sqrt(mx**2 + my**2 + mz**2)
+    if mag_norm > 0:
+        mx /= mag_norm
+        my /= mag_norm
+        mz /= mag_norm
+
+        # 计算预测磁场方向（机体坐标系）
+        hx = 2.0 * mx * (0.5 - q2**2 - q3**2) + 2.0 * my * (q1*q2 - q0*q3) + 2.0 * mz * (q1*q3 + q0*q2)
+        hy = 2.0 * mx * (q1*q2 + q0*q3) + 2.0 * my * (0.5 - q1**2 - q3**2) + 2.0 * mz * (q2*q3 - q0*q1)
+        
+        # 将磁场向量投影到水平面
+        bx = math.sqrt(hx**2 + hy**2)
+        bz = 2.0 * mx * (q1*q3 - q0*q2) + 2.0 * my * (q2*q3 + q0*q1) + 2.0 * mz * (0.5 - q1**2 - q2**2)
+
+        # 计算磁力计误差（方向差）
+        ex_mag = (my * bz - mz * by)  # 磁场Y分量误差
+        ey_mag = (mz * bx - mx * bz)  # 磁场X分量误差
+        ez_mag = (mx * by - my * bx)  # 垂直方向误差（通常忽略）
+
+        # 之后加入限幅 -------------------------------------------------
+
+        # 融合磁力计误差（加权系数）
+        mag_weight = 0.6  # 磁力计权重，根据实际情况调整
+        # 根据运动状态自动调整权重
+        # acc_magnitude = math.sqrt(ax**2 + ay**2 + az**2)
+        # if abs(acc_magnitude - 1.0) < 0.2:  # 接近静止时
+        #     mag_weight = 0.8
+        # else:
+        #     mag_weight = 0.4
+        ex += ex_mag * mag_weight
+        ey += ey_mag * mag_weight
+        # ez += ez_mag * mag_weight  # 通常不修正垂直方向
+    # ============== 磁力计处理结束 ==============
+
     # 误差积分
     # 原代码直接累加，没有乘以imu_ki
     # 修正后与网上代码一致
@@ -116,7 +152,7 @@ def quaternion_update(ax, ay, az, gx, gy, gz):
     I_ey += ey * imu_ki
     I_ez += ez * imu_ki
 
-    # 限幅
+    # 限幅 (50试试？)
     my_limit(I_ex, -100, 100)
     my_limit(I_ey, -100, 100)
     my_limit(I_ez, -100, 100)
@@ -145,6 +181,15 @@ def quaternion_update(ax, ay, az, gx, gy, gz):
     q1 /= norm
     q2 /= norm
     q3 /= norm
+
+    # --------------------------------------------------------------------
+    # 修改原有欧拉角计算（增加磁力计补偿）
+    # 加入限幅
+    # current_yaw = math.degrees(math.atan2(2*(q0*q3 + q1*q2), 1 - 2*(q2**2 + q3**2)))
+    # if mx != 0 or my != 0:  # 有磁力计时使用反正切计算真实航向
+    #     yaw_mag = math.degrees(math.atan2(hy, hx))
+    #     current_yaw = 0.9*current_yaw + 0.1*yaw_mag  # 互补滤波
+    # --------------------------------------------------------------------
 
     # 计算欧拉角
     current_pitch = math.degrees(math.asin(2 * (q0*q2 - q1*q3)))
@@ -220,3 +265,4 @@ while True:
         print("Ticker stop.")
         break
     gc.collect()
+
