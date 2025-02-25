@@ -5,13 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="471d0767-923c-4465-84cd-e0b4f4d3f92e" name="更改" comment="">
-      <change afterPath="$PROJECT_DIR$/main_2_25_姿态解算1#磁场测试.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.name" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.name" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main_2_24_一阶滤波.py" beforeDir="false" afterPath="$PROJECT_DIR$/main_2_24_一阶滤波.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main_2_25_姿态解算1.py" beforeDir="false" afterPath="$PROJECT_DIR$/main_2_25_姿态解算1.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main_2_25_姿态解算2#对性能要求高.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/main_2_25_姿态解算2#改进.py" beforeDir="false" afterPath="$PROJECT_DIR$/main_2_25_姿态解算2#改进.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/t#显示姿态角.py" beforeDir="false" afterPath="$PROJECT_DIR$/t#显示姿态角.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main_2_25_姿态解算1#磁场测试.py" beforeDir="false" afterPath="$PROJECT_DIR$/main_2_25_姿态解算1#磁场测试.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -44,7 +40,7 @@
     "Python.t#显示姿态角2.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "正在合并 master",
+    "git-widget-placeholder": "master",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -53,7 +49,7 @@
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
-  <component name="RunManager" selected="Python.t#显示姿态角">
+  <component name="RunManager" selected="Python.main_2_25_姿态解算1">
     <configuration name="main_2_25_姿态解算1" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="nxp_1_24" />
       <option name="ENV_FILES" value="" />
@@ -148,7 +144,6 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.t#显示姿态角" />
         <item itemvalue="Python.t#显示姿态角2" />
         <item itemvalue="Python.main_2_25_姿态解算1" />
         <item itemvalue="Python.t#显示三个线" />
@@ -182,6 +177,7 @@
       <workItem from="1740401159802" duration="692000" />
       <workItem from="1740449304818" duration="1162000" />
       <workItem from="1740450544405" duration="946000" />
+      <workItem from="1740451626685" duration="1828000" />
     </task>
     <servers />
   </component>

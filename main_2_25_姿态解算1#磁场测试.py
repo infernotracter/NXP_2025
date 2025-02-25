@@ -81,8 +81,8 @@ def my_limit(value, minn, maxn):
 q0 = 1.0
 q1 = q2 = q3 = 0.0
 I_ex = I_ey = I_ez = 0.0
-imu_kp = 1.5  # 比例增益（调整滤波响应速度）
-imu_ki = 0.0005  # 积分增益（调整积分速度）
+imu_kp = 12  # 比例增益（调整滤波响应速度）
+imu_ki = 0.001  # 积分增益（调整积分速度）
 delta_T = 0.001  # 采样周期（与1ms中断对应）
 current_pitch = 0  # 当前俯仰角
 current_roll = 0  # 当前横滚角
@@ -281,5 +281,6 @@ while True:
         print("Ticker stop.")
         break
     gc.collect()
+
 
 
