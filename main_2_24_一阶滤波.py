@@ -95,20 +95,22 @@ def imuoffsetinit():
     return gyrooffsetx, gyrooffsety, gyrooffsetz, accoffsetx, accoffsety, accoffsetz
 # 辅助滤波
 imuoffsetinit()
-last_imu_data = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-tmp_imu_data = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+last_imu_data = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0,0, 0.0, 0.0]
 while True:
     if (ticker_flag and ticker_count % 1 == 0):
         # 获取数据并强制转换为浮点数列表
         imu_data = [float(x) for x in imu.get()]
         
         # 低通滤波处理（加速度计）
-        alpha = 0.2 # 0.65
+        alpha = 0.8 # 0.65
         for i in range(3):
-            tmp_imu_data[i] = imu_data[i]
-            imu_data[i] = (imu_data[i] - [accoffsetx, accoffsety, accoffsetz][i]) / ACC_SPL * alpha + last_imu_data[i] * (1 - alpha)
-            last_imu_data[i] = tmp_imu_data[i]
-        
+            # 先进行零偏校正和单位转换
+            current_processed = (imu_data[i] - [accoffsetx, accoffsety, accoffsetz][i]) / ACC_SPL
+            # 再应用滤波，使用上一次的滤波结果
+            imu_data[i] = alpha * current_processed + (1 - alpha) * last_imu_data[i]
+            # 更新历史值为当前滤波结果
+            last_imu_data[i] = imu_data[i]
+
         # 陀螺仪单位转换（减去偏移后除以灵敏度）
         for i in range(3, 6):
             imu_data[i] = math.radians((imu_data[i] - [gyrooffsetx, gyrooffsety, gyrooffsetz][i-3]) / GYRO_SPL)
