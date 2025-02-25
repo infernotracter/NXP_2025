@@ -76,7 +76,8 @@ def my_limit(value, minn, maxn):
     if value > maxn:
         value = maxn
 
-
+# imu_kp = 15  # 比例增益（调整滤波响应速度）
+# imu_ki = 0.0001  # 积分增益（调整积分速度）
 # 四元数姿态解算相关变量
 q0 = 1.0
 q1 = q2 = q3 = 0.0
