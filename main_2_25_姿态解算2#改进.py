@@ -56,16 +56,16 @@ class MadgwickFilter:
         self.q2 = 0.0
         self.q3 = 0.0
         self.q4 = 0.0
-        self.DEG2RAD = math.pi / 180.0
-        self.RAD2DEG = 180.0 / math.pi
+        # self.DEG2RAD = math.pi / 180.0
+        # self.RAD2DEG = 180.0 / math.pi
 
     def update(self, acc, gyro, mag, dt):
         # 归一化加速度计和磁力计数据
         ax, ay, az = self._normalize(acc)
         mx, my, mz = self._normalize(mag)
-        gx = gyro.x * self.DEG2RAD
-        gy = gyro.y * self.DEG2RAD
-        gz = gyro.z * self.DEG2RAD
+        gx = gyro.x # * self.DEG2RAD
+        gy = gyro.y # * self.DEG2RAD
+        gz = gyro.z # * self.DEG2RAD
 
         # 计算中间变量
         q1, q2, q3, q4 = self.q1, self.q2, self.q3, self.q4
@@ -170,6 +170,7 @@ class MadgwickFilter:
     
 
 # 初始化滤波器
+# !!!!!!!!!beta值需要根据实际情况调整!!!!!!!!!
 filter = MadgwickFilter(beta=0.1)
 # 零飘定义
 gyrooffsetx = 0
