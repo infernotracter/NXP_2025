@@ -37,21 +37,9 @@ encoder_r = encoder("D2", "D3")
 # dir = 1
 
 # 实例化 lcd 模块
-cs = Pin('C5', Pin.OUT, pull=Pin.PULL_UP_47K, value=1)
-cs.high()
-cs.low()
-rst = Pin('B9', Pin.OUT, pull=Pin.PULL_UP_47K, value=1)
-dc = Pin('B8', Pin.OUT, pull=Pin.PULL_UP_47K, value=1)
-blk = Pin('C4', Pin.OUT, pull=Pin.PULL_UP_47K, value=1)
-drv = LCD_Drv(SPI_INDEX=1, BAUDRATE=60000000, DC_PIN=dc,
-              RST_PIN=rst, LCD_TYPE=LCD_Drv.LCD200_TYPE)
-lcd = LCD(drv)
-lcd.color(0xFFFF, 0x0000)
-lcd.mode(2)
-lcd.clear(0x0000)
 
-# 实例化 IMU660RA 模块
-imu = IMU660RA()
+# 实例化 IMU963RA 模块
+imu = IMU963RA()
 
 # 核心板上的LED
 led1 = Pin('C4', Pin.OUT, pull=Pin.PULL_UP_47K, value=True)
@@ -375,34 +363,6 @@ last_imu_data = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0,0, 0.0, 0.0]
 while True:
     motor_l.duty(gyro_pid.out - dir_in.out)
     motor_r.duty(gyro_pid.out + dir_in.out)
-
-    ccd_data1 = ccd.get(0)  # 读取ccd1的数据
-    ccd_data2 = ccd.get(1)  # 读取ccd2的数据
-
-    # 计算动态阈值
-    threshold1 = ccd_get_threshold(ccd_data1)
-    threshold2 = ccd_get_threshold(ccd_data2)
-
-    # 对ccd数据二值化处理
-    image_value1 = ccd_image_value(ccd_data1, threshold1)
-    image_value2 = ccd_image_value(ccd_data2, threshold2)
-
-    # ccd滤波
-    ccd_filter(1), ccd_filter(2)
-
-    # 数组会存储最近十次的中线位置，并保证更新
-    # 这个mid_line_long 的计算方法是，目前中线占10%权重，历史中线占90%权重，最后+n补充，目前n=0
-    # 看看之后加不加    (●'◡'●)
-    # 进行中点计算
-    Mid_point1 = get_ccd1_mid_point(image_value1)
-    Mid_point2 = get_ccd2_mid_point(image_value2)
-
-    # 进行偏差计算
-    error1 = get_offset(Mid_point1)
-    error2 = get_offset(Mid_point2)
-
-    # 元素识别
-    # search_element()
 
     # 拨码开关关中断
     if end_switch.value() == 0:
