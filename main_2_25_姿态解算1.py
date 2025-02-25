@@ -81,8 +81,8 @@ def my_limit(value, minn, maxn):
 q0 = 1.0
 q1 = q2 = q3 = 0.0
 I_ex = I_ey = I_ez = 0.0
-imu_kp = 1.5  # 比例增益（调整滤波响应速度）
-imu_ki = 0.0005  # 积分增益（调整积分速度）
+imu_kp = 15  # 比例增益（调整滤波响应速度）
+imu_ki = 0.0001  # 积分增益（调整积分速度）
 delta_T = 0.001  # 采样周期（与1ms中断对应）
 current_pitch = 0  # 当前俯仰角
 current_roll = 0  # 当前横滚角
@@ -205,7 +205,7 @@ while True:
         imu_data = [float(x) for x in imu.get()]
 
         # 低通滤波处理（加速度计）
-        alpha = 0.2
+        alpha = 0.5
         for i in range(3):
             # 先进行零偏校正和单位转换
             current_processed = (imu_data[i] - [accoffsetx, accoffsety, accoffsetz][i]) / ACC_SPL

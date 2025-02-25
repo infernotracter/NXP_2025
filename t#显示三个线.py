@@ -69,15 +69,15 @@ def update(frame):
     plots[0][1].set_data(x_data, data['acc_y'])
     plots[0][2].set_data(x_data, data['acc_z'])
     
-    # 更新陀螺仪图表
-    plots[1][0].set_data(x_data, data['gyro_x'])
-    plots[1][1].set_data(x_data, data['gyro_y'])
-    plots[1][2].set_data(x_data, data['gyro_z'])
+    # # 更新陀螺仪图表
+    # plots[1][0].set_data(x_data, data['gyro_x'])
+    # plots[1][1].set_data(x_data, data['gyro_y'])
+    # plots[1][2].set_data(x_data, data['gyro_z'])
     
-    # 更新磁力计图表
-    plots[2][0].set_data(x_data, data['mag_x'])
-    plots[2][1].set_data(x_data, data['mag_y'])
-    plots[2][2].set_data(x_data, data['mag_z'])
+    # # 更新磁力计图表
+    # plots[2][0].set_data(x_data, data['mag_x'])
+    # plots[2][1].set_data(x_data, data['mag_y'])
+    # plots[2][2].set_data(x_data, data['mag_z'])
 
     # 调整X轴范围
     for ax in axs:
