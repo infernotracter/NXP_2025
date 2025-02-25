@@ -401,16 +401,17 @@ while True:
          ticker_flag_5ms = False
 
     if (ticker_flag_2ms):
-        gyro_pid.pid_standard_integral(angle_pid.out, imu_data[4])
+        gyro_pid.pid_standard_integral(0, imu_data[3] + imu_data[4] + imu_data[5])
         ticker_flag_2ms = False
 
     if (ticker_flag_10ms):
-        # menu()                           # 菜单显示
-        speed_pid.pid_standard_integral(0, (encl_data + encr_data) / 2)
+        # menu()
+        # !!!!!!!!!!!!!!!!!    pitch    记得改     !!!!!!!!!!!!!!!!!
+        # angle_pid.pid_standard_integral(speed_pid.out + MedAngle, current_pitch)
         ticker_flag_10ms = False
 
     if (ticker_flag_50ms):
-        angle_pid.pid_standard_integral(speed_pid.out + MedAngle, current_pitch)
+        # speed_pid.pid_standard_integral(aim_speed, (encl_data + encr_data) / 2)
         ticker_flag_50ms = False
 
     if (ticker_flag_4ms):
