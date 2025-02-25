@@ -5,12 +5,14 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="471d0767-923c-4465-84cd-e0b4f4d3f92e" name="更改" comment="">
+      <change afterPath="$PROJECT_DIR$/main_2_25_姿态解算3#互补滤波.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.name" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.name" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/nxp_1_24.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/nxp_1_24.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main_2_24_一阶滤波#改.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/main_2_24_一阶滤波.py" beforeDir="false" afterPath="$PROJECT_DIR$/main_2_24_一阶滤波.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main_2_24_卡尔曼滤波.py" beforeDir="false" afterPath="$PROJECT_DIR$/main_2_24_卡尔曼滤波.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/t#显示三个线.py" beforeDir="false" afterPath="$PROJECT_DIR$/t#显示三个线.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main_2_25_姿态解算1.py" beforeDir="false" afterPath="$PROJECT_DIR$/main_2_25_姿态解算1.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/t#显示姿态角2.py" beforeDir="false" afterPath="$PROJECT_DIR$/t#显示姿态角2.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -35,23 +37,23 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Python.main_2_25_姿态解算1.executor": "Run",
-    "Python.t#显示三个线.executor": "Run",
-    "Python.t#显示姿态角2.executor": "Run",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "master",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Python.main_2_25_姿态解算1.executor&quot;: &quot;Run&quot;,
+    &quot;Python.t#显示三个线.executor&quot;: &quot;Run&quot;,
+    &quot;Python.t#显示姿态角2.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;正在合并 master&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
-  <component name="RunManager" selected="Python.main_2_25_姿态解算1">
+}</component>
+  <component name="RunManager" selected="Python.t#显示姿态角2">
     <configuration name="main_2_25_姿态解算1" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="nxp_1_24" />
       <option name="ENV_FILES" value="" />
@@ -123,9 +125,9 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.t#显示姿态角2" />
         <item itemvalue="Python.main_2_25_姿态解算1" />
         <item itemvalue="Python.t#显示三个线" />
-        <item itemvalue="Python.t#显示姿态角2" />
       </list>
     </recent_temporary>
   </component>
@@ -152,6 +154,9 @@
       <workItem from="1740390479952" duration="450000" />
       <workItem from="1740392740297" duration="744000" />
       <workItem from="1740393506630" duration="6148000" />
+      <workItem from="1740401098138" duration="32000" />
+      <workItem from="1740401159802" duration="692000" />
+      <workItem from="1740449304818" duration="1162000" />
     </task>
     <servers />
   </component>
@@ -161,6 +166,7 @@
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/t__py$t_.coverage" NAME="t#显示三个线 覆盖结果" MODIFIED="1740393998477" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/t__py$main_2_25_1.coverage" NAME="main_2_25_姿态解算1 覆盖结果" MODIFIED="1740395087092" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/main_2_25_1_py$t_2.coverage" NAME="t#显示姿态角2 覆盖结果" MODIFIED="1740450183702" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/t__py$t_2.coverage" NAME="t#显示姿态角2 覆盖结果" MODIFIED="1740393651739" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>

@@ -5,7 +5,7 @@ from matplotlib.animation import FuncAnimation
 from scipy.spatial.transform import Rotation as R
 
 # 配置串口参数
-SERIAL_PORT = 'COM7'      # 根据实际情况修改
+SERIAL_PORT = 'COM9'      # 根据实际情况修改
 BAUD_RATE = 115200
 
 # 初始化立方体顶点（边长为2，中心在原点）
