@@ -4,11 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="471d0767-923c-4465-84cd-e0b4f4d3f92e" name="更改" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/.name" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.name" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main_2_25_姿态解算1#磁场测试.py" beforeDir="false" afterPath="$PROJECT_DIR$/main_2_25_姿态解算1#磁场测试.py" afterDir="false" />
-    </list>
+    <list default="true" id="471d0767-923c-4465-84cd-e0b4f4d3f92e" name="更改" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -32,23 +28,23 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Python.main_2_25_姿态解算1.executor": "Run",
-    "Python.t#显示三个线.executor": "Run",
-    "Python.t#显示姿态角.executor": "Run",
-    "Python.t#显示姿态角2.executor": "Run",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "master",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Python.main_2_25_姿态解算1.executor&quot;: &quot;Run&quot;,
+    &quot;Python.t#显示三个线.executor&quot;: &quot;Run&quot;,
+    &quot;Python.t#显示姿态角.executor&quot;: &quot;Run&quot;,
+    &quot;Python.t#显示姿态角2.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RunManager" selected="Python.main_2_25_姿态解算1">
     <configuration name="main_2_25_姿态解算1" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="nxp_1_24" />
@@ -178,6 +174,8 @@
       <workItem from="1740449304818" duration="1162000" />
       <workItem from="1740450544405" duration="946000" />
       <workItem from="1740451626685" duration="1828000" />
+      <workItem from="1740460174665" duration="10000" />
+      <workItem from="1740460218723" duration="5568000" />
     </task>
     <servers />
   </component>

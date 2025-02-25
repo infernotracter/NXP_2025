@@ -118,7 +118,8 @@ def quaternion_update(ax, ay, az, gx, gy, gz, mx, my, mz):
     # ============== 新增磁力计处理部分 ==============
     # 磁力计归一化
     mag_norm = math.sqrt(mx ** 2 + my ** 2 + mz ** 2)
-    if mag_norm > 0:
+    if mag_norm > 0 and mag_flag:
+
         mx /= mag_norm
         my /= mag_norm
         mz /= mag_norm
