@@ -116,7 +116,7 @@ def quaternion_update(ax, ay, az, gx, gy, gz):
     I_ey += ey * imu_ki
     I_ez += ez * imu_ki
 
-    # 限幅
+    # 限幅(-50, 50)可以试试
     my_limit(I_ex, -100, 100)
     my_limit(I_ey, -100, 100)
     my_limit(I_ez, -100, 100)

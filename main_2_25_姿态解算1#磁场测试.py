@@ -117,18 +117,22 @@ def quaternion_update(ax, ay, az, gx, gy, gz, mx, my, mz):
         my /= mag_norm
         mz /= mag_norm
 
-        # 计算预测磁场方向（机体坐标系）
-        hx = 2.0 * mx * (0.5 - q2**2 - q3**2) + 2.0 * my * (q1*q2 - q0*q3) + 2.0 * mz * (q1*q3 + q0*q2)
-        hy = 2.0 * mx * (q1*q2 + q0*q3) + 2.0 * my * (0.5 - q1**2 - q3**2) + 2.0 * mz * (q2*q3 - q0*q1)
-        
-        # 将磁场向量投影到水平面
-        bx = math.sqrt(hx**2 + hy**2)
-        bz = 2.0 * mx * (q1*q3 - q0*q2) + 2.0 * my * (q2*q3 + q0*q1) + 2.0 * mz * (0.5 - q1**2 - q2**2)
+        bx = 0.6428  # 水平北向分量（cos(50°) ≈ 0.6428）
+        bz = 0.7660  # 垂直向下分量（sin(50°) ≈ 0.7660）
 
-        # 计算磁力计误差（方向差）
-        ex_mag = (my * bz - mz * by)  # 磁场Y分量误差
-        ey_mag = (mz * bx - mx * bz)  # 磁场X分量误差
-        ez_mag = (mx * by - my * bx)  # 垂直方向误差（通常忽略）
+        # 计算预测的磁场方向（机体坐标系）
+        hx = (1 - 2*q2**2 - 2*q3**2) * bx + 2*(q1*q3 + q0*q2) * bz
+        hy = 2*(q1*q2 + q0*q3) * bx + 2*(q2*q3 - q0*q1) * bz
+        hz = 2*(q1*q3 - q0*q2) * bx + (1 - 2*q1**2 - 2*q2**2) * bz
+
+        # # 将磁场向量投影到水平面
+        # bx = math.sqrt(hx**2 + hy**2)
+        # bz = 2.0 * mx * (q1*q3 - q0*q2) + 2.0 * my * (q2*q3 + q0*q1) + 2.0 * mz * (0.5 - q1**2 - q2**2)
+
+        # 计算磁力计误差（叉积）
+        ex_mag = my * hz - mz * hy
+        ey_mag = mz * hx - mx * hz
+        ez_mag = mx * hy - my * hx
 
         # 之后加入限幅 -------------------------------------------------
 
