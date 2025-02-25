@@ -137,8 +137,6 @@ encr_data = 0  # 右数据编码器
 aim_speed = 100  # 之后要可以使用KEY手动修改
 aim_speed_l = 0  # 左轮期望速度
 aim_speed_r = 0  # 右轮期望速度
-output_encl = 0  # 左轮编码器滤波
-output_encr = 0  # 右轮编码器滤波
 out_l = 0  # 左轮输出值
 out_r = 0  # 右轮输出值
 MedAngle = 0
@@ -396,7 +394,7 @@ while True:
         ticker_flag_1ms = False
 
     if (ticker_flag_5ms):
-         ncl_data = encoder_l.get()  # 读取左编码器的数据
+         encl_data = encoder_l.get()  # 读取左编码器的数据
          encr_data = encoder_r.get()  # 读取右编码器的数据
          key_data = key.get()  # 读取按键的数据
          # 原函数此时为圆环处理
@@ -407,11 +405,8 @@ while True:
         ticker_flag_2ms = False
 
     if (ticker_flag_10ms):
-    # menu()                           # 菜单显示
-        encl_data = encoder_l.get()  # 读取左编码器的数据
-        encr_data = encoder_r.get()  # 读取右编码器的数据
-        key_data = key.get()  # 读取按键的数据
-        speed_pid.pid_standard_integral(aim_speed, (output_encl + output_encr) / 2)
+        # menu()                           # 菜单显示
+        speed_pid.pid_standard_integral(0, (encl_data + encr_data) / 2)
         ticker_flag_10ms = False
 
     if (ticker_flag_50ms):
@@ -425,3 +420,26 @@ while True:
     if (ticker_flag_8ms):
        # dir_out.pid_standard_integral(0, (error1 + error2) * error_k)
         ticker_flag_8ms = False
+
+    # ----------------------未改动参考代码----------------------
+    # if (ticker_flag_2ms):
+    #     gyro_pid.pid_standard_integral(angle_pid.out, imu_data[4])
+    #     ticker_flag_2ms = False
+
+    # if (ticker_flag_10ms):
+    #     # menu()                           # 菜单显示
+    #     speed_pid.pid_standard_integral(aim_speed, (encl_data + encr_data) / 2)
+    #     ticker_flag_10ms = False
+
+    # if (ticker_flag_50ms):
+    #     angle_pid.pid_standard_integral(speed_pid.out + MedAngle, current_pitch)
+    #     ticker_flag_50ms = False
+
+    # if (ticker_flag_4ms):
+    #    # dir_in.pid_standard_integral(dir_out.out, imu[4])
+    #     ticker_flag_4ms = False
+
+    # if (ticker_flag_8ms):
+    #    # dir_out.pid_standard_integral(0, (error1 + error2) * error_k)
+    #     ticker_flag_8ms = False
+

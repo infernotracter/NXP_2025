@@ -7,7 +7,11 @@
     <list default="true" id="471d0767-923c-4465-84cd-e0b4f4d3f92e" name="更改" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.name" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.name" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+<<<<<<< HEAD
       <change beforePath="$PROJECT_DIR$/main_2_26#pid.py" beforeDir="false" afterPath="$PROJECT_DIR$/main_2_26#pid.py" afterDir="false" />
+=======
+      <change beforePath="$PROJECT_DIR$/src/Seekfree_TC377_Opensource_Library/code/motor.c" beforeDir="false" afterPath="$PROJECT_DIR$/src/Seekfree_TC377_Opensource_Library/code/motor.c" afterDir="false" />
+>>>>>>> 2a74683 (pid改)
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -179,8 +183,12 @@
       <workItem from="1740450544405" duration="946000" />
       <workItem from="1740451626685" duration="1828000" />
       <workItem from="1740460174665" duration="10000" />
+<<<<<<< HEAD
       <workItem from="1740460218723" duration="5568000" />
       <workItem from="1740478963571" duration="926000" />
+=======
+      <workItem from="1740460220600" duration="4815000" />
+>>>>>>> 2a74683 (pid改)
     </task>
     <servers />
   </component>
