@@ -312,6 +312,76 @@ def imuoffsetinit():
     return gyrooffsetx, gyrooffsety, gyrooffsetz, accoffsetx, accoffsety, accoffsetz
 
 
+
+count=0
+def pid_key():   
+    global count
+    flag = False
+    if key_data[0]:    #flag为调参程度标志，为1调大数值，0调小数值，只要切换调参数据flag就归零
+        count +=1
+        flag = False
+
+    if count ==6:
+        count=0
+    if key_data[3]:
+        flag = True
+
+
+    if key_data[1]and count ==0:
+        if flag:
+           speed_pid.kp+=0.1
+        else:speed_pid.kp +=0.01
+    if key_data[2]and count ==0:
+        if flag:
+           speed_pid.kp-=0.1
+        else:speed_pid.kp -=0.01
+
+    if key_data[1] and count==1:
+        if flag:
+           speed_pid.ki+=0.1
+        else:speed_pid.ki +=0.01
+    if key_data[2] and count==1:
+        if flag:
+           speed_pid.ki+=0.1
+        else:speed_pid.ki +=0.01
+
+
+    if key_data[1] and count==2:
+        if flag:
+           angle_pid.kp+=0.1
+        else:angle_pid.kp +=0.01
+    if key_data[2] and count==2:
+        if flag:
+           angle_pid.kp-=0.1
+        else:angle_pid.kp -=0.01
+
+    if key_data[1] and count==3:
+        if flag:
+           angle_pid.kd+=0.1
+        else:angle_pid.kd +=0.01
+    if key_data[2] and count==3:
+        if flag:
+           angle_pid.kd -=0.1
+        else:angle_pid.kd -=0.01
+
+    if key_data[1] and count==4:
+        if flag:
+           gyro_pid.kp+=0.1
+        else:gyro_pid.kp +=0.01
+    if key_data[2] and count==4:
+        if flag:
+           gyro_pid.kp-=0.1
+        else:gyro_pid.kp -=0.01
+
+    if key_data[1] and count==5:
+        if flag:
+           gyro_pid.ki+=0.1
+        else:gyro_pid.ki +=0.01
+    if key_data[2] and count==5:
+        if flag:
+           gyro_pid.ki-=0.1
+        else:gyro_pid.ki -=0.01
+
 # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 imuoffsetinit()  # 零飘校准
 last_imu_data = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0, 0.0, 0.0]
@@ -388,19 +458,19 @@ while True:
         # dir_out.pid_standard_integral(0, (error1 + error2) * error_k)
         ticker_flag_8ms = False
 
-    # ----------------------未改动参考代码----------------------
-    # if (ticker_flag_2ms):
-    #     gyro_pid.pid_standard_integral(angle_pid.out, imu_data[4])
-    #     ticker_flag_2ms = False
+     #----------------------未改动参考代码----------------------
+     if (ticker_flag_2ms):
+         gyro_pid.pid_standard_integral(angle_pid.out, imu_data[4])
+         ticker_flag_2ms = False
 
-    # if (ticker_flag_10ms):
-    #     # menu()                           # 菜单显示
-    #     speed_pid.pid_standard_integral(aim_speed, (encl_data + encr_data) / 2)
-    #     ticker_flag_10ms = False
+     if (ticker_flag_10ms):
+         # menu()                           # 菜单显示
+         speed_pid.pid_standard_integral(aim_speed, (encl_data + encr_data) / 2)
+         ticker_flag_10ms = False
 
-    # if (ticker_flag_50ms):
-    #     angle_pid.pid_standard_integral(speed_pid.out + MedAngle, current_pitch)
-    #     ticker_flag_50ms = False
+     if (ticker_flag_50ms):
+         angle_pid.pid_standard_integral(speed_pid.out + MedAngle, current_pitch)
+         ticker_flag_50ms = False
 
     # if (ticker_flag_4ms):
     #    # dir_in.pid_standard_integral(dir_out.out, imu[4])
