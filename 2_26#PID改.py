@@ -363,29 +363,29 @@ while True:
 
     if (ticker_flag_2ms):
         gyro_pid_out = gyro_pid.calculate(
-            angle_pid_out, imu_data[3] + imu_data[4] + imu_data[5])
+            0, imu_data[3] + imu_data[4] + imu_data[5])
         # gyro_pid.pid_standard_integral(0, imu_data[3] + imu_data[4] + imu_data[5])
         ticker_flag_2ms = False
 
     if (ticker_flag_10ms):
-        angle_pid_out = angle_pid.calculate(speed_pid_out + MedAngle, current_pitch)
+        # angle_pid_out = angle_pid.calculate(speed_pid_out + MedAngle, current_pitch)
         # !!!!!!!!!!!!!!!!!    pitch    记得改     !!!!!!!!!!!!!!!!!
         # angle_pid.pid_standard_integral(speed_pid.out + MedAngle, current_pitch)
         ticker_flag_10ms = False
 
     if (ticker_flag_50ms):
-        speed_pid_out = speed_pid.calculate(aim_speed, (encl_data + encr_data) / 2)
+        # speed_pid_out = speed_pid.calculate(aim_speed, (encl_data + encr_data) / 2)
         # speed_pid.pid_standard_integral(aim_speed, (encl_data + encr_data) / 2)
         ticker_flag_50ms = False
 
     if (ticker_flag_4ms):
-       dir_in_out = dir_in.calculate(dir_out_out, imu[4])
+       # dir_in_out = dir_in.calculate(dir_out_out, imu[4])
        # dir_in.pid_standard_integral(dir_out.out, imu[4])
        ticker_flag_4ms = False
 
     if (ticker_flag_8ms):
-        dir_out_out = dir_out.calculate(0, (error1 + error2) * error_k)
-       # dir_out.pid_standard_integral(0, (error1 + error2) * error_k)
+        # dir_out_out = dir_out.calculate(0, (error1 + error2) * error_k)
+        # dir_out.pid_standard_integral(0, (error1 + error2) * error_k)
         ticker_flag_8ms = False
 
     # ----------------------未改动参考代码----------------------
