@@ -95,8 +95,7 @@ current_yaw = 0    # 当前偏航角
 
 # 姿态角度计算函数
 def quaternion_update(ax, ay, az, gx, gy, gz):
-    global q0, q1, q2, q3, I_ex, I_ey, I_ez, current_pitch, current_roll, current_yaw
-    
+    global q0, q1, q2, q3, I_ex, I_ey, I_ez, current_pitch, current_roll, current_yaw    
     # 归一化加速度计数据
     norm = math.sqrt(ax**2 + ay**2 + az**2)
     if norm == 0:
@@ -151,32 +150,32 @@ def quaternion_update(ax, ay, az, gx, gy, gz):
     current_yaw = math.degrees(math.atan2(2*(q0*q3 + q1*q2), 1 - 2*(q2**2 + q3**2)))
 
 # 零飘定义
-gyrooffsetx = 0
-gyrooffsety = 0
-gyrooffsetz = 0
-accoffsetx = 0
-accoffsety = 0
-accoffsetz = 0
-OFFSETNUM = 1000
+#gyrooffsetx = 0
+#gyrooffsety = 0
+#gyrooffsetz = 0
+#accoffsetx = 0
+#accoffsety = 0
+#accoffsetz = 0
+#OFFSETNUM = 1000
 
-def imuoffsetinit():
-    for _ in range(OFFSETNUM):
-        imu.get()
-        gyrooffsetx += imu_data[0]
-        gyrooffsety += imu_data[1]
-        gyrooffsetz += imu_data[2]
-        accoffsetx += imu_data[3]
-        accoffsety += imu_data[4]
-        accoffsetz += imu_data[5]
-    gyrooffsetx /= OFFSETNUM
-    gyrooffsety /= OFFSETNUM
-    gyrooffsetz /= OFFSETNUM
-    accoffsetx /= OFFSETNUM
-    accoffsety /= OFFSETNUM
-    accoffsetz /= OFFSETNUM
-    return gyrooffsetx, gyrooffsety, gyrooffsetz, accoffsetx, accoffsety, accoffsetz
+#def imuoffsetinit():
+#    for _ in range(OFFSETNUM):
+#       imu.get()
+#        gyrooffsetx += imu_data[0]
+#        gyrooffsety += imu_data[1]
+#        gyrooffsetz += imu_data[2]
+#        accoffsetx += imu_data[3]
+#        accoffsety += imu_data[4]
+#        accoffsetz += imu_data[5]
+#    gyrooffsetx /= OFFSETNUM
+#    gyrooffsety /= OFFSETNUM
+#    gyrooffsetz /= OFFSETNUM
+#    accoffsetx /= OFFSETNUM
+#    accoffsety /= OFFSETNUM
+#    accoffsetz /= OFFSETNUM
+#    return gyrooffsetx, gyrooffsety, gyrooffsetz, accoffsetx, accoffsety, accoffsetz
 
-imuoffsetinit()
+#imuoffsetinit()
 while True:
     if (ticker_flag and ticker_count % 1 == 0):
         # 通过 capture 接口更新数据 但在这个例程中被 ticker 模块接管了
@@ -187,19 +186,19 @@ while True:
         kalman_filter_gyro(kfp_var_gyro, imu_data[1])
         kalman_filter_gyro(kfp_var_gyro, imu_data[2])
         # 单位转换
-        imu_data[0] /= ACC_SPL
-        imu_data[1] /= ACC_SPL
-        imu_data[2] /= ACC_SPL
-        imu_data[3] /= GYRO_SPL
-        imu_data[4] /= GYRO_SPL
-        imu_data[5] /= GYRO_SPL
+        #imu_data[0] /= ACC_SPL
+        #imu_data[1] /= ACC_SPL
+        #imu_data[2] /= ACC_SPL
+        #imu_data[3] /= GYRO_SPL
+        #imu_data[4] /= GYRO_SPL
+        #imu_data[5] /= GYRO_SPL
         # 零飘校准  
-        imu_data[0] -= accoffsetx
-        imu_data[1] -= accoffsety
-        imu_data[2] -= accoffsetz
-        imu_data[3] -= gyrooffsetx
-        imu_data[4] -= gyrooffsety
-        imu_data[5] -= gyrooffsetz
+        #imu_data[0] -= accoffsetx
+        #imu_data[1] -= accoffsety
+        #imu_data[2] -= accoffsetz
+        #imu_data[3] -= gyrooffsetx
+        #imu_data[4] -= gyrooffsety
+        #imu_data[5] -= gyrooffsetz
         # ax = imu_data[0]
         # ay = imu_data[1]
         # az = imu_data[2]

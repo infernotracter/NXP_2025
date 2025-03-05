@@ -1151,33 +1151,14 @@ while True:
 
     # 1ms中断标志位
     if (ticker_flag_1ms):
-<<<<<<< HEAD
-        imu_data = imu.get()             # 读取陀螺仪的数据
-        # 采样周期（与3ms中断对应）
-        # delta_T = 0.003
-        # 卡尔曼滤波
-        kalman_filter_gyro(kfp_var_gyro, imu_data[0])
-        kalman_filter_gyro(kfp_var_gyro, imu_data[1])
-        kalman_filter_gyro(kfp_var_gyro, imu_data[2])
-        # 单位转换
-        imu_data[0] /= ACC_SPL
-        imu_data[1] /= ACC_SPL
-        imu_data[2] /= ACC_SPL
-        imu_data[3] /= GYRO_SPL
-        imu_data[4] /= GYRO_SPL
-        imu_data[5] /= GYRO_SPL
-=======
         # menu()                           # 菜单显示
         imu_data = imu.get()             # 读取陀螺仪的数据
->>>>>>> f4fa4d780181a6ce1de82862aa92e1b05cb8e5dc
         ax = imu_data[0]
         ay = imu_data[1]
         az = imu_data[2]
         gx = imu_data[3]  # 陀螺仪X轴（可能需要根据坐标系调整）
         gy = imu_data[4]  # 陀螺仪Y轴
         gz = imu_data[5]  # 陀螺仪Z轴
-<<<<<<< HEAD
-=======
         # 采样周期（与3ms中断对应）
         # delta_T = 0.003
         # 执行四元数更新
@@ -1191,7 +1172,6 @@ while True:
         imu_data[1] /= ACC_SPL
         imu_data[2] /= ACC_SPL
 
->>>>>>> f4fa4d780181a6ce1de82862aa92e1b05cb8e5dc
         quaternion_update(ax, ay, az, gx, gy, gz)
 
         gc.collect()

@@ -8,8 +8,16 @@
       <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/nxp_1_24.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/nxp_1_24.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+<<<<<<< HEAD
       <change beforePath="$PROJECT_DIR$/ciallo_2_18.py" beforeDir="false" afterPath="$PROJECT_DIR$/ciallo_2_18.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/zyc_2_21.py" beforeDir="false" afterPath="$PROJECT_DIR$/zyc_2_21.py" afterDir="false" />
+=======
+<<<<<<< HEAD
+      <change beforePath="$PROJECT_DIR$/main_2_26#pid.py" beforeDir="false" afterPath="$PROJECT_DIR$/main_2_26#pid.py" afterDir="false" />
+=======
+      <change beforePath="$PROJECT_DIR$/src/Seekfree_TC377_Opensource_Library/code/motor.c" beforeDir="false" afterPath="$PROJECT_DIR$/src/Seekfree_TC377_Opensource_Library/code/motor.c" afterDir="false" />
+>>>>>>> 2a74683 (pid改)
+>>>>>>> 0077cf3a686cb66224800d548c727a2ca32cae3f
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -177,11 +185,18 @@
       <workItem from="1740450544405" duration="946000" />
       <workItem from="1740451626685" duration="1828000" />
       <workItem from="1740460174665" duration="10000" />
+<<<<<<< HEAD
       <workItem from="1740460218723" duration="5568000" />
       <workItem from="1740478963571" duration="926000" />
+<<<<<<< HEAD
       <workItem from="1740964434336" duration="13000" />
       <workItem from="1740997544490" duration="258000" />
       <workItem from="1740997804796" duration="7606000" />
+=======
+=======
+      <workItem from="1740460220600" duration="4815000" />
+>>>>>>> 2a74683 (pid改)
+>>>>>>> 0077cf3a686cb66224800d548c727a2ca32cae3f
     </task>
     <servers />
   </component>
