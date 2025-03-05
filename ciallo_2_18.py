@@ -21,7 +21,7 @@ Go = Pin('C21', Pin.IN, pull=Pin.PULL_UP_47K, value=0)
 motor_l = MOTOR_CONTROLLER(
     MOTOR_CONTROLLER.PWM_C25_DIR_C27, 13000, duty=0, invert=True)
 motor_r = MOTOR_CONTROLLER(
-    MOTOR_CONTROLLER.PWM_C24_DIR_C26, 13000, duty=0, invert=True)
+    MOTOR_CONTROLLER.PWM_C24_DIR_C, 13000, duty=0, invert=True)
 
 # 实例化 encoder 模块
 encoder_l = encoder("D0", "D1", True)

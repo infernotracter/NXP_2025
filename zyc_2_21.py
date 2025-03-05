@@ -528,7 +528,6 @@ parameter_flag = 0
 screen_off_flag = 0
 save_para_flag = 0
 
-
 def menu():
     global main_menu_flag, car_go_flag, speed_flag, element_flag, angle_pd_flag, speed_pi_flag, gyro_pi_flag, ccd_image_flag, screen_off_flag, save_para_flag
     if (main_menu_flag == 1):
@@ -1015,6 +1014,7 @@ def write_flash():
 
     # 最后将文件关闭即可
     user_file.close()
+
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 while True:
