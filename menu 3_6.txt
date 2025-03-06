@@ -144,7 +144,7 @@ ccd_data2 = [0] * 128  # ccd2原始数组
 encl_data = 0  # 左编码器数据
 encr_data = 0  # 右数据编码器
 # out = 0  # 舵机输出值
-aim_speed = 100  # 之后要可以使用KEY手动修改
+aim_speed = 0  # 之后要可以使用KEY手动修改
 aim_speed_l = 0  # 左轮期望速度
 aim_speed_r = 0  # 右轮期望速度
 out_l = 0  # 左轮输出值
@@ -322,6 +322,7 @@ def imuoffsetinit():
     accoffsety /= OFFSETNUM
     accoffsetz /= OFFSETNUM
     return gyrooffsetx, gyrooffsety, gyrooffsetz, accoffsetx, accoffsety, accoffsetz
+
 
 main_point_item = 30
 main_menu_flag = 1
@@ -935,23 +936,21 @@ while True:
         
     
     if (ticker_flag_2ms):
-        
         menu(key_data)
         gyro_pid_out = gyro_pid.calculate(
             0, imu_data[3] + imu_data[4] + imu_data[5])
-        # gyro_pid.pid_standard_integral(0, imu_data[3] + imu_data[4] + imu_data[5])
         ticker_flag_2ms = False
 
     if (ticker_flag_10ms):
-        # angle_pid_out = angle_pid.calculate(speed_pid_out + MedAngle, current_pitch)
+        #angle_pid_out = angle_pid.calculate(speed_pid_out + MedAngle, current_pitch)
         # !!!!!!!!!!!!!!!!!    pitch    记得改     !!!!!!!!!!!!!!!!!
-        # angle_pid.pid_standard_integral(speed_pid.out + MedAngle, current_pitch)
+        #angle_pid.pid_standard_integral(speed_pid.out + MedAngle, current_pitch)
         key_data=key.get()
         ticker_flag_10ms = False
 
     if (ticker_flag_50ms):
-        # speed_pid_out = speed_pid.calculate(aim_speed, (encl_data + encr_data) / 2)
-        # speed_pid.pid_standard_integral(aim_speed, (encl_data + encr_data) / 2)
+        #speed_pid_out = speed_pid.calculate(aim_speed, (encl_data + encr_data) / 2)
+        #speed_pid.pid_standard_integral(aim_speed, (encl_data + encr_data) / 2)
         ticker_flag_50ms = False
 
     if (ticker_flag_4ms):
@@ -985,5 +984,6 @@ while True:
     # if (ticker_flag_8ms):
     #    # dir_out.pid_standard_integral(0, (error1 + error2) * error_k)
     #     ticker_flag_8ms = False
+
 
 
