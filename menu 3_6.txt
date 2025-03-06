@@ -378,7 +378,7 @@ def main_menu(key_data):  # 一级菜单
     lcd.str16(16, 158, "screen_off", 0xFFFF)
     lcd.str16(16, 174, "save_para", 0xFFFF)
 
-    lcd.str12(0, main_point_item, ">", 0xF800)
+    lcd.str16(0, main_point_item, ">", 0xF800)
     if key_data[0]:
         lcd.clear(0x0000)
         main_point_item += 16
@@ -496,7 +496,7 @@ def sec_menu_02(key_data):
     lcd.str16(16, 62, "return", 0xFFFF)
     lcd.str16(16, 30, "aim_speed_l={}".format(aim_speed_l), 0xFFFF)
     lcd.str16(16, 46, "aim_speed_r={}".format(aim_speed_r), 0xFFFF)
-    lcd.str12(0, main_point_item, ">", 0xF800)
+    lcd.str16(0, main_point_item, ">", 0xF800)
 
     if key_data[0]:
         main_point_item += 16
@@ -514,17 +514,21 @@ def sec_menu_02(key_data):
 
     if main_point_item == 30:
         if key_data[2]:
+            lcd.clear(0x0000)
             aim_speed_l += 5
             key.clear(3)
         if key_data[3]:
+            lcd.clear(0x0000)
             aim_speed_l -= 5
             key.clear(4)
 
     if main_point_item == 46:
         if key_data[2]:
+            lcd.clear(0x0000)
             aim_speed_r += 5
             key.clear(3)
         if key_data[3]:
+            lcd.clear(0x0000)
             aim_speed_r -= 5
             key.clear(4)
     if main_point_item == 62 and key_data[2]:
@@ -558,13 +562,13 @@ def sec_menu_02(key_data):
 def sec_menu_04(key_data):
     global main_point_item, main_menu_flag, angle_pd_flag
     lcd.str24(60, 0, "angle_pd", 0x07E0)
-    lcd.str16(16, 30, "angle_KP={}".format(angle_pid.kp), 0xFFFF)
+    lcd.str16(16, 30, "angle_KP={}".format(angle_pid.kp, '.2f'), 0xFFFF)
     lcd.str16(16, 46, "angle_Kp+/- 0.01", 0xFFFF)
     lcd.str16(16, 62, "angle_Kp+/- 0.1", 0xFFFF)
-    lcd.str16(16, 78, "angle_KD={}".format(angle_pid.kd), 0xFFFF)
+    lcd.str16(16, 78, "angle_KD={}".format(angle_pid.kd, '.2f'), 0xFFFF)
     lcd.str16(16, 94, "angle_KD+/- 0.01", 0xFFFF)
     lcd.str16(16, 110, "angle_KD+/- 0.1", 0xFFFF)
-    lcd.str12(0, main_point_item, ">", 0xF800)
+    lcd.str16(0, main_point_item, ">", 0xF800)
 
     lcd.str16(16, 126, "return", 0xFFFF)
 
@@ -584,23 +588,29 @@ def sec_menu_04(key_data):
 
     if main_point_item == 46:
         if key_data[2]:
+            lcd.clear(0x0000)
             angle_pid.kp += 0.01
             key.clear(3)
         if key_data[3]:
+            lcd.clear(0x0000)
             angle_pid.kp -= 0.01
             key.clear(4)
     if main_point_item == 62:
         if key_data[2]:
+            lcd.clear(0x0000)
             angle_pid.kp += 0.1
             key.clear(3)
         if key_data[3]:
+            lcd.clear(0x0000)
             angle_pid.kp -= 0.1
             key.clear(4)
     if main_point_item == 94:
         if key_data[2]:
+            lcd.clear(0x0000)
             angle_pid.kd += 0.01
             key.clear(3)
         if key_data[3]:
+            lcd.clear(0x0000)
             angle_pid.kd -= 0.01
             key.clear(4)
     if main_point_item == 110:
@@ -630,7 +640,7 @@ def sec_menu_05(key_data):
     lcd.str16(16, 78, "speed_kd={}".format(speed_pid.ki), 0xFFFF)
     lcd.str16(16, 94, "speed_kd +/- 0.01", 0xFFFF)
     lcd.str16(16, 110, "speed_kd +/- 0.1", 0xFFFF)
-    lcd.str12(0, main_point_item, ">", 0xF800)
+    lcd.str16(0, main_point_item, ">", 0xF800)
 
     lcd.str16(16, 126, "return", 0xFFFF)
     if key_data[0]:
@@ -647,30 +657,38 @@ def sec_menu_05(key_data):
             main_point_item = 126
     if main_point_item == 46:
         if key_data[2]:
+            lcd.clear(0x0000)
             speed_pid.kp += 0.01
             key.clear(3)
         if key_data[3]:
+            lcd.clear(0x0000)
             speed_pid.kp -= 0.01
             key.clear(4)
     if main_point_item == 62:
         if key_data[2]:
+            lcd.clear(0x0000)
             speed_pid.kp += 0.1
             key.clear(3)
         if key_data[3]:
+            lcd.clear(0x0000)
             speed_pid.kp -= 0.1
             key.clear(4)
     if main_point_item == 94:
         if key_data[2]:
+            lcd.clear(0x0000)
             speed_pid.ki += 0.01
             key.clear(3)
         if key_data[3]:
+            lcd.clear(0x0000)
             speed_pid.ki -= 0.01
             key.clear(4)
     if main_point_item == 110:
         if key_data[2]:
+            lcd.clear(0x0000)
             speed_pid.ki += 0.1
             key.clear(3)
         if key_data[3]:
+            lcd.clear(0x0000)
             speed_pid.ki -= 0.1
             key.clear(4)
     if main_point_item == 126:
@@ -693,7 +711,7 @@ def sec_menu_06(key_data):
     lcd.str16(16, 78, "gyro_ki={}".format(gyro_pid.ki), 0xFFFF)
     lcd.str16(16, 94, "gyro_ki+/- 0.01", 0xFFFF)
     lcd.str16(16, 110, "gyro_ki+/- 0.1", 0xFFFF)
-    lcd.str12(0, main_point_item, ">", 0xF800)
+    lcd.str16(0, main_point_item, ">", 0xF800)
 
     lcd.str16(16, 126, "return", 0xFFFF)
     if key_data[0]:
@@ -710,30 +728,38 @@ def sec_menu_06(key_data):
             main_point_item = 126
     if main_point_item == 46:
         if key_data[2]:
+            lcd.clear(0x0000)
             gyro_pid.kp += 0.01
             key.clear(3)
         if key_data[3]:
+            lcd.clear(0x0000)
             gyro_pid.kp -= 0.01
             key.clear(4)
     if main_point_item == 62:
         if key_data[2]:
+            lcd.clear(0x0000)
             gyro_pid.kp += 0.1
             key.clear(3)
         if key_data[3]:
+            lcd.clear(0x0000)
             gyro_pid.kp -= 0.1
             key.clear(4)
     if main_point_item == 94:
         if key_data[2]:
+            lcd.clear(0x0000)
             gyro_pid.ki += 0.01
             key.clear(3)
         if key_data[3]:
+            lcd.clear(0x0000)
             gyro_pid.ki -= 0.01
             key.clear(4)
     if main_point_item == 110:
         if key_data[2]:
+            lcd.clear(0x0000)
             gyro_pid.ki += 0.1
             key.clear(3)
         if key_data[3]:
+            lcd.clear(0x0000)
             gyro_pid.ki -= 0.1
             key.clear(4)
     if main_point_item == 126:
