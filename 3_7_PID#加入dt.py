@@ -163,9 +163,10 @@ def my_limit(value, min_val, max_val):
 
 
 class PID:
-    def __init__(self, kp, ki=0, kd=0,
+    def __init__(self, kp, ki=0, kd=0,dt = 0,
                  integral_limits=None, output_limits=None,
                  output_adjustment=None):
+        self.dt = dt
         self.kp = kp
         self.ki = ki
         self.kd = kd
@@ -179,7 +180,7 @@ class PID:
         error = target - current
 
         # 积分项处理
-        self.integral += error * self.ki
+        self.integral += error * self.ki * self.dt
         if self.integral_limits:
             self.integral = my_limit(self.integral, *self.integral_limits)
 
@@ -208,14 +209,14 @@ def gyro_adjustment(output):
 
 
 # PID实例化
-speed_pid = PID(kp=0.0, ki=0.6,
+speed_pid = PID(kp=0.0, ki=0.6,dt = 0.002,
                 integral_limits=(-2000, 2000),
                 output_limits=(-500, 500))
 
-angle_pid = PID(kp=0.0, kd=0.6,
+angle_pid = PID(kp=0.0, kd=0.6,dt = 0.01,
                 integral_limits=(-2000, 2000))
 
-gyro_pid = PID(kp=0.1, kd=0.0,
+gyro_pid = PID(kp=0.0, kd=0.0,dt = 0.05,
                integral_limits=(-2000, 2000),
                output_limits=(-500, 500))
                # output_adjustment=gyro_adjustment)
@@ -903,8 +904,6 @@ while True:
     motor_l.duty(gyro_pid_out - dir_in_out)
     motor_r.duty(gyro_pid_out + dir_in_out)
 
-    print(f"{gyro_pid_out - dir_in_out}, {gyro_pid_out + dir_in_out}")
-
     # motor_l.duty(aim_speed)
     # motor_r.duty(aim_speed)
 
@@ -954,7 +953,7 @@ while True:
 
         menu(key_data)
         gyro_pid_out = gyro_pid.calculate(
-            0, current_roll)
+            0, current_pitch)
         # gyro_pid.pid_standard_integral(0, imu_data[3] + imu_data[4] + imu_data[5])
         ticker_flag_2ms = False
 
