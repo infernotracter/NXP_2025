@@ -954,7 +954,7 @@ while True:
 
         menu(key_data)
         gyro_pid_out = gyro_pid.calculate(
-            0, current_roll)
+            0, imu_data[3])
         # gyro_pid.pid_standard_integral(0, imu_data[3] + imu_data[4] + imu_data[5])
         ticker_flag_2ms = False
 
