@@ -109,7 +109,7 @@ def time_pit_1ms_handler(time):
 pit1 = ticker(1)
 pit1.capture_list(imu, key)
 pit1.callback(time_pit_1ms_handler)
-pit1.start(1)  # 之前为3，现在改为1
+pit1.start(3)  # 之前为3，现在改为1
 
 
 def time_pit_5ms_handler(time):
