@@ -69,7 +69,10 @@ ccd = TSL1401(3)
 # 实例化 KEY_HANDLER 模块
 key = KEY_HANDLER(10)
 # 零号ticker记数，用于三个pid
-pit_cont0 = 0
+pit_cont_gyro = 0  #仿独立计时器用于角速度环
+pit_cont_angle= 0  #仿独立计时器用于角度环
+pit_cont_speed= 0  #仿独立计时器用于速度环
+
 
 # 定义一个回调函数
 ticker_flag_2ms = False
@@ -82,16 +85,19 @@ ticker_flag_50ms = False
 
 
 def time_pit_pid_handler(time):
-    global ticker_flag_2ms, ticker_flag_10ms, ticker_flag_50ms, pit_cont0
-    pit_cont0 += 1
-    if (pit_cont0 == 2):
+    global ticker_flag_2ms, ticker_flag_10ms, ticker_flag_50ms, pit_cont_gyro,pit_cont_angle,pit_cont_speed
+    pit_cont_gyro += 1
+    pit_cont_angle+=1
+    pit_cont_speed+=1
+    if (pit_cont_gyro == 2):
         ticker_flag_2ms = True
-    if (pit_cont0 == 10):
+        pit_cont_gyro=0  #重置计时器
+    if (pit_cont_angle == 10):
         ticker_flag_10ms = True
-    if (pit_cont0 == 50):
+        pit_cont_angle=0
+    if (pit_cont_speed == 50):
         ticker_flag_50ms = True
-    if (pit_cont0 > 50):
-        pit_cont0 = 1
+        pit_cont_speed=0
 
 
 # 实例化 PIT ticker 模块
@@ -123,16 +129,19 @@ pit2.capture_list(ccd, key, encoder_l, encoder_r)
 pit2.callback(time_pit_5ms_handler)
 pit2.start(5)
 
-pit_cont3 = 0
-
+pit_dir_in=0
+pit_dir_out=0
 
 def time_pit_turnpid_handler(time):
-    global ticker_flag_4ms, ticker_flag_8ms, pit_cont3
-    pit_cont3 += 1
-    if (pit_cont3 == 4):
+    global ticker_flag_4ms, ticker_flag_8ms, pit_dir_in,pit_dir_out
+    pit_dir_in += 1
+    pit_dir_out+=1
+    if (pit_dir_in == 4):
         ticker_flag_4ms = True
-    if (pit_cont3 == 8):
+        pit_dir_in=0
+    if (pit_dir_out == 8):
         ticker_flag_8ms = True
+        pit_dir_out=0
 
 
 pit3 = ticker(3)
