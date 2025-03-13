@@ -41,11 +41,8 @@ motor_r = MOTOR_CONTROLLER(
 encoder_l = encoder("D0", "D1", True)
 encoder_r = encoder("D2", "D3")
 
-# # 实例化 bldc 模块
-# bldc1 = BLDC_CONTROLLER(BLDC_CONTROLLER.PWM_B26, freq = 300, highlevel_us = 1100)
-# bldc2 = BLDC_CONTROLLER(BLDC_CONTROLLER.PWM_B27, freq = 300, highlevel_us = 1100)
-# high_level_us = 1300
-# dir = 1
+# 实例化 WIRELESS_UART 模块
+wireless = WIRELESS_UART(460800)
 
 # 实例化 lcd 模块
 
@@ -908,6 +905,7 @@ def sec_menu_10(key_data):
 # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 imuoffsetinit()  # 零飘校准
 last_imu_data = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0, 0.0, 0.0]
+data_wave = [0,0,0,0,0,0,0,0]
 key_data = key.get()
 while True:
     motor_l.duty(gyro_pid_out - dir_in_out)
@@ -957,6 +955,20 @@ while True:
 
         encl_data = encoder_l.get()  # 读取左编码器的数据
         encr_data = encoder_r.get()  # 读取右编码器的数据
+
+        # 定期进行数据解析
+        data_flag = wireless.data_analysis()
+        for i in range(0,8):
+            # 判断哪个通道有数据更新
+            if (data_flag[i]):
+                # 数据更新到缓冲
+                data_wave[i] = wireless.get_data(i)
+                # 将更新的通道数据输出到 Thonny 的控制台
+                print("Data[{:<6}] updata : {:<.3f}.\r\n".format(i,data_wave[i]))
+
+        wireless.send_oscilloscope(
+            data_wave[0],data_wave[1],data_wave[2],data_wave[3],
+            data_wave[4],data_wave[5],data_wave[6],data_wave[7])
 
         # 原函数此时为圆环处理
         ticker_flag_5ms = False

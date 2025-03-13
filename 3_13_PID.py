@@ -284,9 +284,9 @@ def quaternion_update(ax, ay, az, gx, gy, gz):
     my_limit(I_ez, -100, 100)
 
     # 调整陀螺仪数据（弧度制）
-    gx = math.radians(gx) + imu_kp * ex + I_ex
-    gy = math.radians(gy) + imu_kp * ey + I_ey
-    gz = math.radians(gz) + imu_kp * ez + I_ez
+    gx += imu_kp * ex + I_ex
+    gy += imu_kp * ey + I_ey
+    gz += imu_kp * ez + I_ez
 
     # 四元数积分（一阶龙格库塔法）
     half_T = 0.5 * delta_T
@@ -321,7 +321,7 @@ gyrooffsetz = 0
 accoffsetx = 0
 accoffsety = 0
 accoffsetz = 0
-OFFSETNUM = 1000
+OFFSETNUM = 100
 
 
 def imuoffsetinit():
@@ -942,18 +942,15 @@ while True:
         alpha = 0.5
         for i in range(3):
             # 先进行零偏校正和单位转换
-            current_processed = (
-                imu_data[i] - [accoffsetx, accoffsety, accoffsetz][i]) / ACC_SPL
+            current_processed = (imu_data[i] - [accoffsetx, accoffsety, accoffsetz][i]) / ACC_SPL
             # 再应用滤波，使用上一次的滤波结果
-            imu_data[i] = alpha * current_processed + \
-                (1 - alpha) * last_imu_data[i]
+            imu_data[i] = alpha * current_processed + (1 - alpha) * last_imu_data[i]
             # 更新历史值为当前滤波结果
             last_imu_data[i] = imu_data[i]
 
         # 陀螺仪单位转换（减去偏移后除以灵敏度）
         for i in range(3, 6):
-            imu_data[i] = math.radians(
-                (imu_data[i] - [gyrooffsetx, gyrooffsety, gyrooffsetz][i - 3]) / GYRO_SPL)
+            imu_data[i] = math.radians((imu_data[i] - [gyrooffsetx, gyrooffsety, gyrooffsetz][i - 3]) / GYRO_SPL)
         # 四元数更新（使用解包后的变量）
         ax, ay, az = imu_data[0], imu_data[1], imu_data[2]
         gx, gy, gz = imu_data[3], imu_data[4], imu_data[5]
