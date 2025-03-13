@@ -588,9 +588,7 @@ def sec_menu_04(key_data):
     lcd.str16(16, 142, "motor_r.duty()={:0>4d}".format(motor_r.duty()), 0xFFFF)
     lcd.str16(0, main_point_item, ">", 0xF800)
 
-    lcd.str16(0, main_point_item, ">", 0xF800)
-
-    lcd.str16(16, 126, "return", 0xFFFF)
+    # lcd.str16(16, 126, "return", 0xFFFF)
 
     if key_data[0]:
         main_point_item += 16
@@ -664,7 +662,7 @@ def sec_menu_05(key_data):
     lcd.str16(16, 142, "motor_r.duty()={:0>4d}".format(motor_r.duty()), 0xFFFF)
     lcd.str16(0, main_point_item, ">", 0xF800)
 
-    lcd.str16(16, 126, "return", 0xFFFF)
+    # lcd.str16(16, 126, "return", 0xFFFF)
     if key_data[0]:
         main_point_item += 16
         lcd.clear(0x0000)
@@ -737,7 +735,7 @@ def sec_menu_06(key_data):
     lcd.str16(16, 142, "motor_r.duty()={:0>4d}".format(motor_r.duty()), 0xFFFF)
     lcd.str16(0, main_point_item, ">", 0xF800)
 
-    lcd.str16(16, 126, "return", 0xFFFF)
+    # lcd.str16(16, 126, "return", 0xFFFF)
     if key_data[0]:
         main_point_item += 16
         lcd.clear(0x0000)
@@ -920,12 +918,13 @@ while True:
     # motor_l.duty(aim_speed)
     # motor_r.duty(aim_speed)
 
-    # 拨码开关关中断
-#     if end_switch.value() == 0:
-#         pit1.stop()  # pit1关闭
-#         pit2.stop()  # pit2关闭
-#         pit3.stop()  # pit3关闭
-#         break  # 跳出判断
+    # 如果拨码开关打开 对应引脚拉低 就退出循环
+    # 这么做是为了防止写错代码导致异常 有一个退出的手段
+    if end_switch.value() == 0:
+        pit1.stop()  # pit1关闭
+        pit2.stop()  # pit2关闭
+        pit3.stop()  # pit3关闭
+        break  # 跳出判断
 
     # 1ms中断标志位
     if (ticker_flag_1ms):
