@@ -246,13 +246,17 @@ current_yaw = 0  # 当前偏航角
 # 姿态角度计算函数
 
 
+# 姿态角度计算函数
 def quaternion_update(ax, ay, az, gx, gy, gz):
     global q0, q1, q2, q3, I_ex, I_ey, I_ez, current_pitch, current_roll, current_yaw
+    
+    if ax == 0 or ay == 0 or az == 0:
+        return
 
     # 归一化加速度计数据
-    norm = math.sqrt(ax ** 2 + ay ** 2 + az ** 2)
-    if norm == 0:
-        return
+    norm = math.sqrt(ax**2 + ay**2 + az**2)
+    # if norm == 0:
+    #     return
     ax /= norm
     ay /= norm
     az /= norm
@@ -268,9 +272,16 @@ def quaternion_update(ax, ay, az, gx, gy, gz):
     ez = (ax * vy - ay * vx)
 
     # 误差积分
+    # 原代码直接累加，没有乘以imu_ki
+    # 修正后与网上代码一致
     I_ex += ex * imu_ki
     I_ey += ey * imu_ki
     I_ez += ez * imu_ki
+
+    # 限幅(-50, 50)可以试试
+    my_limit(I_ex, -100, 100)
+    my_limit(I_ey, -100, 100)
+    my_limit(I_ez, -100, 100)
 
     # 调整陀螺仪数据（弧度制）
     gx = math.radians(gx) + imu_kp * ex + I_ex
@@ -299,10 +310,8 @@ def quaternion_update(ax, ay, az, gx, gy, gz):
 
     # 计算欧拉角
     current_pitch = math.degrees(math.asin(2 * (q0 * q2 - q1 * q3)))
-    current_roll = math.degrees(math.atan2(
-        2 * (q0 * q1 + q2 * q3), 1 - 2 * (q1 ** 2 + q2 ** 2)))
-    current_yaw = math.degrees(math.atan2(
-        2 * (q0 * q3 + q1 * q2), 1 - 2 * (q2 ** 2 + q3 ** 2)))
+    current_roll = math.degrees(math.atan2(2 * (q0 * q1 + q2 * q3), 1 - 2 * (q1 ** 2 + q2 ** 2)))
+    current_yaw = math.degrees(math.atan2(2 * (q0 * q3 + q1 * q2), 1 - 2 * (q2 ** 2 + q3 ** 2)))
 
 
 # 零飘定义
@@ -913,17 +922,17 @@ while True:
     motor_l.duty(gyro_pid_out - dir_in_out)
     motor_r.duty(gyro_pid_out + dir_in_out)
 
-    print(f"{motor_l.duty()}, {motor_r.duty()},{current_roll},{current_pitch},{current_yaw}")
+    print(f"{motor_l.duty()}, {motor_r.duty()}, {current_roll}, {current_pitch}, {current_yaw}, {imu_data[3]}, {imu_data[4]}, {imu_data[5]}")
 
     # motor_l.duty(aim_speed)
     # motor_r.duty(aim_speed)
 
     # 拨码开关关中断
-#     if end_switch.value() == 0:
-#         pit1.stop()  # pit1关闭
-#         pit2.stop()  # pit2关闭
-#         pit3.stop()  # pit3关闭
-#         break  # 跳出判断
+    if end_switch.value() == 0:
+        pit1.stop()  # pit1关闭
+        pit2.stop()  # pit2关闭
+        pit3.stop()  # pit3关闭
+        break  # 跳出判断
 
     # 1ms中断标志位
     if (ticker_flag_1ms):
@@ -969,7 +978,8 @@ while True:
         ticker_flag_2ms = False
 
     if (ticker_flag_10ms):
-        angle_pid_out = angle_pid.calculate(speed_pid_out + MedAngle, current_roll)
+        angle_pid_out = angle_pid.calculate(
+            speed_pid_out + MedAngle, current_roll)
         key_data = key.get()
         ticker_flag_10ms = False
 
