@@ -1,1 +1,0 @@
-"user\Dianci\LQ_dianci.c" LARGE INTR2 BROWSE INCDIR(.\user;.\user\Dianci) DEBUG PRINT(.\Listings\LQ_dianci.lst) TABS (2) OBJECT(.\Objects\LQ_dianci.obj)
