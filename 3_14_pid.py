@@ -84,6 +84,9 @@ ticker_flag_50ms = False
 
 def time_pit_pid_handler(time):
     global ticker_flag_2ms, ticker_flag_10ms, ticker_flag_50ms, pit_cont_gyro, pit_cont_angle, pit_cont_speed
+    pit_cont_gyro+=1
+    pit_cont_angle+=1
+    pit_cont_speed+=1
     if (pit_cont_gyro == 2):
         ticker_flag_2ms = True
         pit_cont_gyro = 0  # 重置计时器
@@ -111,7 +114,7 @@ def time_pit_1ms_handler(time):
 pit1 = ticker(1)
 pit1.capture_list(imu, key)
 pit1.callback(time_pit_1ms_handler)
-pit1.start(1)  # 之前为3，现在改为1
+pit1.start(2)  # 之前为3，现在改为1
 
 
 def time_pit_5ms_handler(time):
@@ -156,12 +159,12 @@ ccd_data2 = [0] * 128  # ccd2原始数组
 encl_data = 0  # 左编码器数据
 encr_data = 0  # 右数据编码器
 # # out = 0  # 舵机输出值
-aim_speed = 10  # 之后要可以使用KEY手动修改
+aim_speed = 0  # 之后要可以使用KEY手动修改
 aim_speed_l = 0  # 左轮期望速度
 aim_speed_r = 0  # 右轮期望速度
 out_l = 0  # 左轮输出值
 out_r = 0  # 右轮输出值
-MedAngle = 37.2
+MedAngle = 62.2
 
 
 # n = 0  # 元素判断用
@@ -222,17 +225,18 @@ def gyro_adjustment(output):
 
 
 # PID实例化
-speed_pid = PID(kp=10.0, ki=0.6,
-                integral_limits=(-2000, 2000),
+speed_pid = PID(kp=1.0, ki=0
+                ,integral_limits=(-2000, 2000),
                 output_limits=(-500, 500))
+                
 
-angle_pid = PID(kp=10.0, kd=0.6,
-                integral_limits=(-2000, 2000))
+angle_pid = PID(kp=1.0, kd=0
+                ,integral_limits=(-2000, 2000))
 
-gyro_pid = PID(kp=100.0, kd=1.0,
-               integral_limits=(-2000, 2000),
+gyro_pid = PID(kp=1.0, kd=0.0
+               ,integral_limits=(-2000, 2000),
                output_limits=(-500, 500),
-               output_adjustment=gyro_adjustment)
+              output_adjustment=gyro_adjustment)
 
 dir_in = PID(kp=0.0, ki=0.6,
              integral_limits=(-2000, 2000))
@@ -938,10 +942,10 @@ imuoffsetinit()  # 零飘校准
 last_imu_data = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0, 0.0, 0.0]
 key_data = key.get()
 while True:
-    motor_l.duty(gyro_pid_out - dir_in_out)
-    motor_r.duty(gyro_pid_out + dir_in_out)
+    motor_l.duty(my_limit(gyro_pid_out - dir_in_out,-4000,4000))
+    motor_r.duty(my_limit(gyro_pid_out + dir_in_out,-4000,4000))
 
-    print(f"{motor_l.duty()}, {motor_r.duty()}, {current_roll}, {current_pitch}, {current_yaw}")
+    print(f"{motor_l.duty()}, {motor_r.duty()}, {gyro_pid_out}, {angle_pid_out}, {speed_pid_out}，{current_roll}")
 
     # motor_l.duty(aim_speed)
     # motor_r.duty(aim_speed)
@@ -979,26 +983,26 @@ while True:
         gc.collect()
         ticker_flag_1ms = False
 
-    # #    if (ticker_flag_5ms):
+    if (ticker_flag_5ms):
     # #
-    #         encl_data = encoder_l.get()  # 读取左编码器的数据
-    #         encr_data = encoder_r.get()  # 读取右编码器的数据
+        encl_data = encoder_l.get()  # 读取左编码器的数据
+        encr_data = encoder_r.get()  # 读取右编码器的数据
     # # #
     # # #        # 原函数此时为圆环处理
-    #        ticker_flag_5ms = False
+        ticker_flag_5ms = False
     #
-    if (ticker_flag_2ms):
-        menu(key_data)
-        gyro_pid_out = gyro_pid.calculate(
-            0, imu_data[3])
+    if (ticker_flag_2ms):      #kp=100.1  ki=2.0000001
+        
+        gyro_pid_out = gyro_pid.calculate(angle_pid_out, imu_data[3])
         # gyro_pid.pid_standard_integral(0, imu_data[3] + imu_data[4] + imu_data[5])
         ticker_flag_2ms = False
 
-    if (ticker_flag_10ms):
-        angle_pid_out = angle_pid.calculate(
-            speed_pid_out + MedAngle, current_roll)
-        key_data = key.get()
-        ticker_flag_10ms = False
+    if (ticker_flag_10ms): 
+         angle_pid_out = angle_pid.calculate(
+             speed_pid_out + MedAngle, current_roll)
+         menu(key_data)
+         key_data = key.get()
+         ticker_flag_10ms = False
 
     if (ticker_flag_50ms):
         speed_pid_out = speed_pid.calculate(aim_speed, (encl_data + encr_data) / 2)
@@ -1036,4 +1040,6 @@ while True:
     # if (ticker_flag_8ms):
     #    # dir_out.pid_standard_integral(0, (error1 + error2) * error_k)
     #     ticker_flag_8ms = False
+
+
 
