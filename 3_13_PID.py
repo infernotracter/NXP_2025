@@ -588,9 +588,7 @@ def sec_menu_04(key_data):
     lcd.str16(16, 142, "motor_r.duty()={:0>4d}".format(motor_r.duty()), 0xFFFF)
     lcd.str16(0, main_point_item, ">", 0xF800)
 
-    lcd.str16(0, main_point_item, ">", 0xF800)
-
-    lcd.str16(16, 126, "return", 0xFFFF)
+    # lcd.str16(16, 126, "return", 0xFFFF)
 
     if key_data[0]:
         main_point_item += 16
@@ -664,7 +662,7 @@ def sec_menu_05(key_data):
     lcd.str16(16, 142, "motor_r.duty()={:0>4d}".format(motor_r.duty()), 0xFFFF)
     lcd.str16(0, main_point_item, ">", 0xF800)
 
-    lcd.str16(16, 126, "return", 0xFFFF)
+    # lcd.str16(16, 126, "return", 0xFFFF)
     if key_data[0]:
         main_point_item += 16
         lcd.clear(0x0000)
@@ -737,7 +735,7 @@ def sec_menu_06(key_data):
     lcd.str16(16, 142, "motor_r.duty()={:0>4d}".format(motor_r.duty()), 0xFFFF)
     lcd.str16(0, main_point_item, ">", 0xF800)
 
-    lcd.str16(16, 126, "return", 0xFFFF)
+    # lcd.str16(16, 126, "return", 0xFFFF)
     if key_data[0]:
         main_point_item += 16
         lcd.clear(0x0000)
