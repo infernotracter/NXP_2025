@@ -1,4 +1,3 @@
-
 # 基础库、NXP库、第三方库
 from machine import *
 from display import *
@@ -34,9 +33,9 @@ Go = Pin('C21', Pin.IN, pull=Pin.PULL_UP_47K, value=0)
 
 # 实例化 MOTOR_CONTROLLER 电机驱动模块
 motor_l = MOTOR_CONTROLLER(
-    MOTOR_CONTROLLER.PWM_C25_DIR_C27, 13000, duty=0, invert=True)
+    MOTOR_CONTROLLER.PWM_C27_DIR_C25, 13000, duty=0, invert=True)
 motor_r = MOTOR_CONTROLLER(
-    MOTOR_CONTROLLER.PWM_C24_DIR_C26, 13000, duty=0, invert=True)
+    MOTOR_CONTROLLER.PWM_C26_DIR_C24, 13000, duty=0, invert=True)
 
 # 实例化 encoder 模块
 encoder_l = encoder("D0", "D1", True)
@@ -109,7 +108,7 @@ def time_pit_1ms_handler(time):
 pit1 = ticker(1)
 pit1.capture_list(imu, key)
 pit1.callback(time_pit_1ms_handler)
-pit1.start(3)  # 之前为3，现在改为1
+pit1.start(1)  # 之前为3，现在改为1
 
 
 def time_pit_5ms_handler(time):
@@ -155,7 +154,7 @@ MedAngle = 0
 n = 0  # 元素判断用
 m = 0
 error_k = 1  # 直接传error2后的比例
-
+speed_d = 10  # 速度增量
 # 限幅函数
 
 
@@ -506,9 +505,13 @@ def sec_menu_01(key_data):
 def sec_menu_02(key_data):
     global speed_flag, main_menu_flag, aim_speed_l, aim_speed_r, main_point_item
     lcd.str24(60, 0, "speed", 0x07E0)
-    lcd.str16(16, 62, "return", 0xFFFF)
+    lcd.str16(16, 126, "return", 0xFFFF)
     lcd.str16(16, 30, "aim_speed_l={}".format(aim_speed_l), 0xFFFF)
     lcd.str16(16, 46, "aim_speed_r={}".format(aim_speed_r), 0xFFFF)
+    lcd.str16(16, 62, "motor_l.duty={}".format(motor_l.duty()), 0xFFFF)
+    lcd.str16(16, 78, "motor_r.duty={}".format(motor_r.duty()), 0xFFFF)
+    lcd.str16(16, 94, "encoder_l={:0>4d}".format(encl_data), 0xFFFF)
+    lcd.str16(16, 110, "encoder_r={:0>4d}".format(encr_data), 0xFFFF)
     lcd.str16(0, main_point_item, ">", 0xF800)
 
     if key_data[0]:
@@ -528,23 +531,23 @@ def sec_menu_02(key_data):
     if main_point_item == 30:
         if key_data[2]:
             lcd.clear(0x0000)
-            aim_speed_l += 5
+            aim_speed_l += speed_d
             key.clear(3)
         if key_data[3]:
             lcd.clear(0x0000)
-            aim_speed_l -= 5
+            aim_speed_l -= speed_d
             key.clear(4)
 
     if main_point_item == 46:
         if key_data[2]:
             lcd.clear(0x0000)
-            aim_speed_r += 5
+            aim_speed_r += speed_d
             key.clear(3)
         if key_data[3]:
             lcd.clear(0x0000)
-            aim_speed_r -= 5
+            aim_speed_r -= speed_d
             key.clear(4)
-    if main_point_item == 62 and key_data[2]:
+    if main_point_item == 94 and key_data[2]:
         lcd.clear(0x0000)
         main_menu_flag = 1
         speed_flag = 0
@@ -904,7 +907,7 @@ while True:
     motor_l.duty(aim_speed_l)
     motor_r.duty(aim_speed_r)
 
-    print(f"{aim_speed_l}, {aim_speed_r}")
+    print(f"{aim_speed_l}, {aim_speed_r}, {motor_l.duty()}, {motor_r.duty()}")
 
     # motor_l.duty(aim_speed)
     # motor_r.duty(aim_speed)
@@ -916,70 +919,70 @@ while True:
 #         pit3.stop()  # pit3关闭
 #         break  # 跳出判断
 
-    # # 1ms中断标志位
-    # if (ticker_flag_1ms):
-    #     imu_data = [float(x) for x in imu.get()]
+    # 1ms中断标志位
+    if (ticker_flag_1ms):
+        imu_data = [float(x) for x in imu.get()]
 
-    #     # 低通滤波处理（加速度计）
-    #     alpha = 0.5
-    #     for i in range(3):
-    #         # 先进行零偏校正和单位转换
-    #         current_processed = (
-    #             imu_data[i] - [accoffsetx, accoffsety, accoffsetz][i]) / ACC_SPL
-    #         # 再应用滤波，使用上一次的滤波结果
-    #         imu_data[i] = alpha * current_processed + \
-    #             (1 - alpha) * last_imu_data[i]
-    #         # 更新历史值为当前滤波结果
-    #         last_imu_data[i] = imu_data[i]
+        # 低通滤波处理（加速度计）
+        alpha = 0.5
+        for i in range(3):
+            # 先进行零偏校正和单位转换
+            current_processed = (
+                imu_data[i] - [accoffsetx, accoffsety, accoffsetz][i]) / ACC_SPL
+            # 再应用滤波，使用上一次的滤波结果
+            imu_data[i] = alpha * current_processed + \
+                (1 - alpha) * last_imu_data[i]
+            # 更新历史值为当前滤波结果
+            last_imu_data[i] = imu_data[i]
 
-    #     # 陀螺仪单位转换（减去偏移后除以灵敏度）
-    #     for i in range(3, 6):
-    #         imu_data[i] = math.radians(
-    #             (imu_data[i] - [gyrooffsetx, gyrooffsety, gyrooffsetz][i - 3]) / GYRO_SPL)
-    #     # 四元数更新（使用解包后的变量）
-    #     ax, ay, az = imu_data[0], imu_data[1], imu_data[2]
-    #     gx, gy, gz = imu_data[3], imu_data[4], imu_data[5]
-    #     quaternion_update(ax, ay, az, gx, gy, gz)
-    #     gc.collect()
-    #     ticker_flag_1ms = False
+        # 陀螺仪单位转换（减去偏移后除以灵敏度）
+        for i in range(3, 6):
+            imu_data[i] = math.radians(
+                (imu_data[i] - [gyrooffsetx, gyrooffsety, gyrooffsetz][i - 3]) / GYRO_SPL)
+        # 四元数更新（使用解包后的变量）
+        ax, ay, az = imu_data[0], imu_data[1], imu_data[2]
+        gx, gy, gz = imu_data[3], imu_data[4], imu_data[5]
+        quaternion_update(ax, ay, az, gx, gy, gz)
+        gc.collect()
+        ticker_flag_1ms = False
 
-    # if (ticker_flag_5ms):
+    if (ticker_flag_5ms):
 
-    #     encl_data = encoder_l.get()  # 读取左编码器的数据
-    #     encr_data = encoder_r.get()  # 读取右编码器的数据
+        encl_data = encoder_l.get()  # 读取左编码器的数据
+        encr_data = encoder_r.get()  # 读取右编码器的数据
 
-    #     # 原函数此时为圆环处理
-    #     ticker_flag_5ms = False
+        # 原函数此时为圆环处理
+        ticker_flag_5ms = False
 
-    # if (ticker_flag_2ms):
+    if (ticker_flag_2ms):
 
-    #     menu(key_data)
-    #     gyro_pid_out = gyro_pid.calculate(
-    #         0, imu_data[3])
-    #     # gyro_pid.pid_standard_integral(0, imu_data[3] + imu_data[4] + imu_data[5])
-    #     ticker_flag_2ms = False
+        menu(key_data)
+        gyro_pid_out = gyro_pid.calculate(
+            0, imu_data[3])
+        # gyro_pid.pid_standard_integral(0, imu_data[3] + imu_data[4] + imu_data[5])
+        ticker_flag_2ms = False
 
-    # if (ticker_flag_10ms):
-    #     # angle_pid_out = angle_pid.calculate(speed_pid_out + MedAngle, current_pitch)
-    #     # !!!!!!!!!!!!!!!!!    pitch    记得改     !!!!!!!!!!!!!!!!!
-    #     # angle_pid.pid_standard_integral(speed_pid.out + MedAngle, current_pitch)
-    #     key_data = key.get()
-    #     ticker_flag_10ms = False
+    if (ticker_flag_10ms):
+        # angle_pid_out = angle_pid.calculate(speed_pid_out + MedAngle, current_pitch)
+        # !!!!!!!!!!!!!!!!!    pitch    记得改     !!!!!!!!!!!!!!!!!
+        # angle_pid.pid_standard_integral(speed_pid.out + MedAngle, current_pitch)
+        key_data = key.get()
+        ticker_flag_10ms = False
 
-    # if (ticker_flag_50ms):
-    #     # speed_pid_out = speed_pid.calculate(aim_speed, (encl_data + encr_data) / 2)
-    #     # speed_pid.pid_standard_integral(aim_speed, (encl_data + encr_data) / 2)
-    #     ticker_flag_50ms = False
+    if (ticker_flag_50ms):
+        # speed_pid_out = speed_pid.calculate(aim_speed, (encl_data + encr_data) / 2)
+        # speed_pid.pid_standard_integral(aim_speed, (encl_data + encr_data) / 2)
+        ticker_flag_50ms = False
 
-    # if (ticker_flag_4ms):
-    #     # dir_in_out = dir_in.calculate(dir_out_out, imu[4])
-    #     # dir_in.pid_standard_integral(dir_out.out, imu[4])
-    #     ticker_flag_4ms = False
+    if (ticker_flag_4ms):
+        # dir_in_out = dir_in.calculate(dir_out_out, imu[4])
+        # dir_in.pid_standard_integral(dir_out.out, imu[4])
+        ticker_flag_4ms = False
 
-    # if (ticker_flag_8ms):
-    #     # dir_out_out = dir_out.calculate(0, (error1 + error2) * error_k)
-    #     # dir_out.pid_standard_integral(0, (error1 + error2) * error_k)
-    #     ticker_flag_8ms = False
+    if (ticker_flag_8ms):
+        # dir_out_out = dir_out.calculate(0, (error1 + error2) * error_k)
+        # dir_out.pid_standard_integral(0, (error1 + error2) * error_k)
+        ticker_flag_8ms = False
 
      # ----------------------未改动参考代码----------------------
     #  if (ticker_flag_2ms):
