@@ -141,7 +141,7 @@ aim_speed_l = 0  # 左轮期望速度
 aim_speed_r = 0  # 右轮期望速度
 out_l = 0  # 左轮输出值
 out_r = 0  # 右轮输出值
-MedAngle = 0
+MedAngle = 69.8
 speed_d = 50  # 速度增量(调试用)
 
 
@@ -157,7 +157,7 @@ def my_limit(value, min_val, max_val):
 
 
 class PID:
-    def __init__(self, kp, ki=0, kd=0,
+    def __init__(self, kp = 0, ki = 0, kd = 0,
                  integral_limits=None, output_limits=None,
                  output_adjustment=None):
         self.kp = kp
@@ -203,18 +203,18 @@ def gyro_adjustment(output):
 
 
 # PID实例化
-speed_pid = PID(kp=0.0, ki=0)
-                # , integral_limits=(-2000, 2000),
+speed_pid = PID(kp=0.0, ki=0.0
+                , integral_limits=(-2000, 2000),)
                 # output_limits=(-500, 500))
 
 
-angle_pid = PID(kp=0.0, kd=0)
+angle_pid = PID(kp=0.3, kd=1.8)
                 # , integral_limits=(-2000, 2000))
 
-gyro_pid = PID(kp=0.0, ki=0.0,
+gyro_pid = PID(kp=500.0, kd=10.0,
             #    , integral_limits=(-2000, 2000),
-            #    output_limits=(-500, 500),
-                output_adjustment=gyro_adjustment)
+            # output_limits=(-500, 500),
+            output_adjustment=gyro_adjustment)
 
 dir_in = PID(kp=0.0, ki=0.0)
             #  integral_limits=(-2000, 2000))
@@ -738,7 +738,7 @@ def sec_menu_06(key_data):
     lcd.str16(16, 30, "gyro_kp={}".format(gyro_pid.kp), 0xFFFF)
     lcd.str16(16, 46, "gyro_kp+/- 0.01", 0xFFFF)
     lcd.str16(16, 62, "gyro_kp+/- 0.1", 0xFFFF)
-    lcd.str16(16, 78, "gyro_kd={}".format(gyro_pid.ki), 0xFFFF)
+    lcd.str16(16, 78, "gyro_kd={}".format(gyro_pid.kd), 0xFFFF)
     lcd.str16(16, 94, "gyro_ki+/- 0.01", 0xFFFF)
     lcd.str16(16, 110, "gyro_ki+/- 0.1", 0xFFFF)
     lcd.str16(16, 126, "motor_l.duty()={:0>4d}".format(motor_l.duty()), 0xFFFF)
@@ -761,38 +761,38 @@ def sec_menu_06(key_data):
     if main_point_item == 46:
         if key_data[2]:
             lcd.clear(0x0000)
-            gyro_pid.kp += 0.01
-            key.clear(3)
-        if key_data[3]:
-            lcd.clear(0x0000)
-            gyro_pid.kp -= 0.01
-            key.clear(4)
-    if main_point_item == 62:
-        if key_data[2]:
-            lcd.clear(0x0000)
             gyro_pid.kp += 0.1
             key.clear(3)
         if key_data[3]:
             lcd.clear(0x0000)
             gyro_pid.kp -= 0.1
             key.clear(4)
-    if main_point_item == 94:
+    if main_point_item == 62:
         if key_data[2]:
             lcd.clear(0x0000)
-            gyro_pid.ki += 0.01
+            gyro_pid.kp += 1
             key.clear(3)
         if key_data[3]:
             lcd.clear(0x0000)
-            gyro_pid.ki -= 0.01
+            gyro_pid.kp -= 1
+            key.clear(4)
+    if main_point_item == 94:
+        if key_data[2]:
+            lcd.clear(0x0000)
+            gyro_pid.kd += 0.01
+            key.clear(3)
+        if key_data[3]:
+            lcd.clear(0x0000)
+            gyro_pid.kd -= 0.01
             key.clear(4)
     if main_point_item == 110:
         if key_data[2]:
             lcd.clear(0x0000)
-            gyro_pid.ki += 0.1
+            gyro_pid.kd += 0.1
             key.clear(3)
         if key_data[3]:
             lcd.clear(0x0000)
-            gyro_pid.ki -= 0.1
+            gyro_pid.kd -= 0.1
             key.clear(4)
     if main_point_item == 126:
         if key_data[2]:
@@ -923,13 +923,13 @@ last_imu_data = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0, 0.0, 0.0]
 data_wave = [0,0,0,0,0,0,0,0]
 key_data = key.get()
 while True:
-    motor_l.duty(my_limit(gyro_pid_out - dir_in_out, -5000, 5000))
-    motor_r.duty(my_limit(gyro_pid_out + dir_in_out, -5000, 5000))
+    motor_l.duty(my_limit(gyro_pid_out - dir_in_out, -3000, 3000))
+    motor_r.duty(my_limit(gyro_pid_out + dir_in_out, -3000, 3000))
 
     # motor_l.duty(aim_speed_l)
     # motor_r.duty(aim_speed_r)
 
-    print(f"{motor_l.duty()}, {motor_r.duty()}, {gyro_pid_out}, {angle_pid_out}, {speed_pid_out}，{current_roll}")
+    print(f"{motor_l.duty()}, {motor_r.duty()}, {gyro_pid_out}, {angle_pid_out}, {speed_pid_out}, {current_roll}")
 
     # motor_l.duty(aim_speed)
     # motor_r.duty(aim_speed)
@@ -979,15 +979,15 @@ while True:
         ticker_flag_2ms = False
 
     if (ticker_flag_10ms):
-        # angle_pid_out = angle_pid.calculate(
-        #     speed_pid_out + MedAngle, current_roll)
+        angle_pid_out = angle_pid.calculate(
+            speed_pid_out + MedAngle, current_roll)
         menu(key_data)
         key_data = key.get()
         ticker_flag_10ms = False
 
     if (ticker_flag_50ms):
-        # speed_pid_out = speed_pid.calculate(
-        #     aim_speed, (encl_data + encr_data) / 2)
+        speed_pid_out = speed_pid.calculate(
+            aim_speed, (encl_data + encr_data) / 2)
         ticker_flag_50ms = False
 
     if (ticker_flag_4ms):
