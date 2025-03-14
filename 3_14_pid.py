@@ -13,7 +13,9 @@ import io
 # 单位换算用
 ACC_SPL = 4096.0
 GYRO_SPL = 16.4
-
+# 实例化 WIRELESS_UART 模块 参数是波特率
+# 无线串口模块需要自行先配对好设置好参数
+wireless = WIRELESS_UART(460800)
 # 屏幕实例化
 cs = Pin('C5', Pin.OUT, pull=Pin.PULL_UP_47K, value=1)
 cs.high()
@@ -27,44 +29,28 @@ lcd = LCD(drv)
 lcd.color(0xFFFF, 0x0000)
 lcd.mode(2)
 lcd.clear(0x0000)
-
 # 发车初始化
 Go = Pin('C21', Pin.IN, pull=Pin.PULL_UP_47K, value=0)
-
 # 实例化 MOTOR_CONTROLLER 电机驱动模块
 motor_l = MOTOR_CONTROLLER(
     MOTOR_CONTROLLER.PWM_C25_DIR_C27, 13000, duty=0, invert=True)
 motor_r = MOTOR_CONTROLLER(
     MOTOR_CONTROLLER.PWM_C24_DIR_C26, 13000, duty=0, invert=True)
-
 # 实例化 encoder 模块
 encoder_l = encoder("D0", "D1", True)
 encoder_r = encoder("D2", "D3")
-
-# # 实例化 bldc 模块
-# bldc1 = BLDC_CONTROLLER(BLDC_CONTROLLER.PWM_B26, freq = 300, highlevel_us = 1100)
-# bldc2 = BLDC_CONTROLLER(BLDC_CONTROLLER.PWM_B27, freq = 300, highlevel_us = 1100)
-# high_level_us = 1300
-# dir = 1
-
-# 实例化 lcd 模块
-
 # 实例化 IMU963RA 模块
 imu = IMU963RA()
-
 # 核心板上的LED
 led1 = Pin('C4', Pin.OUT, pull=Pin.PULL_UP_47K, value=True)
-
 # 拨码开关2
 end_switch = Pin('C19', Pin.IN, pull=Pin.PULL_UP_47K, value=True)
 # 拨码开关4
 switch_3 = Pin('B14', Pin.IN, pull=Pin.PULL_UP_47K, value=True)
 # 拨码开关3
 switch_4 = Pin('B15', Pin.IN, pull=Pin.PULL_UP_47K, value=True)
-
 # 调用 TSL1401 模块获取 CCD 实例
 ccd = TSL1401(3)
-
 # 实例化 KEY_HANDLER 模块
 key = KEY_HANDLER(10)
 # 零号ticker记数，用于三个pid
@@ -81,12 +67,11 @@ ticker_flag_8ms = False
 ticker_flag_10ms = False
 ticker_flag_50ms = False
 
-
 def time_pit_pid_handler(time):
     global ticker_flag_2ms, ticker_flag_10ms, ticker_flag_50ms, pit_cont_gyro, pit_cont_angle, pit_cont_speed
-    pit_cont_gyro+=1
-    pit_cont_angle+=1
-    pit_cont_speed+=1
+    pit_cont_gyro += 1
+    pit_cont_angle += 1
+    pit_cont_speed += 1
     if (pit_cont_gyro == 2):
         ticker_flag_2ms = True
         pit_cont_gyro = 0  # 重置计时器
@@ -98,7 +83,6 @@ def time_pit_pid_handler(time):
         pit_cont_speed = 0
 
 
-#
 # # 实例化 PIT ticker 模块
 pit0 = ticker(0)
 pit0.capture_list(ccd, imu, key, encoder_l, encoder_r)
@@ -122,14 +106,11 @@ def time_pit_5ms_handler(time):
     ticker_flag_5ms = True
 
 
-#
-#
 # # 实例化 PIT ticker 模块
 pit2 = ticker(2)
 pit2.capture_list(ccd, key, encoder_l, encoder_r)
 pit2.callback(time_pit_5ms_handler)
 pit2.start(5)
-#
 pit_dir_in = 0
 pit_dir_out = 0
 
@@ -145,26 +126,23 @@ def time_pit_turnpid_handler(time):
         ticker_flag_8ms = True
         pit_dir_out = 0
 
-
-#
-#
 pit3 = ticker(3)
 pit3.capture_list(ccd, imu)
 pit3.callback(time_pit_turnpid_handler)
 pit3.start(1)
-#
-# # 初始化变量
+
+# 初始化变量
 ccd_data1 = [0] * 128  # ccd1原始数组
 ccd_data2 = [0] * 128  # ccd2原始数组
 encl_data = 0  # 左编码器数据
 encr_data = 0  # 右数据编码器
-# # out = 0  # 舵机输出值
 aim_speed = 0  # 之后要可以使用KEY手动修改
 aim_speed_l = 0  # 左轮期望速度
 aim_speed_r = 0  # 右轮期望速度
 out_l = 0  # 左轮输出值
 out_r = 0  # 右轮输出值
 MedAngle = 62.2
+speed_d = 50  # 速度增量(调试用)
 
 
 # n = 0  # 元素判断用
@@ -225,23 +203,20 @@ def gyro_adjustment(output):
 
 
 # PID实例化
-speed_pid = PID(kp=1.0, ki=0
-                ,integral_limits=(-2000, 2000),
+speed_pid = PID(kp=0.0, ki=0, integral_limits=(-2000, 2000),
                 output_limits=(-500, 500))
-                
 
-angle_pid = PID(kp=1.0, kd=0
-                ,integral_limits=(-2000, 2000))
 
-gyro_pid = PID(kp=1.0, kd=0.0
-               ,integral_limits=(-2000, 2000),
+angle_pid = PID(kp=0.0, kd=0, integral_limits=(-2000, 2000))
+
+gyro_pid = PID(kp=0.0, ki=0.0, integral_limits=(-2000, 2000),
                output_limits=(-500, 500),
-              output_adjustment=gyro_adjustment)
+               output_adjustment=gyro_adjustment)
 
-dir_in = PID(kp=0.0, ki=0.6,
+dir_in = PID(kp=0.0, ki=0.0,
              integral_limits=(-2000, 2000))
 
-dir_out = PID(kp=0.0, kd=0.6)
+dir_out = PID(kp=0.0, kd=0.0)
 
 # 串级PID相关变量
 speed_pid_out = 0
@@ -329,8 +304,10 @@ def quaternion_update(ax, ay, az, gx, gy, gz):
 
     # 计算欧拉角
     current_pitch = math.degrees(math.asin(2 * (q0 * q2 - q1 * q3)))
-    current_roll = math.degrees(math.atan2(2 * (q0 * q1 + q2 * q3), 1 - 2 * (q1 ** 2 + q2 ** 2)))
-    current_yaw = math.degrees(math.atan2(2 * (q0 * q3 + q1 * q2), 1 - 2 * (q2 ** 2 + q3 ** 2)))
+    current_roll = math.degrees(math.atan2(
+        2 * (q0 * q1 + q2 * q3), 1 - 2 * (q1 ** 2 + q2 ** 2)))
+    current_yaw = math.degrees(math.atan2(
+        2 * (q0 * q3 + q1 * q2), 1 - 2 * (q2 ** 2 + q3 ** 2)))
 
 
 # 零飘定义
@@ -637,20 +614,20 @@ def sec_menu_04(key_data):
     if main_point_item == 46:
         if key_data[2]:
             lcd.clear(0x0000)
+            angle_pid.kp += 0.01
+            key.clear(3)
+        if key_data[3]:
+            lcd.clear(0x0000)
+            angle_pid.kp -= 0.01
+            key.clear(4)
+    if main_point_item == 62:
+        if key_data[2]:
+            lcd.clear(0x0000)
             angle_pid.kp += 0.1
             key.clear(3)
         if key_data[3]:
             lcd.clear(0x0000)
             angle_pid.kp -= 0.1
-            key.clear(4)
-    if main_point_item == 62:
-        if key_data[2]:
-            lcd.clear(0x0000)
-            angle_pid.kp += 1
-            key.clear(3)
-        if key_data[3]:
-            lcd.clear(0x0000)
-            angle_pid.kp -= 1
             key.clear(4)
     if main_point_item == 94:
         if key_data[2]:
@@ -781,38 +758,38 @@ def sec_menu_06(key_data):
     if main_point_item == 46:
         if key_data[2]:
             lcd.clear(0x0000)
+            gyro_pid.kp += 0.01
+            key.clear(3)
+        if key_data[3]:
+            lcd.clear(0x0000)
+            gyro_pid.kp -= 0.01
+            key.clear(4)
+    if main_point_item == 62:
+        if key_data[2]:
+            lcd.clear(0x0000)
             gyro_pid.kp += 0.1
             key.clear(3)
         if key_data[3]:
             lcd.clear(0x0000)
             gyro_pid.kp -= 0.1
             key.clear(4)
-    if main_point_item == 62:
-        if key_data[2]:
-            lcd.clear(0x0000)
-            gyro_pid.kp += 1
-            key.clear(3)
-        if key_data[3]:
-            lcd.clear(0x0000)
-            gyro_pid.kp -= 1
-            key.clear(4)
     if main_point_item == 94:
         if key_data[2]:
             lcd.clear(0x0000)
-            gyro_pid.kd += 0.01
+            gyro_pid.ki += 0.01
             key.clear(3)
         if key_data[3]:
             lcd.clear(0x0000)
-            gyro_pid.kd -= 0.01
+            gyro_pid.ki -= 0.01
             key.clear(4)
     if main_point_item == 110:
         if key_data[2]:
             lcd.clear(0x0000)
-            gyro_pid.kd += 0.1
+            gyro_pid.ki += 0.1
             key.clear(3)
         if key_data[3]:
             lcd.clear(0x0000)
-            gyro_pid.kd -= 0.1
+            gyro_pid.ki -= 0.1
             key.clear(4)
     if main_point_item == 126:
         if key_data[2]:
@@ -940,10 +917,11 @@ def sec_menu_10(key_data):
 # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 imuoffsetinit()  # 零飘校准
 last_imu_data = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0, 0.0, 0.0]
+data_wave = [0,0,0,0,0,0,0,0]
 key_data = key.get()
 while True:
-    motor_l.duty(my_limit(gyro_pid_out - dir_in_out,-4000,4000))
-    motor_r.duty(my_limit(gyro_pid_out + dir_in_out,-4000,4000))
+    motor_l.duty(my_limit(gyro_pid_out - dir_in_out, -4000, 4000))
+    motor_r.duty(my_limit(gyro_pid_out + dir_in_out, -4000, 4000))
 
     print(f"{motor_l.duty()}, {motor_r.duty()}, {gyro_pid_out}, {angle_pid_out}, {speed_pid_out}，{current_roll}")
 
@@ -966,9 +944,10 @@ while True:
         for i in range(3):
             # 先进行零偏校正和单位转换
             current_processed = (
-                                        imu_data[i] - [accoffsetx, accoffsety, accoffsetz][i]) / ACC_SPL
+                imu_data[i] - [accoffsetx, accoffsety, accoffsetz][i]) / ACC_SPL
             # 再应用滤波，使用上一次的滤波结果
-            imu_data[i] = alpha * current_processed + (1 - alpha) * last_imu_data[i]
+            imu_data[i] = alpha * current_processed + \
+                (1 - alpha) * last_imu_data[i]
             # 更新历史值为当前滤波结果
             last_imu_data[i] = imu_data[i]
 
@@ -984,62 +963,51 @@ while True:
         ticker_flag_1ms = False
 
     if (ticker_flag_5ms):
-    # #
         encl_data = encoder_l.get()  # 读取左编码器的数据
         encr_data = encoder_r.get()  # 读取右编码器的数据
-    # # #
-    # # #        # 原函数此时为圆环处理
+        # 原函数此时为圆环处理
         ticker_flag_5ms = False
-    #
-    if (ticker_flag_2ms):      #kp=100.1  ki=2.0000001
-        
+    
+    if (ticker_flag_2ms):  # kp=100.1  ki=2.0000001
         gyro_pid_out = gyro_pid.calculate(angle_pid_out, imu_data[3])
-        # gyro_pid.pid_standard_integral(0, imu_data[3] + imu_data[4] + imu_data[5])
         ticker_flag_2ms = False
 
-    if (ticker_flag_10ms): 
-         angle_pid_out = angle_pid.calculate(
-             speed_pid_out + MedAngle, current_roll)
-         menu(key_data)
-         key_data = key.get()
-         ticker_flag_10ms = False
+    if (ticker_flag_10ms):
+        angle_pid_out = angle_pid.calculate(
+            speed_pid_out + MedAngle, current_roll)
+        menu(key_data)
+        key_data = key.get()
+        ticker_flag_10ms = False
 
     if (ticker_flag_50ms):
-        speed_pid_out = speed_pid.calculate(aim_speed, (encl_data + encr_data) / 2)
-        # speed_pid.pid_standard_integral(aim_speed, (encl_data + encr_data) / 2)
+        speed_pid_out = speed_pid.calculate(
+            aim_speed, (encl_data + encr_data) / 2)
         ticker_flag_50ms = False
 
     if (ticker_flag_4ms):
-        #         dir_in_out = dir_in.calculate(dir_out_out, imu[4])
-        #         # dir_in.pid_standard_integral(dir_out.out, imu[4])
+        # dir_in_out = dir_in.calculate(dir_out_out, imu[4])
         ticker_flag_4ms = False
-    #
+    
     if (ticker_flag_8ms):
-        #         dir_out_out = dir_out.calculate(0, (error1 + error2) * error_k)
-        #         # dir_out.pid_standard_integral(0, (error1 + error2) * error_k)
+        # 定期进行数据解析
+        data_flag = wireless.data_analysis()
+        for i in range(0,8):
+            # 判断哪个通道有数据更新
+            if (data_flag[i]):
+                # 数据更新到缓冲
+                data_wave[i] = wireless.get_data(i)
+                # 将更新的通道数据输出到 Thonny 的控制台
+                print("Data[{:<6}] updata : {:<.3f}.\r\n".format(i,data_wave[i]))
+                gyro_pid.kp = data_wave[0]
+                gyro_pid.ki = data_wave[1]
+                angle_pid.kp = data_wave[2]
+                angle_pid.kd = data_wave[3]
+                speed_pid.kp = data_wave[4]
+                speed_pid.ki = data_wave[5]
+        # 将数据发送到示波器
+        wireless.send_oscilloscope(
+            gyro_pid.kp, gyro_pid.ki, angle_pid.kp, angle_pid.kd,
+            speed_pid.kp, speed_pid.ki, motor_l.duty(), motor_r.duty())
+
+        # dir_out_out = dir_out.calculate(0, (error1 + error2) * error_k)
         ticker_flag_8ms = False
-
-    # ----------------------未改动参考代码----------------------
-    #  if (ticker_flag_2ms):
-    #      gyro_pid.pid_standard_integral(angle_pid.out, imu_data[4])
-    #      ticker_flag_2ms = False
-
-    #  if (ticker_flag_10ms):
-    #      menu()                           # 菜单显示
-    #      speed_pid.pid_standard_integral(aim_speed, (encl_data + encr_data) / 2)
-    #      ticker_flag_10ms = False
-
-    #  if (ticker_flag_50ms):
-    #      angle_pid.pid_standard_integral(speed_pid.out + MedAngle, current_pitch)
-    #      ticker_flag_50ms = False
-
-    # if (ticker_flag_4ms):
-    #    # dir_in.pid_standard_integral(dir_out.out, imu[4])
-    #     ticker_flag_4ms = False
-
-    # if (ticker_flag_8ms):
-    #    # dir_out.pid_standard_integral(0, (error1 + error2) * error_k)
-    #     ticker_flag_8ms = False
-
-
-
