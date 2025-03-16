@@ -205,8 +205,7 @@ def gyro_adjustment(output):
 
 
 # PID实例化
-speed_pid = PID(kp=0.8, ki=0.1
-                , integral_limits=(-2000, 2000))
+speed_pid = PID(kp=0.8, ki=0.1, integral_limits=(-2000, 2000))
 # output_limits=(-500, 500))
 
 
@@ -961,10 +960,10 @@ while True:
         for i in range(3):
             # 先进行零偏校正和单位转换
             current_processed = (
-                                        imu_data[i] - [accoffsetx, accoffsety, accoffsetz][i]) / ACC_SPL
+                imu_data[i] - [accoffsetx, accoffsety, accoffsetz][i]) / ACC_SPL
             # 再应用滤波，使用上一次的滤波结果
             imu_data[i] = alpha * current_processed + \
-                          (1 - alpha) * last_imu_data[i]
+                (1 - alpha) * last_imu_data[i]
             # 更新历史值为当前滤波结果
             last_imu_data[i] = imu_data[i]
 
@@ -1014,7 +1013,8 @@ while True:
                 # 数据更新到缓冲
                 data_wave[i] = wireless.get_data(i)
                 # 将更新的通道数据输出到 Thonny 的控制台
-                print("Data[{:<6}] updata : {:<.3f}.\r\n".format(i, data_wave[i]))
+                print("Data[{:<6}] updata : {:<.3f}.\r\n".format(
+                    i, data_wave[i]))
                 gyro_pid.kp = data_wave[0]
                 gyro_pid.ki = data_wave[1]
                 angle_pid.kp = data_wave[2]
@@ -1028,4 +1028,3 @@ while True:
 
         # dir_out_out = dir_out.calculate(0, (error1 + error2) * error_k)
         ticker_flag_8ms = False
-
