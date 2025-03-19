@@ -240,10 +240,6 @@ current_pitch = 0  # 当前俯仰角
 current_roll = 0  # 当前横滚角
 current_yaw = 0  # 当前偏航角
 
-
-# 姿态角度计算函数
-
-
 # 姿态角度计算函数
 def quaternion_update(ax, ay, az, gx, gy, gz):
     global q0, q1, q2, q3, I_ex, I_ey, I_ez, current_pitch, current_roll, current_yaw
