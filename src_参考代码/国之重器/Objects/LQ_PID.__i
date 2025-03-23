@@ -1,0 +1,1 @@
+"user\LQ_PID.c" LARGE INTR2 BROWSE INCDIR(.\user;.\user\Dianci) DEBUG PRINT(.\Listings\LQ_PID.lst) TABS (2) OBJECT(.\Objects\LQ_PID.obj)
