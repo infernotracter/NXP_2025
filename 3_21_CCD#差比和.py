@@ -64,7 +64,7 @@ ccd = TSL1401(10)
 ticker_flag = False
 ticker_count = 0
 runtime_count = 0
-
+ 
 # 定义一个回调函数 需要一个参数 这个参数就是 ticker 实例自身
 def time_pit_handler(time):
     global ticker_flag  # 需要注意的是这里得使用 global 修饰全局属性
