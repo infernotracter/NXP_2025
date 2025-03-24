@@ -59,7 +59,8 @@ lcd.clear(0x0000)
 # 调用 TSL1401 模块获取 CCD 实例
 # 参数是采集周期 调用多少次 capture 更新一次数据
 # 默认参数为 1 调整这个参数相当于调整曝光时间倍数
-ccd = TSL1401(10)
+ccd_delta = 10
+ccd = TSL1401(ccd_delta)
 
 ticker_flag = False
 ticker_count = 0

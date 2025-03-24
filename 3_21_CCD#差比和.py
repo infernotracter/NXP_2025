@@ -56,6 +56,9 @@ lcd.mode(2)
 # 清屏
 lcd.clear(0x0000)
 
+# 实例化 KEY_HANDLER 模块
+key = KEY_HANDLER(10)
+
 # 调用 TSL1401 模块获取 CCD 实例
 # 参数是采集周期 调用多少次 capture 更新一次数据
 # 默认参数为 1 调整这个参数相当于调整曝光时间倍数
