@@ -202,8 +202,8 @@ class MenuSystem:
     def update_adjust_text(self):
         self.current_menu['items'][0]['text'] = f"Current: {self.variable_temp:.2f}"
 
-# # 初始化菜单系统
-# menu_system = MenuSystem()
+# 初始化菜单系统
+menu = MenuSystem()
 
 # def menu(key_data):
 #     menu_system.handle_input(key_data)

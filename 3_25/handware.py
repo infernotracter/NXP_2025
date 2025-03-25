@@ -54,7 +54,7 @@ class SYSTEM:
     def __init__(self):
         self.ACC_SPL = 4096.0
         self.GYRO_SPL = 16.4
-        self.key_data = 0
+        self.key_data = [0] * 4  # 按键数据
         self.ccd_data1 = [0] * 128  # ccd1原始数组
         self.ccd_data2 = [0] * 128  # ccd2原始数组
         self.encl_data = 0  # 左编码器数据
@@ -64,8 +64,8 @@ class SYSTEM:
         self.aim_speed_r = 0  # 右轮期望速度
         self.MedAngle = 64.0
         self.speed_d = 50  # 速度增量(调试用)
-        self.imu_data = 0
         self.last_imu_data = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0, 0.0, 0.0]
+        self.imu_data = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0, 0.0, 0.0]
         self.tof_data = 0
 
         self.left_point_1 = 0
@@ -98,7 +98,7 @@ class SYSTEM:
         self.encl_data = encoder_l.read()
         self.encr_data = encoder_r.read()
     def update_imu(self):
-        self.imu_data = [float(x) for x in imu.get()]
+        self.imu_data = imu.get()
     def imu_filter(self):
         # 低通滤波处理（加速度计）
         self.update_imu()
