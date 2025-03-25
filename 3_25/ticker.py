@@ -81,6 +81,7 @@ pit3.callback(time_pit_turnpid_handler)
 pit3.start(1)
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 def check_flag(flag):
     if flag==1:
         res=flags.flag_1ms
@@ -111,3 +112,11 @@ def check_flag(flag):
         flags.flag_125ms = False
         return res
 
+=======
+def check_flag(flag_name):
+    """安全获取标志状态并自动重置"""
+    status = ticker_flags[flag_name]
+    if status:
+        ticker_flags[flag_name] = False
+    return status
+>>>>>>> b8505fec62438596018d8ca1aff411883a909ed6
