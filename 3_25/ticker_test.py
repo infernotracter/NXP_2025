@@ -2,6 +2,13 @@ from smartcar import ticker
 from handware import *
 
 # 全局定时标志字典
+class pid_pit:
+    def __init__(self):
+        self.pit_cont_gyro = 0  # 仿独立计时器用于角速度环
+        self.pit_cont_angle = 0  # 仿独立计时器用于角度环
+        self.pit_cont_speed = 0  # 仿独立计时器用于速度环
+
+
 ticker_flags = {
     '1ms': False,
     '2ms': False,
