@@ -98,7 +98,7 @@ class SYSTEM:
         self.encl_data = encoder_l.read()
         self.encr_data = encoder_r.read()
     def update_imu(self):
-        self.imu_data = imu.get()
+        self.imu_data = [float(x) for x in imu.get()]
     def imu_filter(self):
         # 低通滤波处理（加速度计）
         self.update_imu()
