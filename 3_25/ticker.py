@@ -110,11 +110,4 @@ def check_flag(flag):
         res = flags.flag_125ms
         flags.flag_125ms = False
         return res
-=======
-def check_flag(flag_name):
-    """安全获取标志状态并自动重置"""
-    status = ticker_flags[flag_name]
-    if status:
-        ticker_flags[flag_name] = False
-    return status
->>>>>>> 6e9174258e232d4d2a977c459dbf7c1ba1ac5050
+
