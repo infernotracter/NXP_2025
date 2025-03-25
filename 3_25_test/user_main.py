@@ -1,17 +1,10 @@
 import gc
-from handware import init_hardware
-from handware import SYSTEM
+from handware import *
 from imu_processor import *
 from pid_controller import *
 from ticker import *
 from menu import *
 
-# 初始化硬件
-wireless, lcd, motor_l, motor_r, encoder_l, encoder_r, imu, led1, key, end_switch, switch_3, switch_4, ccd = init_hardware()
-
-
-pid = PID_data()
-sys = SYSTEM()
 sys.imu_offset()
 while True:
     motor_l.duty(pid.out_l)

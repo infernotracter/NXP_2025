@@ -1,3 +1,5 @@
+from smartcar import ticker
+from handware import *
 # 零号ticker记数，用于三个pid
 pit_cont_gyro = 0  # 仿独立计时器用于角速度环
 pit_cont_angle = 0  # 仿独立计时器用于角度环

@@ -76,3 +76,5 @@ class PID_data:
         self.out_r = self.gyro_pid_out - self.dir_in_out
         self.out_l = my_limit(self.out_l, -5000, 5000)
         self.out_r = my_limit(self.out_r, -5000, 5000)
+
+pid = PID_data()
