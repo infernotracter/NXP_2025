@@ -80,41 +80,9 @@ pit3.capture_list(ccd, imu)
 pit3.callback(time_pit_turnpid_handler)
 pit3.start(1)
 
-<<<<<<< HEAD
-def check_flag(flag):
-    if flag==1:
-        res=flags.flag_1ms
-        flags.flag_1ms=False
-        return res
-    if flag==2:
-        res = flags.flag_5ms
-        flags.flag_5ms = False
-        return res
-    if flag==4:
-        res = flags.flag_4ms
-        flags.flag_4ms = False
-        return res
-    if flag==5:
-        res = flags.flag_5ms_data
-        flags.flag_5ms_data = False
-        return res
-    if flag==8:
-        res = flags.flag_8ms
-        flags.flag_8ms = False
-        return res
-    if flag==10:
-        res = flags.flag_25ms
-        flags.flag_25ms = False
-        return res
-    if flag==50:
-        res = flags.flag_125ms
-        flags.flag_125ms = False
-        return res
-=======
 def check_flag(flag_name):
     """安全获取标志状态并自动重置"""
     status = ticker_flags[flag_name]
     if status:
         ticker_flags[flag_name] = False
     return status
->>>>>>> 6e9174258e232d4d2a977c459dbf7c1ba1ac5050
