@@ -4,7 +4,7 @@ from imu_processor import *
 from pid_controller import *
 from ticker import *
 from menu import *
-
+print("start")
 sys.imu_offset()
 while True:
     motor_l.duty(pid.out_l)
@@ -34,8 +34,8 @@ while True:
     if (check_flag(10)):
         pid.angle_pid_out = angle_pid.calculate(
             pid.speed_pid_out + sys.MedAngle, sys.current_roll)
-        menu(key_data)
-        key_data = key.get()
+        # menu(key_data)
+        # key_data = key.get()
 
     if (check_flag(50)):
         pid.speed_pid_out = speed_pid.calculate(
