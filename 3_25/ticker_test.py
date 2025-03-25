@@ -1,5 +1,5 @@
 from smartcar import ticker
-from handware import *
+from handware import ccd, imu, key, encoder_l, encoder_r
 
 # 全局定时标志字典
 ticker_flags = {
@@ -74,3 +74,4 @@ for config in ticker_configs:
     pit.capture_list(*config['captures'])
     pit.callback(create_handler(config['tasks']))
     pit.start(config['interval'])
+    print("Ticker started")

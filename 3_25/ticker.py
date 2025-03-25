@@ -79,3 +79,10 @@ pit3 = ticker(3)
 pit3.capture_list(ccd, imu)
 pit3.callback(time_pit_turnpid_handler)
 pit3.start(1)
+
+def check_flag(flag_name):
+    """安全获取标志状态并自动重置"""
+    status = ticker_flags[flag_name]
+    if status:
+        ticker_flags[flag_name] = False
+    return status
