@@ -73,13 +73,13 @@ def time_pit_pid_handler(time):
     pit_cont_gyro += 1
     pit_cont_angle += 1
     pit_cont_speed += 1
-    if (pit_cont_gyro == 5):
+    if (pit_cont_gyro == 1):
         ticker_flag_2ms = True
         pit_cont_gyro = 0  # 重置计时器
-    if (pit_cont_angle == 25):
+    if (pit_cont_angle == 5):
         ticker_flag_10ms = True
         pit_cont_angle = 0
-    if (pit_cont_speed == 125):
+    if (pit_cont_speed == 10):
         ticker_flag_50ms = True
         pit_cont_speed = 0
 
@@ -958,6 +958,12 @@ while True:
     # 1ms中断标志位
     if (ticker_flag_1ms):
         imu_data = [float(x) for x in imu.get()]
+        ticker_flag_1ms = False
+
+    if (ticker_flag_5ms):
+        encl_data = encoder_l.get()  # 读取左编码器的数据
+        encr_data = encoder_r.get()  # 读取右编码器的数据
+        # 原函数此时为圆环处理
 
         # 低通滤波处理（加速度计）
         alpha = 0.5
@@ -979,12 +985,7 @@ while True:
         ax, ay, az = imu_data[0], imu_data[1], imu_data[2]
         gx, gy, gz = imu_data[3], imu_data[4], imu_data[5]
         quaternion_update(ax, ay, az, gx, gy, gz)
-        ticker_flag_1ms = False
 
-    if (ticker_flag_5ms):
-        encl_data = encoder_l.get()  # 读取左编码器的数据
-        encr_data = encoder_r.get()  # 读取右编码器的数据
-        # 原函数此时为圆环处理
         ticker_flag_5ms = False
 
     if (ticker_flag_2ms):  # kp=100.1  ki=2.0000001
