@@ -205,14 +205,14 @@ def gyro_adjustment(output):
 
 
 # PID实例化
-speed_pid = PID(kp=0.8, ki=0.1, integral_limits=(-2000, 2000))
+speed_pid = PID(kp=0.0, ki=0.0, integral_limits=(-2000, 2000))
 # output_limits=(-500, 500))
 
 
-angle_pid = PID(kp=0.3, kd=0.0)
+angle_pid = PID(kp=0.0, kd=0.0)
 # , integral_limits=(-2000, 2000))
 
-gyro_pid = PID(kp=500.0, kd=20.0,  # kp=
+gyro_pid = PID(kp=0.0, kd=0.0,  # kp=
                #    , integral_limits=(-2000, 2000),
                # output_limits=(-500, 500),
                output_adjustment=gyro_adjustment)
@@ -239,6 +239,7 @@ delta_T = 0.001  # 采样周期（与1ms中断对应）
 current_pitch = 0  # 当前俯仰角
 current_roll = 0  # 当前横滚角
 current_yaw = 0  # 当前偏航角
+
 
 # 姿态角度计算函数
 def quaternion_update(ax, ay, az, gx, gy, gz):
@@ -318,18 +319,30 @@ accoffsetx = 0
 accoffsety = 0
 accoffsetz = 0
 OFFSETNUM = 100
+last_ax = 0
+last_ay = 0
+last_az = 0
+last_gx = 0
+last_gy = 0
+last_gz = 0
 
 
 def imuoffsetinit():
-    global accoffsetx, accoffsety, accoffsetz, gyrooffsetx, gyrooffsety, gyrooffsetz
+    global accoffsetx, accoffsety, accoffsetz, gyrooffsetx, gyrooffsety, gyrooffsetz, last_ax, last_ay, last_az, last_gx, last_gy, last_gz
     for _ in range(OFFSETNUM):
         imu_data = imu.get()
-        accoffsetx += imu_data[0]
-        accoffsety += imu_data[1]
-        accoffsetz += imu_data[2]
-        gyrooffsetx += imu_data[3]
-        gyrooffsety += imu_data[4]
-        gyrooffsetz += imu_data[5]
+        accoffsetx += (imu_data[0] - last_ax)
+        accoffsety += (imu_data[1] - last_ay)
+        accoffsetz += (imu_data[2] - last_az)
+        gyrooffsetx += (imu_data[3] - last_gx)
+        gyrooffsety += (imu_data[4] - last_gy)
+        gyrooffsetz += (imu_data[5] - last_gz)
+        last_ax = imu_data[0]
+        last_ay = imu_data[1]
+        last_az = imu_data[2]
+        last_gx = imu_data[3]
+        last_gy = imu_data[4]
+        last_gz = imu_data[5]
     accoffsetx /= OFFSETNUM
     accoffsety /= OFFSETNUM
     accoffsetz /= OFFSETNUM
@@ -953,10 +966,10 @@ while True:
         for i in range(3):
             # 先进行零偏校正和单位转换
             current_processed = (
-                imu_data[i] - [accoffsetx, accoffsety, accoffsetz][i]) / ACC_SPL
+                                        imu_data[i] - [accoffsetx, accoffsety, accoffsetz][i]) / ACC_SPL
             # 再应用滤波，使用上一次的滤波结果
             imu_data[i] = alpha * current_processed + \
-                (1 - alpha) * last_imu_data[i]
+                          (1 - alpha) * last_imu_data[i]
             # 更新历史值为当前滤波结果
             last_imu_data[i] = imu_data[i]
 
@@ -1021,5 +1034,6 @@ while True:
 
         # dir_out_out = dir_out.calculate(0, (error1 + error2) * error_k)
         ticker_flag_8ms = False
-    
-    gc.collect() #主循环结束后进行垃圾回收
+
+    gc.collect()  # 主循环结束后进行垃圾回收
+
