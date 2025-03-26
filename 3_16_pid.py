@@ -212,11 +212,7 @@ speed_pid = PID(kp=0.0, ki=0.0, integral_limits=(-2000, 2000))
 angle_pid = PID(kp=0.0, kd=0.0)
 # , integral_limits=(-2000, 2000))
 
-<<<<<<< HEAD
-gyro_pid = PID(kp=0.0, kd=0.0,  # kp=
-=======
 gyro_pid = PID(kp=500.0, kd=0.0,  # kp=
->>>>>>> 4cff6c63778886ea78cd6ec1d5ec14f0f45670dd
                #    , integral_limits=(-2000, 2000),
                # output_limits=(-500, 500),
                output_adjustment=gyro_adjustment)
@@ -322,17 +318,7 @@ gyrooffsetz = 0
 accoffsetx = 0
 accoffsety = 0
 accoffsetz = 0
-<<<<<<< HEAD
-OFFSETNUM = 100
-last_ax = 0
-last_ay = 0
-last_az = 0
-last_gx = 0
-last_gy = 0
-last_gz = 0
-=======
 OFFSETNUM = 1000
->>>>>>> 4cff6c63778886ea78cd6ec1d5ec14f0f45670dd
 
 
 def imuoffsetinit():
