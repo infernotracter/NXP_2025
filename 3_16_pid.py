@@ -143,7 +143,7 @@ aim_speed_l = 0  # 左轮期望速度
 aim_speed_r = 0  # 右轮期望速度
 out_l = 0  # 左轮输出值
 out_r = 0  # 右轮输出值
-MedAngle = 64.0
+MedAngle = 36.5
 speed_d = 50  # 速度增量(调试用)
 
 
@@ -979,7 +979,6 @@ while True:
         ax, ay, az = imu_data[0], imu_data[1], imu_data[2]
         gx, gy, gz = imu_data[3], imu_data[4], imu_data[5]
         quaternion_update(ax, ay, az, gx, gy, gz)
-        gc.collect()
         ticker_flag_1ms = False
 
     if (ticker_flag_5ms):
@@ -1025,10 +1024,12 @@ while True:
                 angle_pid.kd = data_wave[3]
                 speed_pid.kp = data_wave[4]
                 speed_pid.ki = data_wave[5]
-        # 将数据发送到示波器
+                MedAngle = data_wave[6]
+                aim_speed = data_wave[7]
+ # 将数据发送到示波器
         wireless.send_oscilloscope(
             gyro_pid.kp, gyro_pid.ki, angle_pid.kp, angle_pid.kd,
-            speed_pid.kp, speed_pid.ki, motor_l.duty(), motor_r.duty())
+            speed_pid.kp, current_yaw,current_roll,current_pitch)
 
         # dir_out_out = dir_out.calculate(0, (error1 + error2) * error_k)
         ticker_flag_8ms = False
