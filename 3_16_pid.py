@@ -7,8 +7,6 @@ from math import *
 import gc
 import time
 import math
-import os
-import io
 
 # 单位换算用
 ACC_SPL = 4096.0
@@ -214,8 +212,8 @@ speed_pid = PID(kp=0.0, ki=0.0, integral_limits=(-2000, 2000))
 angle_pid = PID(kp=0.0, kd=0.0)
 # , integral_limits=(-2000, 2000))
 
-gyro_pid = PID(kp=0.0, kd=0.0,  # kp=
-               #    , integral_limits=(-2000, 2000),
+gyro_pid = PID(kp=0.0, kd=0.0,
+               #  integral_limits=(-2000, 2000),
                # output_limits=(-500, 500),
                output_adjustment=gyro_adjustment)
 
@@ -979,10 +977,10 @@ while True:
         for i in range(3):
             # 先进行零偏校正和单位转换
             current_processed = (
-                                        imu_data[i] - [accoffsetx, accoffsety, accoffsetz][i]) / ACC_SPL
+                imu_data[i] - [accoffsetx, accoffsety, accoffsetz][i]) / ACC_SPL
             # 再应用滤波，使用上一次的滤波结果
             imu_data[i] = alpha * current_processed + \
-                          (1 - alpha) * last_imu_data[i]
+                (1 - alpha) * last_imu_data[i]
             # 更新历史值为当前滤波结果
             last_imu_data[i] = imu_data[i]
 
@@ -1045,4 +1043,3 @@ while True:
         ticker_flag_8ms = False
 
     gc.collect()  # 主循环结束后进行垃圾回收
-
