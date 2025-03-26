@@ -1,0 +1,19 @@
+3.26:
+
+# PID实例化
+speed_pid = PID(kp=0.8, ki=0.1, integral_limits=(-2000, 2000))
+# output_limits=(-500, 500))
+
+
+angle_pid = PID(kp=0.3, kd=0.0)
+# , integral_limits=(-2000, 2000))
+
+gyro_pid = PID(kp=500.0, kd=20.0,  # kp=
+               #    , integral_limits=(-2000, 2000),
+               # output_limits=(-500, 500),
+               output_adjustment=gyro_adjustment)
+
+dir_in = PID(kp=0.0, ki=0.0)
+#  integral_limits=(-2000, 2000))
+
+dir_out = PID(kp=0.0, kd=0.0)

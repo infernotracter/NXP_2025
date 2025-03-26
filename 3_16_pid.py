@@ -143,7 +143,7 @@ aim_speed_l = 0  # 左轮期望速度
 aim_speed_r = 0  # 右轮期望速度
 out_l = 0  # 左轮输出值
 out_r = 0  # 右轮输出值
-MedAngle = 64.0
+MedAngle = 31.5
 speed_d = 50  # 速度增量(调试用)
 
 
@@ -212,7 +212,11 @@ speed_pid = PID(kp=0.0, ki=0.0, integral_limits=(-2000, 2000))
 angle_pid = PID(kp=0.0, kd=0.0)
 # , integral_limits=(-2000, 2000))
 
+<<<<<<< HEAD
 gyro_pid = PID(kp=0.0, kd=0.0,  # kp=
+=======
+gyro_pid = PID(kp=500.0, kd=0.0,  # kp=
+>>>>>>> 4cff6c63778886ea78cd6ec1d5ec14f0f45670dd
                #    , integral_limits=(-2000, 2000),
                # output_limits=(-500, 500),
                output_adjustment=gyro_adjustment)
@@ -318,6 +322,7 @@ gyrooffsetz = 0
 accoffsetx = 0
 accoffsety = 0
 accoffsetz = 0
+<<<<<<< HEAD
 OFFSETNUM = 100
 last_ax = 0
 last_ay = 0
@@ -325,6 +330,9 @@ last_az = 0
 last_gx = 0
 last_gy = 0
 last_gz = 0
+=======
+OFFSETNUM = 1000
+>>>>>>> 4cff6c63778886ea78cd6ec1d5ec14f0f45670dd
 
 
 def imuoffsetinit():
@@ -1027,10 +1035,12 @@ while True:
                 angle_pid.kd = data_wave[3]
                 speed_pid.kp = data_wave[4]
                 speed_pid.ki = data_wave[5]
+                MedAngle = data_wave[6]
+                aim_speed = data_wave[7]
         # 将数据发送到示波器
         wireless.send_oscilloscope(
             gyro_pid.kp, gyro_pid.ki, angle_pid.kp, angle_pid.kd,
-            speed_pid.kp, speed_pid.ki, motor_l.duty(), motor_r.duty())
+            current_pitch, current_roll, current_yaw, motor_l.duty())
 
         # dir_out_out = dir_out.calculate(0, (error1 + error2) * error_k)
         ticker_flag_8ms = False

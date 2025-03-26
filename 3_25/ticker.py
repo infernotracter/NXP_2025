@@ -2,8 +2,8 @@ from smartcar import ticker
 from handware import *
 class ticker_flags:
     def __init__(self):
-        self.flag_5ms = False
         self.flag_1ms = False
+        self.flag_5ms = False
         self.flag_4ms = False
         self.flag_5ms_data = False
         self.flag_8ms = False
@@ -80,7 +80,10 @@ pit3.capture_list(ccd, imu)
 pit3.callback(time_pit_turnpid_handler)
 pit3.start(1)
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 4cff6c63778886ea78cd6ec1d5ec14f0f45670dd
 def check_flag(flag):
     if flag==1:
         res=flags.flag_1ms
