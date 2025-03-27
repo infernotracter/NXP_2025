@@ -365,6 +365,22 @@ screen_off_flag = 0
 save_para_flag = 0
 
 
+def point_move(hight, low):
+    global main_point_item
+    if key_data[1]:
+        lcd.clear(0x0000)
+        main_point_item += 16
+        key.clear(2)
+        if main_point_item == hight + 16:
+            main_point_item = low
+    if key_data[0]:
+        lcd.clear(0x0000)
+        main_point_item -= 16
+        key.clear(1)
+        if main_point_item == low - 16:
+            main_point_item = hight
+
+
 def menu(key_data):
     global main_menu_flag, car_go_flag, speed_flag, element_flag, angle_pd_flag, speed_pi_flag, gyro_pi_flag, ccd_image_flag, screen_off_flag, save_para_flag
     if (main_menu_flag == 1):
@@ -408,19 +424,7 @@ def main_menu(key_data):  # 一级菜单
     lcd.str16(16, 174, "save_para", 0xFFFF)
 
     lcd.str16(0, main_point_item, ">", 0xF800)
-    if key_data[0]:
-        lcd.clear(0x0000)
-        main_point_item += 16
-        key.clear(1)
-        if main_point_item == 190:
-            main_point_item = 30
-
-    if key_data[1]:
-        lcd.clear(0x0000)
-        main_point_item -= 16
-        key.clear(2)
-        if main_point_item == 14:
-            main_point_item = 174
+    point_move(174, 30)
 
     if main_point_item == 30 and key_data[2]:
         key.clear(3)
@@ -493,18 +497,7 @@ def sec_menu_01(key_data):
     lcd.str16(16, 46, "It's mygo", 0xFFFF)
     lcd.str12(0, main_point_item, ">", 0xF800)
 
-    if key_data[0]:
-        lcd.clear(0x0000)
-        main_point_item += 16
-        key.clear(1)
-        if main_point_item == 78:
-            main_point_item = 30
-    if key_data[1]:
-        lcd.clear(0x0000)
-        main_point_item -= 16
-        key.clear(2)
-        if main_point_item == 14:
-            main_point_item = 62
+    point_move(62, 30)
     if main_point_item == 62 and key_data[2]:
         lcd.clear(0x0000)
         main_menu_flag = 1
@@ -531,19 +524,7 @@ def sec_menu_02(key_data):
     lcd.str16(16, 110, "encoder_r={:0>4d}".format(encr_data), 0xFFFF)
     lcd.str16(0, main_point_item, ">", 0xF800)
 
-    if key_data[0]:
-        main_point_item += 16
-        lcd.clear(0x0000)
-        key.clear(1)
-        if main_point_item == 78:
-            main_point_item = 30
-
-    if key_data[1]:
-        main_point_item -= 16
-        lcd.clear(0x0000)
-        key.clear(2)
-        if main_point_item == 14:
-            main_point_item = 62
+    point_move(126, 30)
 
     if main_point_item == 30:
         if key_data[2]:
@@ -607,19 +588,7 @@ def sec_menu_04(key_data):
 
     # lcd.str16(16, 126, "return", 0xFFFF)
 
-    if key_data[0]:
-        main_point_item += 16
-        lcd.clear(0x0000)
-        key.clear(1)
-        if main_point_item == 158:
-            main_point_item = 30
-
-    if key_data[1]:
-        main_point_item -= 16
-        lcd.clear(0x0000)
-        key.clear(2)
-        if main_point_item == 14:
-            main_point_item = 142
+    point_move(126, 30)
 
     if main_point_item == 46:
         if key_data[2]:
@@ -690,18 +659,7 @@ def sec_menu_05(key_data):
     lcd.str16(0, main_point_item, ">", 0xF800)
 
     # lcd.str16(16, 126, "return", 0xFFFF)
-    if key_data[0]:
-        main_point_item += 16
-        lcd.clear(0x0000)
-        key.clear(1)
-        if main_point_item == 142:
-            main_point_item = 30
-    if key_data[1]:
-        main_point_item -= 16
-        lcd.clear(0x0000)
-        key.clear(2)
-        if main_point_item == 14:
-            main_point_item = 126
+    point_move(126, 30)
     if main_point_item == 46:
         if key_data[2]:
             lcd.clear(0x0000)
@@ -763,18 +721,7 @@ def sec_menu_06(key_data):
     lcd.str16(0, main_point_item, ">", 0xF800)
 
     # lcd.str16(16, 126, "return", 0xFFFF)
-    if key_data[0]:
-        main_point_item += 16
-        lcd.clear(0x0000)
-        key.clear(1)
-        if main_point_item == 142:
-            main_point_item = 30
-    if key_data[1]:
-        main_point_item -= 16
-        lcd.clear(0x0000)
-        key.clear(2)
-        if main_point_item == 14:
-            main_point_item = 126
+    point_move(126, 30)
     if main_point_item == 46:
         if key_data[2]:
             lcd.clear(0x0000)
