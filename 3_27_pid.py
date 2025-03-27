@@ -1029,14 +1029,14 @@ while True:
                 print("Data[{:<6}] updata : {:<.3f}.\r\n".format(
                     i, data_wave[i]))
                 gyro_pid.kp = data_wave[0]
-                gyro_pid.ki = data_wave[1]
+                gyro_pid.kd = data_wave[1]
                 angle_pid.kp = data_wave[2]
                 angle_pid.kd = data_wave[3]
                 speed_pid.kp = data_wave[4]
                 speed_pid.ki = data_wave[5]
         # 将数据发送到示波器
         wireless.send_oscilloscope(
-            gyro_pid.kp, gyro_pid.ki, angle_pid.kp, angle_pid.kd,
+            gyro_pid.kp, gyro_pid.kd, angle_pid.kp, angle_pid.kd,
             speed_pid.kp, current_yaw, current_roll, motor_l.duty())
 
         # dir_out_out = dir_out.calculate(0, (error1 + error2) * error_k)
