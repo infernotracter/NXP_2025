@@ -143,7 +143,7 @@ aim_speed_l = 0  # 左轮期望速度
 aim_speed_r = 0  # 右轮期望速度
 out_l = 0  # 左轮输出值
 out_r = 0  # 右轮输出值
-MedAngle = 64.0
+MedAngle = 32.5
 speed_d = 50  # 速度增量(调试用)
 
 
@@ -212,7 +212,7 @@ speed_pid = PID(kp=0.0, ki=0.0, integral_limits=(-2000, 2000))
 angle_pid = PID(kp=0.0, kd=0.0)
 # , integral_limits=(-2000, 2000))
 
-gyro_pid = PID(kp=0.0, kd=0.0,
+gyro_pid = PID(kp=1750.0, kd=0.0,
                #  integral_limits=(-2000, 2000),
                # output_limits=(-500, 500),
                output_adjustment=gyro_adjustment)
@@ -233,8 +233,8 @@ dir_out_out = 0
 q0 = 1.0
 q1 = q2 = q3 = 0.0
 I_ex = I_ey = I_ez = 0.0
-imu_kp = 250  # 比例增益（调整滤波响应速度）
-imu_ki = 0.0001  # 积分增益（调整积分速度）
+imu_kp = 1500  # 比例增益（调整滤波响应速度）
+imu_ki = 10  # 积分增益（调整积分速度）
 delta_T = 0.001  # 采样周期（与1ms中断对应）
 current_pitch = 0  # 当前俯仰角
 current_roll = 0  # 当前横滚角
@@ -942,7 +942,7 @@ last_imu_data = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0, 0.0, 0.0]
 data_wave = [0, 0, 0, 0, 0, 0, 0, 0]
 key_data = key.get()
 while True:
-    if (current_yaw >= 89) or (current_yaw <= 20):
+    if (current_roll >= 75) or (current_roll <= 20):
         stop_flag = 0
 
     motor_l.duty(my_limit(gyro_pid_out - dir_in_out, -3000, 3000) * stop_flag)
@@ -1043,3 +1043,4 @@ while True:
         ticker_flag_8ms = False
 
     gc.collect()  # 主循环结束后进行垃圾回收
+
