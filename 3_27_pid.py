@@ -941,12 +941,13 @@ imuoffsetinit()  # 零飘校准
 last_imu_data = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0, 0.0, 0.0]
 data_wave = [0, 0, 0, 0, 0, 0, 0, 0]
 key_data = key.get()
+imu_data_filtered = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0, 0.0, 0.0]
 while True:
     if (current_roll >= 75) or (current_roll <= 20):
         stop_flag = 0
 
-    motor_l.duty(my_limit(gyro_pid_out - dir_in_out, -3000, 3000) * stop_flag)
-    motor_r.duty(my_limit(gyro_pid_out + dir_in_out, -3000, 3000) * stop_flag)
+    motor_l.duty(my_limit(gyro_pid_out - dir_in_out, -3000, 3000))
+    motor_r.duty(my_limit(gyro_pid_out + dir_in_out, -3000, 3000))
 
     # motor_l.duty(aim_speed_l)
     # motor_r.duty(aim_speed_r)
@@ -977,20 +978,21 @@ while True:
         for i in range(3):
             # 先进行零偏校正和单位转换
             current_processed = (
-                imu_data[i] - [accoffsetx, accoffsety, accoffsetz][i]) / ACC_SPL
+                                        imu_data[i] - [accoffsetx, accoffsety, accoffsetz][i]) / ACC_SPL
             # 再应用滤波，使用上一次的滤波结果
-            imu_data[i] = alpha * current_processed + \
-                (1 - alpha) * last_imu_data[i]
+            imu_data_filtered[i] = alpha * current_processed + \
+                                   (1 - alpha) * last_imu_data[i]
             # 更新历史值为当前滤波结果
-            last_imu_data[i] = imu_data[i]
+            last_imu_data[i] = imu_data_filtered[i]
 
         # 陀螺仪单位转换（减去偏移后除以灵敏度）
         for i in range(3, 6):
-            imu_data[i] = math.radians(
+            imu_data_filtered[i] = math.radians(
                 (imu_data[i] - [gyrooffsetx, gyrooffsety, gyrooffsetz][i - 3]) / GYRO_SPL)
         # 四元数更新（使用解包后的变量）
-        ax, ay, az = imu_data[0], imu_data[1], imu_data[2]
-        gx, gy, gz = imu_data[3], imu_data[4], imu_data[5]
+
+        ax, ay, az = imu_data_filtered[0], imu_data_filtered[1], imu_data_filtered[2]
+        gx, gy, gz = imu_data_filtered[3], imu_data_filtered[4], imu_data_filtered[5]
         quaternion_update(ax, ay, az, gx, gy, gz)
 
         ticker_flag_5ms = False
@@ -1043,4 +1045,5 @@ while True:
         ticker_flag_8ms = False
 
     gc.collect()  # 主循环结束后进行垃圾回收
+
 
