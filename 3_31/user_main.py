@@ -9,6 +9,7 @@ import time
 import utime
 import math
 from imu_handler import *
+from menutext import *
 # 单位换算用
 ACC_SPL = 4096.0
 GYRO_SPL = 16.4
@@ -73,8 +74,6 @@ def time_pit_pid_handler(time):
     if (pit_cont_pid >= 10):
         ticker_flag_speed = True
         pit_cont_pid = 0
-
-# 实例化 PIT ticker 模块
 pit0 = ticker(0)
 pit0.capture_list(ccd, key, encoder_l, encoder_r)
 pit0.callback(time_pit_pid_handler)
@@ -86,8 +85,6 @@ stop_time = 0
 def time_pit_1ms_handler(time):
     global ticker_flag_1ms, stop_time
     ticker_flag_1ms = True
-
-
 pit1 = ticker(1)
 pit1.capture_list(imu)
 pit1.callback(time_pit_1ms_handler)
@@ -97,8 +94,6 @@ pit1.start(1)  # 之前为3，现在改为1
 def time_pit_5ms_handler(time):
     global ticker_flag_5ms
     ticker_flag_5ms = True
-
-
 # # 实例化 PIT ticker 模块
 pit2 = ticker(2)
 pit2.capture_list(encoder_l, encoder_r)
