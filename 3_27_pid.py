@@ -925,10 +925,10 @@ while True:
         for i in range(3):
             # 先进行零偏校正和单位转换
             current_processed = (
-                                        imu_data[i] - [accoffsetx, accoffsety, accoffsetz][i]) / ACC_SPL
+                imu_data[i] - [accoffsetx, accoffsety, accoffsetz][i]) / ACC_SPL
             # 再应用滤波，使用上一次的滤波结果
             imu_data_filtered[i] = alpha * current_processed + \
-                                   (1 - alpha) * last_imu_data[i]
+                (1 - alpha) * last_imu_data[i]
             # 更新历史值为当前滤波结果
             last_imu_data[i] = imu_data_filtered[i]
 
@@ -990,7 +990,5 @@ while True:
 
         # dir_out_out = dir_out.calculate(0, (error1 + error2) * error_k)
         ticker_flag_8ms = False
-
-    gc.collect()  # 主循环结束后进行垃圾回收
 
 
