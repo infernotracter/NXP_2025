@@ -1,4 +1,6 @@
+from basic_data import *
 from display import *
+
 main_point_item = 30
 main_menu_flag = 1
 car_go_flag = 0
@@ -11,7 +13,6 @@ ccd_image_flag = 0
 parameter_flag = 0
 screen_off_flag = 0
 save_para_flag = 0
-
 
 def point_move(hight, low):
     global main_point_item
@@ -487,5 +488,3 @@ def sec_menu_10(key_data):
     lcd.clear(0xF800)  # 清屏
     time.sleep_ms(100)  # 延时
     main_menu_item = 1  # 返回一级菜单
-
-
