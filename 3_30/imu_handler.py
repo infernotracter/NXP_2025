@@ -1,7 +1,8 @@
 from machine import Pin
 from seekfree import IMU963RA
 import math
-
+import utime
+import time
 def my_limit(value, min_value, max_value):
     if value < min_value:
         return min_value
@@ -14,8 +15,7 @@ class IMUHandler:
         self.imu = IMU963RA()
         self.delta_T = 0.005  # 时间间隔（秒）
         # 零飘校准参数
-        self.gyro_offset = [0.0, 0.0, 0.0]
-        self.acc_offset = [0.0, 0.0, 0.0]
+        self.offset = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
         
         # 四元数参数
         self.q0 = 1.0
@@ -38,56 +38,43 @@ class IMUHandler:
         self.imu_kp = 1500  # 比例增益（调整滤波响应速度）
         self.imu_ki = 10  # 积分增益（调整积分速度）
 
-        self.ax = 0.0
-        self.ay = 0.0
-        self.az = 0.0
-        self.gx = 0.0
-        self.gy = 0.0
-        self.gz = 0.0
+        self.data = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+        self.last_data = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 
-    def calibrate(self, samples=100):
-        """零飘校准"""
-        acc_temp = [0.0, 0.0, 0.0]
-        gyro_temp = [0.0, 0.0, 0.0]
-        
+        self.get_offset(100)
+
+    def get_offset(self, samples = 100):
+        """获取IMU的零飘偏移量"""
         for _ in range(samples):
             data = self.imu.get()
-            for i in range(3):
-                acc_temp[i] += data[i]
-                gyro_temp[i] += data[i+3]
-            # 添加适当延时确保采样间隔
-        
-        for i in range(3):
-            self.acc_offset[i] = acc_temp[i] / samples
-            self.gyro_offset[i] = gyro_temp[i] / samples
+            for i in range(6):
+                self.offset[i] += (data[i] - self.last_data[i])
+                self.last_data[i] = data[i]
+        for i in range(6):
+            self.offset[i] /= samples
 
     def update(self):
         """更新姿态数据"""
         raw_data = self.imu.get()
         
         # 加速度计处理
-        self.ax = (raw_data[0] - self.acc_offset[0]) / 4096.0
-        self.ay = (raw_data[1] - self.acc_offset[1]) / 4096.0
-        self.az = (raw_data[2] - self.acc_offset[2]) / 4096.0
-        
-        # 低通滤波
-        self.ax = self.alpha * self.ax + (1 - self.alpha) * self.ax
-        self.ay = self.alpha * self.ay + (1 - self.alpha) * self.ay
-        self.az = self.alpha * self.az + (1 - self.alpha) * self.az
-        
+        for i in range(3):
+            self.data[i] = (raw_data[i] - self.offset[i]) / 4096.0
+            self.data[i] = self.alpha * self.data[i] + (1 - self.alpha) * self.last_data[i]
+            self.last_data[i] = self.data[i]
+
         # 陀螺仪处理（转换为弧度）
-        self.gx = math.radians((raw_data[3] - self.gyro_offset[0]) / 16.4)
-        self.gy = math.radians((raw_data[4] - self.gyro_offset[1]) / 16.4)
-        self.gz = math.radians((raw_data[5] - self.gyro_offset[2]) / 16.4)
+        for i in range(3, 6):
+            self.data[i] = math.radians((raw_data[i] - self.offset[i - 3]) / 16.4)
         
     def quaternion_update(self):
         """四元数姿态解算"""
-        ax = self.ax
-        ay = self.ay
-        az = self.az
-        gx = self.gx
-        gy = self.gy
-        gz = self.gz
+        ax = self.data[0]
+        ay = self.data[1]
+        az = self.data[2]
+        gx = self.data[3]
+        gy = self.data[4]
+        gz = self.data[5]
         q0 = self.q0
         q1 = self.q1
         q2 = self.q2
@@ -158,10 +145,10 @@ class IMUHandler:
         q3 /= norm
 
         # 计算欧拉角
-        current_pitch = math.degrees(math.asin(2 * (q0 * q2 - q1 * q3)))
-        current_roll = math.degrees(math.atan2(
+        self.pitch = math.degrees(math.asin(2 * (q0 * q2 - q1 * q3)))
+        self.roll = math.degrees(math.atan2(
             2 * (q0 * q1 + q2 * q3), 1 - 2 * (q1 ** 2 + q2 ** 2)))
-        current_yaw = math.degrees(math.atan2(
+        self.yaw = math.degrees(math.atan2(
             2 * (q0 * q3 + q1 * q2), 1 - 2 * (q2 ** 2 + q3 ** 2)))
 
 
@@ -190,3 +177,69 @@ class IMUHandler:
     def raw_data(self):
         """获取原始传感器数据"""
         return self.imu.get()
+    
+
+
+class PID:
+    def __init__(self, kp=0, ki=0, kd=0,
+                 integral_limits=None, output_limits=None,
+                 output_adjustment=None):
+        self.kp = kp
+        self.ki = ki
+        self.kd = kd
+        self.integral = 0
+        self.prev_error = 0
+        self.integral_limits = integral_limits
+        self.output_limits = output_limits
+        self.output_adjustment = output_adjustment
+
+    def calculate(self, target, current):
+        error = target - current
+
+        # 积分项处理
+        self.integral += error * self.ki
+        if self.integral_limits:
+            self.integral = my_limit(self.integral, *self.integral_limits)
+
+        # 微分项计算
+        derivative = error - self.prev_error
+
+        # PID输出计算
+        output = (self.kp * error) + self.integral + (self.kd * derivative)
+
+        # 输出限幅
+        if self.output_limits:
+            output = my_limit(output, *self.output_limits)
+
+        # 特殊输出调整
+        if self.output_adjustment:
+            output = self.output_adjustment(output)
+
+        self.prev_error = error
+        return output
+    
+
+class TickerProfiler:
+    def __init__(self, name, expected_interval_ms):
+        self.name = name                # Ticker名称（如 "1ms"）
+        self.expected_us = expected_interval_ms * 1000  # 预期间隔（微秒）
+        self.last_ticks = 0             # 上一次触发时间戳
+        self.first_trigger = True       # 首次触发标志
+
+    def update(self):
+        """更新并打印时间间隔（需在每次ticker触发时调用）"""
+        current_ticks = utime.ticks_us()
+        
+        if not self.first_trigger:
+            # 计算实际间隔（自动处理计数器溢出）
+            actual_interval_us = utime.ticks_diff(current_ticks, self.last_ticks)
+            
+            # 打印带颜色标记的调试信息（可选）
+            error = abs(actual_interval_us - self.expected_us)
+            status = "OK" if error < self.expected_us * 0.1 else "WARN"
+            color_code = "\033[32m" if status == "OK" else "\033[31m"
+            print(f"{color_code}[{self.name} Ticker] 预期: {self.expected_us}us, 实际: {actual_interval_us}us\033[0m")
+        
+        # 更新状态
+        self.last_ticks = current_ticks
+        self.first_trigger = False
