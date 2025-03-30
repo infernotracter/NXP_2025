@@ -6,6 +6,7 @@ from seekfree import *
 from math import *
 import gc
 import time
+import utime
 import math
 
 # 单位换算用
@@ -143,6 +144,30 @@ speed_d = 50  # 速度增量(调试用)
 # speed_d = 50  # 速度增量
 # 限幅函数
 
+class TickerProfiler:
+    def __init__(self, name, expected_interval_ms):
+        self.name = name                # Ticker名称（如 "1ms"）
+        self.expected_us = expected_interval_ms * 1000  # 预期间隔（微秒）
+        self.last_ticks = 0             # 上一次触发时间戳
+        self.first_trigger = True       # 首次触发标志
+
+    def update(self):
+        """更新并打印时间间隔（需在每次ticker触发时调用）"""
+        current_ticks = utime.ticks_us()
+        
+        if not self.first_trigger:
+            # 计算实际间隔（自动处理计数器溢出）
+            actual_interval_us = utime.ticks_diff(current_ticks, self.last_ticks)
+            
+            # 打印带颜色标记的调试信息（可选）
+            error = abs(actual_interval_us - self.expected_us)
+            status = "OK" if error < self.expected_us * 0.1 else "WARN"
+            color_code = "\033[32m" if status == "OK" else "\033[31m"
+            print(f"{color_code}[{self.name} Ticker] 预期: {self.expected_us}us, 实际: {actual_interval_us}us\033[0m")
+        
+        # 更新状态
+        self.last_ticks = current_ticks
+        self.first_trigger = False
 
 def my_limit(value, min_val, max_val):
     return max(min_val, min(value, max_val))
@@ -873,6 +898,15 @@ def sec_menu_10(key_data):
 #     user_file.close()
 # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
+# 在主程序初始化阶段创建实例
+profiler_1ms = TickerProfiler("1ms", expected_interval_ms=1)
+profiler_5ms = TickerProfiler("5ms", expected_interval_ms=5)
+profiler_gyro = TickerProfiler("Gyro", expected_interval_ms=1)  # 示例值
+profiler_angle = TickerProfiler("Angle", expected_interval_ms=5)
+profiler_speed = TickerProfiler("Speed", expected_interval_ms=10)
+profiler_4ms = TickerProfiler("4ms", expected_interval_ms=4)
+profiler_8ms = TickerProfiler("8ms", expected_interval_ms=8)
+
 stop_flag = 1
 imuoffsetinit()  # 零飘校准
 last_imu_data = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0, 0.0, 0.0]
@@ -897,10 +931,12 @@ while True:
 
     # 1ms中断标志位
     if (ticker_flag_1ms):
+        profiler_1ms.update()
         imu_data = [float(x) for x in imu.get()]
         ticker_flag_1ms = False
 
     if (ticker_flag_5ms):
+        profiler_5ms.update()
         encl_data = encoder_l.get()  # 读取左编码器的数据
         encr_data = encoder_r.get()  # 读取右编码器的数据
         # 原函数此时为圆环处理
@@ -930,10 +966,12 @@ while True:
         ticker_flag_5ms = False
 
     if (ticker_flag_gyro):  # kp=100.1  ki=2.0000001
+        profiler_gyro.update()
         gyro_pid_out = gyro_pid.calculate(angle_pid_out, imu_data[3])
         ticker_flag_gyro = False
 
     if (ticker_flag_angle):
+        profiler_angle.update()
         angle_pid_out = angle_pid.calculate(
             speed_pid_out + MedAngle, current_roll)
         menu(key_data)
@@ -943,15 +981,18 @@ while True:
         ticker_flag_angle = False
 
     if (ticker_flag_speed):
+        profiler_speed.update()
         speed_pid_out = speed_pid.calculate(
             aim_speed, (encl_data + encr_data) / 2)
         ticker_flag_speed = False
 
     if (ticker_flag_4ms):
+        profiler_4ms.update()
         # dir_in_out = dir_in.calculate(dir_out_out, imu[4])
         ticker_flag_4ms = False
 
     if (ticker_flag_8ms):
+        profiler_8ms.update()
         # 定期进行数据解析
         data_flag = wireless.data_analysis()
         for i in range(0, 8):
