@@ -12,7 +12,7 @@ def my_limit(value, min_value, max_value):
 
 class IMUHandler:
     def __init__(self):
-        self.imu = IMU963RA()
+        self.Imu = IMU963RA()
         self.delta_T = 0.005  # 时间间隔（秒）
         # 零飘校准参数
         self.offset = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
@@ -46,7 +46,7 @@ class IMUHandler:
     def get_offset(self, samples = 100):
         """获取IMU的零飘偏移量"""
         for _ in range(samples):
-            data = self.imu.get()
+            data = self.Imu.get()
             for i in range(6):
                 self.offset[i] += (data[i] - self.last_data[i])
                 self.last_data[i] = data[i]
@@ -55,7 +55,7 @@ class IMUHandler:
 
     def update(self):
         """更新姿态数据"""
-        raw_data = self.imu.get()
+        raw_data = self.Imu.get()
         
         # 加速度计处理
         for i in range(3):
@@ -176,7 +176,7 @@ class IMUHandler:
     @property
     def raw_data(self):
         """获取原始传感器数据"""
-        return self.imu.get()
+        return self.Imu.get()
     
 
 
@@ -222,7 +222,7 @@ class PID:
 class TickerProfiler:
     def __init__(self, name, expected_interval_ms):
         self.name = name                # Ticker名称（如 "1ms"）
-        self.expected_us = expected_interval_ms * 1000  # 预期间隔（微秒）
+        self.expected_us = expected_interval_ms  # 预期间隔（微秒）
         self.last_ticks = 0             # 上一次触发时间戳
         self.first_trigger = True       # 首次触发标志
 
@@ -238,7 +238,7 @@ class TickerProfiler:
             error = abs(actual_interval_us - self.expected_us)
             status = "OK" if error < self.expected_us * 0.1 else "WARN"
             color_code = "\033[32m" if status == "OK" else "\033[31m"
-            print(f"{color_code}[{self.name} Ticker] 预期: {self.expected_us}us, 实际: {actual_interval_us}us\033[0m")
+            print(f"{color_code}[{self.name} Ticker] 预期: {self.expected_us}ms, 实际: {actual_interval_us}ms\033[0m")
         
         # 更新状态
         self.last_ticks = current_ticks
