@@ -51,40 +51,31 @@ switch_4 = Pin('B15', Pin.IN, pull=Pin.PULL_UP_47K, value=True)
 ccd = TSL1401(3)
 # 实例化 KEY_HANDLER 模块
 key = KEY_HANDLER(10)
-# 零号ticker记数，用于三个pid
-pit_cont_gyro = 0  # 仿独立计时器用于角速度环
-pit_cont_angle = 0  # 仿独立计时器用于角度环
-pit_cont_speed = 0  # 仿独立计时器用于速度环
+
+pit_cont_pid = 0
 
 # 定义一个回调函数
-ticker_flag_2ms = False
+ticker_flag_gyro = False
 ticker_flag_1ms = False
 ticker_flag_4ms = False
 ticker_flag_5ms = False
 ticker_flag_8ms = False
-ticker_flag_10ms = False
-ticker_flag_50ms = False
-
+ticker_flag_angle = False
+ticker_flag_speed = False
 
 def time_pit_pid_handler(time):
-    global ticker_flag_2ms, ticker_flag_10ms, ticker_flag_50ms, pit_cont_gyro, pit_cont_angle, pit_cont_speed
-    pit_cont_gyro += 1
-    pit_cont_angle += 1
-    pit_cont_speed += 1
-    if (pit_cont_gyro == 1):
-        ticker_flag_2ms = True
-        pit_cont_gyro = 0  # 重置计时器
-    if (pit_cont_angle == 5):
-        ticker_flag_10ms = True
-        pit_cont_angle = 0
-    if (pit_cont_speed == 10):
-        ticker_flag_50ms = True
-        pit_cont_speed = 0
+    global ticker_flag_gyro, ticker_flag_angle, ticker_flag_speed, pit_cont_pid
+    if (pit_cont_pid % 1 == 0):
+        ticker_flag_gyro = True
+    if (pit_cont_pid % 5 == 0):
+        ticker_flag_angle = True
+    if (pit_cont_pid >= 10):
+        ticker_flag_speed = True
+        pit_cont_pid = 0
 
-
-# # 实例化 PIT ticker 模块
+# 实例化 PIT ticker 模块
 pit0 = ticker(0)
-pit0.capture_list(ccd, imu, key, encoder_l, encoder_r)
+pit0.capture_list(ccd, key, encoder_l, encoder_r)
 pit0.callback(time_pit_pid_handler)
 pit0.start(1)
 
@@ -97,7 +88,7 @@ def time_pit_1ms_handler(time):
 
 
 pit1 = ticker(1)
-pit1.capture_list(imu, key)
+pit1.capture_list(imu)
 pit1.callback(time_pit_1ms_handler)
 pit1.start(1)  # 之前为3，现在改为1
 
@@ -112,10 +103,9 @@ pit2 = ticker(2)
 pit2.capture_list(ccd, key, encoder_l, encoder_r)
 pit2.callback(time_pit_5ms_handler)
 pit2.start(5)
+
 pit_dir_in = 0
 pit_dir_out = 0
-
-
 def time_pit_turnpid_handler(time):
     global ticker_flag_4ms, ticker_flag_8ms, pit_dir_in, pit_dir_out
     pit_dir_in += 1
@@ -896,12 +886,7 @@ while True:
     motor_l.duty(my_limit(gyro_pid_out - dir_in_out, -3000, 3000))
     motor_r.duty(my_limit(gyro_pid_out + dir_in_out, -3000, 3000))
 
-    # motor_l.duty(aim_speed_l)
-    # motor_r.duty(aim_speed_r)
     print(f"{motor_l.duty()}, {motor_r.duty()}, {current_pitch}, {current_roll}, {current_yaw}")
-
-    # motor_l.duty(aim_speed)
-    # motor_r.duty(aim_speed)
 
     # 拨码开关关中断
     if end_switch.value() == 1:
@@ -944,23 +929,23 @@ while True:
 
         ticker_flag_5ms = False
 
-    if (ticker_flag_2ms):  # kp=100.1  ki=2.0000001
+    if (ticker_flag_gyro):  # kp=100.1  ki=2.0000001
         gyro_pid_out = gyro_pid.calculate(angle_pid_out, imu_data[3])
-        ticker_flag_2ms = False
+        ticker_flag_gyro = False
 
-    if (ticker_flag_10ms):
+    if (ticker_flag_angle):
         angle_pid_out = angle_pid.calculate(
             speed_pid_out + MedAngle, current_roll)
         menu(key_data)
         key_data = key.get()
         if (key_data[0] or key_data[1] or key_data[2] or key_data[3]):
             stop_flag = 1
-        ticker_flag_10ms = False
+        ticker_flag_angle = False
 
-    if (ticker_flag_50ms):
+    if (ticker_flag_speed):
         speed_pid_out = speed_pid.calculate(
             aim_speed, (encl_data + encr_data) / 2)
-        ticker_flag_50ms = False
+        ticker_flag_speed = False
 
     if (ticker_flag_4ms):
         # dir_in_out = dir_in.calculate(dir_out_out, imu[4])
