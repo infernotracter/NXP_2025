@@ -1,18 +1,4 @@
-from user_main import *
-from machine import *
 from display import *
-from smartcar import *
-from seekfree import *
-from math import *
-import gc
-import time
-import utime
-import math
-
-
-
-
-
 main_point_item = 30
 main_menu_flag = 1
 car_go_flag = 0
@@ -501,4 +487,5 @@ def sec_menu_10(key_data):
     lcd.clear(0xF800)  # 清屏
     time.sleep_ms(100)  # 延时
     main_menu_item = 1  # 返回一级菜单
+
 
