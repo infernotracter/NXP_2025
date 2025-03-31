@@ -1,11 +1,6 @@
 # 基础库、NXP库、第三方库
-from machine import *
-from display import *
-from smartcar import *
-from seekfree import *
 from math import *
 from menutext import *
-from basic_data import *
 import gc
 import time
 import utime
@@ -14,7 +9,6 @@ import math
 # 单位换算用
 ACC_SPL = 4096.0
 GYRO_SPL = 16.4
-
 
 pit_cont_pid = 0
 
@@ -26,15 +20,19 @@ ticker_flag_5ms = False
 ticker_flag_8ms = False
 ticker_flag_angle = False
 ticker_flag_speed = False
+ticker_flag_menu = False
 
 
 def time_pit_pid_handler(time):
-    global ticker_flag_gyro, ticker_flag_angle, ticker_flag_speed, pit_cont_pid
-    if (pit_cont_pid % 1 == 0):
-        ticker_flag_gyro = True
+    global ticker_flag_gyro, ticker_flag_angle, ticker_flag_speed, ticker_flag_menu, pit_cont_pid
+    pit_cont_pid += 5
     if (pit_cont_pid % 5 == 0):
+        ticker_flag_gyro = True
+    if (pit_cont_pid % 10 == 0):
+        ticker_flag_menu = True
+    if (pit_cont_pid % 25 == 0):
         ticker_flag_angle = True
-    if (pit_cont_pid >= 10):
+    if (pit_cont_pid >= 125):
         ticker_flag_speed = True
         pit_cont_pid = 0
 
@@ -43,20 +41,18 @@ def time_pit_pid_handler(time):
 pit0 = ticker(0)
 pit0.capture_list(ccd, key, encoder_l, encoder_r)
 pit0.callback(time_pit_pid_handler)
-pit0.start(1)
-
-stop_time = 0
+pit0.start(5)
 
 
 def time_pit_1ms_handler(time):
-    global ticker_flag_1ms, stop_time
+    global ticker_flag_1ms
     ticker_flag_1ms = True
 
 
 pit1 = ticker(1)
 pit1.capture_list(imu)
 pit1.callback(time_pit_1ms_handler)
-pit1.start(1)  # 之前为3，现在改为1
+pit1.start(5)  # 之前为3，现在改为1
 
 
 def time_pit_5ms_handler(time):
@@ -87,6 +83,7 @@ pit3 = ticker(3)
 pit3.capture_list()
 pit3.callback(time_pit_turnpid_handler)
 pit3.start(1)
+
 
 # n = 0  # 元素判断用
 # m = 0
@@ -120,81 +117,6 @@ class TickerProfiler:
         self.first_trigger = False
 
 
-def my_limit(value, min_val, max_val):
-    return max(min_val, min(value, max_val))
-
-
-class PID:
-    def __init__(self, kp=0, ki=0, kd=0,
-                 integral_limits=None, output_limits=None,
-                 output_adjustment=None):
-        self.kp = kp
-        self.ki = ki
-        self.kd = kd
-        self.integral = 0
-        self.prev_error = 0
-        self.integral_limits = integral_limits
-        self.output_limits = output_limits
-        self.output_adjustment = output_adjustment
-
-    def calculate(self, target, current):
-        error = target - current
-
-        # 积分项处理
-        self.integral += error * self.ki
-        if self.integral_limits:
-            self.integral = my_limit(self.integral, *self.integral_limits)
-
-        # 微分项计算
-        derivative = error - self.prev_error
-
-        # PID输出计算
-        output = (self.kp * error) + self.integral + (self.kd * derivative)
-
-        # 输出限幅
-        if self.output_limits:
-            output = my_limit(output, *self.output_limits)
-
-        # 特殊输出调整
-        if self.output_adjustment:
-            output = self.output_adjustment(output)
-
-        self.prev_error = error
-        return output
-
-
-# 特殊输出调整函数
-
-
-def gyro_adjustment(output):
-    return output + 700 if output >= 0 else output - 700
-
-
-# PID实例化
-speed_pid = PID(kp=0.0, ki=0.0, integral_limits=(-2000, 2000))
-# output_limits=(-500, 500))
-
-
-angle_pid = PID(kp=0.0, kd=0.0)
-# , integral_limits=(-2000, 2000))
-
-gyro_pid = PID(kp=1750.0, kd=0.0,
-               #  integral_limits=(-2000, 2000),
-               # output_limits=(-500, 500),
-               output_adjustment=gyro_adjustment)
-
-dir_in = PID(kp=0.0, ki=0.0)
-#  integral_limits=(-2000, 2000))
-
-dir_out = PID(kp=0.0, kd=0.0)
-
-# 串级PID相关变量
-speed_pid_out = 0
-angle_pid_out = 0
-gyro_pid_out = 0
-dir_in_out = 0
-dir_out_out = 0
-
 # 四元数姿态解算相关变量   #kp=50 ki=0.0001
 q0 = 1.0
 q1 = q2 = q3 = 0.0
@@ -207,7 +129,6 @@ current_roll = 0  # 当前横滚角
 current_yaw = 0  # 当前偏航角
 
 
-# 姿态角度计算函数
 def quaternion_update(ax, ay, az, gx, gy, gz):
     global q0, q1, q2, q3, I_ex, I_ey, I_ez, current_pitch, current_roll, current_yaw
 
@@ -328,11 +249,13 @@ profiler_speed = TickerProfiler("Speed", expected_interval_ms=10)
 profiler_4ms = TickerProfiler("4ms", expected_interval_ms=4)
 profiler_8ms = TickerProfiler("8ms", expected_interval_ms=8)
 
+imuoffsetinit()
 stop_flag = 1
-imuoffsetinit()  # 零飘校准
 last_imu_data = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0, 0.0, 0.0]
 data_wave = [0, 0, 0, 0, 0, 0, 0, 0]
+
 key_data = key.get()
+imu_data = imu.get()
 imu_data_filtered = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0, 0.0, 0.0]
 
 while True:
@@ -356,7 +279,7 @@ while True:
         ticker_flag_1ms = False
 
     if (ticker_flag_5ms):
-        profiler_5ms.update()
+        # profiler_5ms.update()
         encl_data = encoder_l.get()  # 读取左编码器的数据
         encr_data = encoder_r.get()  # 读取右编码器的数据
         # 原函数此时为圆环处理
@@ -391,28 +314,28 @@ while True:
         ticker_flag_gyro = False
 
     if (ticker_flag_angle):
-        profiler_angle.update()
+        # profiler_angle.update()
         angle_pid_out = angle_pid.calculate(
             speed_pid_out + MedAngle, current_roll)
+        ticker_flag_angle = False
+    if (ticker_flag_menu):
         menu(key_data)
         key_data = key.get()
-        if (key_data[0] or key_data[1] or key_data[2] or key_data[3]):
-            stop_flag = 1
-        ticker_flag_angle = False
+        ticker_flag_menu = False
 
     if (ticker_flag_speed):
-        profiler_speed.update()
+        # profiler_speed.update()
         speed_pid_out = speed_pid.calculate(
             aim_speed, (encl_data + encr_data) / 2)
         ticker_flag_speed = False
 
     if (ticker_flag_4ms):
-        profiler_4ms.update()
+        # profiler_4ms.update()
         # dir_in_out = dir_in.calculate(dir_out_out, imu[4])
         ticker_flag_4ms = False
 
     if (ticker_flag_8ms):
-        profiler_8ms.update()
+        # profiler_8ms.update()
         # 定期进行数据解析
         data_flag = wireless.data_analysis()
         for i in range(0, 8):
@@ -436,6 +359,7 @@ while True:
 
         # dir_out_out = dir_out.calculate(0, (error1 + error2) * error_k)
         ticker_flag_8ms = False
+
 
 
 

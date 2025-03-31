@@ -1,5 +1,5 @@
 from basic_data import *
-from display import *
+import gc
 
 main_point_item = 30
 main_menu_flag = 1
@@ -14,7 +14,8 @@ parameter_flag = 0
 screen_off_flag = 0
 save_para_flag = 0
 
-def point_move(hight, low):
+
+def point_move(hight, low, key_data):
     global main_point_item
     if key_data[1]:
         lcd.clear(0x0000)
@@ -28,6 +29,7 @@ def point_move(hight, low):
         key.clear(1)
         if main_point_item == low - 16:
             main_point_item = hight
+    gc.collect()
 
 
 def menu(key_data):
@@ -73,7 +75,7 @@ def main_menu(key_data):  # 一级菜单
     lcd.str16(16, 174, "save_para", 0xFFFF)
 
     lcd.str16(0, main_point_item, ">", 0xF800)
-    point_move(174, 30)
+    point_move(174, 30, key_data)
 
     if main_point_item == 30 and key_data[2]:
         key.clear(3)
@@ -146,7 +148,8 @@ def sec_menu_01(key_data):
     lcd.str16(16, 46, "It's mygo", 0xFFFF)
     lcd.str12(0, main_point_item, ">", 0xF800)
 
-    point_move(62, 30)
+    point_move(62, 30, key_data)
+
     if main_point_item == 62 and key_data[2]:
         lcd.clear(0x0000)
         main_menu_flag = 1
@@ -173,7 +176,7 @@ def sec_menu_02(key_data):
     lcd.str16(16, 110, "encoder_r={:0>4d}".format(encr_data), 0xFFFF)
     lcd.str16(0, main_point_item, ">", 0xF800)
 
-    point_move(126, 30)
+    point_move(126, 30, key_data)
 
     if main_point_item == 30:
         if key_data[2]:
@@ -235,9 +238,9 @@ def sec_menu_04(key_data):
     lcd.str16(16, 126, "medAngle={}".format(MedAngle, '.2f'), 0xFFFF)
     lcd.str16(0, main_point_item, ">", 0xF800)
 
-    # lcd.str16(16, 126, "return", 0xFFFF)
+    lcd.str16(16, 142, "return", 0xFFFF)
 
-    point_move(126, 30)
+    point_move(142, 30, key_data)
 
     if main_point_item == 46:
         if key_data[2]:
@@ -308,7 +311,8 @@ def sec_menu_05(key_data):
     lcd.str16(0, main_point_item, ">", 0xF800)
 
     # lcd.str16(16, 126, "return", 0xFFFF)
-    point_move(126, 30)
+    point_move(126, 30, key_data)
+
     if main_point_item == 46:
         if key_data[2]:
             lcd.clear(0x0000)
@@ -365,12 +369,10 @@ def sec_menu_06(key_data):
     lcd.str16(16, 78, "gyro_kd={}".format(gyro_pid.kd), 0xFFFF)
     lcd.str16(16, 94, "gyro_kd+/- 0.01", 0xFFFF)
     lcd.str16(16, 110, "gyro_kd+/- 0.1", 0xFFFF)
-    lcd.str16(16, 126, "motor_l.duty()={:0>4d}".format(motor_l.duty()), 0xFFFF)
-    lcd.str16(16, 142, "motor_r.duty()={:0>4d}".format(motor_r.duty()), 0xFFFF)
     lcd.str16(0, main_point_item, ">", 0xF800)
+    lcd.str16(16, 126, "return", 0xFFFF)
 
-    # lcd.str16(16, 126, "return", 0xFFFF)
-    point_move(126, 30)
+    point_move(126, 30, key_data)
     if main_point_item == 46:
         if key_data[2]:
             lcd.clear(0x0000)
