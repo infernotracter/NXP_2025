@@ -14,7 +14,7 @@ pit_cont_pid = 0
 
 # 定义一个回调函数
 ticker_flag_gyro = False
-ticker_flag_1ms = False
+ticker_flag_imu = False
 ticker_flag_4ms = False
 ticker_flag_5ms = False
 ticker_flag_8ms = False
@@ -44,15 +44,15 @@ pit0.callback(time_pit_pid_handler)
 pit0.start(5)
 
 
-def time_pit_1ms_handler(time):
-    global ticker_flag_1ms
-    ticker_flag_1ms = True
+def time_pit_imu_handler(time):
+    global ticker_flag_imu
+    ticker_flag_imu = True
 
 
 pit1 = ticker(1)
 pit1.capture_list(imu)
-pit1.callback(time_pit_1ms_handler)
-pit1.start(5)  # 之前为3，现在改为1
+pit1.callback(time_pit_imu_handler)
+pit1.start(5)
 
 
 def time_pit_5ms_handler(time):
@@ -71,10 +71,10 @@ pit_cont_dir = 0
 
 def time_pit_turnpid_handler(time):
     global ticker_flag_4ms, ticker_flag_8ms, pit_cont_dir
-    pit_cont_dir += 1
-    if (pit_cont_dir % 4 == 0):
+    pit_cont_dir += 5
+    if (pit_cont_dir % 20 == 0):
         ticker_flag_4ms = True
-    if (pit_cont_dir >= 8):
+    if (pit_cont_dir >= 40):
         ticker_flag_8ms = True
         pit_cont_dir = 0
 
@@ -82,7 +82,7 @@ def time_pit_turnpid_handler(time):
 pit3 = ticker(3)
 pit3.capture_list()
 pit3.callback(time_pit_turnpid_handler)
-pit3.start(1)
+pit3.start(5)
 
 
 # n = 0  # 元素判断用
@@ -273,10 +273,10 @@ while True:
         break  # 跳出判断
 
     # 1ms中断标志位
-    if (ticker_flag_1ms):
+    if (ticker_flag_imu):
         profiler_1ms.update()
         imu_data = [float(x) for x in imu.get()]
-        ticker_flag_1ms = False
+        ticker_flag_imu = False
 
     if (ticker_flag_5ms):
         # profiler_5ms.update()
