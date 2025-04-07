@@ -1,6 +1,7 @@
 # 基础库、NXP库、第三方库
 from math import *
 from menutext import *
+from ccd_hander import *
 import gc
 import time
 import utime
@@ -21,6 +22,7 @@ ticker_flag_8ms = False
 ticker_flag_angle = False
 ticker_flag_speed = False
 ticker_flag_menu = False
+ticker_flag_element = False
 
 
 def time_pit_pid_handler(time):
@@ -70,8 +72,10 @@ pit_cont_dir = 0
 
 
 def time_pit_turnpid_handler(time):
-    global ticker_flag_4ms, ticker_flag_8ms, pit_cont_dir
+    global ticker_flag_4ms, ticker_flag_8ms, ticker_flag_element, pit_cont_dir
     pit_cont_dir += 5
+    if (pit_cont_dir % 15 == 0):
+        ticker_flag_element = True
     if (pit_cont_dir % 20 == 0):
         ticker_flag_4ms = True
     if (pit_cont_dir >= 40):
@@ -337,6 +341,9 @@ while True:
         speed_pid_out = speed_pid.calculate(
             aim_speed, (encl_data + encr_data) / 2)
         ticker_flag_speed = False
+
+    if (ticker_flag_element):
+        pass
 
     if (ticker_flag_4ms):
         # profiler_4ms.update()
