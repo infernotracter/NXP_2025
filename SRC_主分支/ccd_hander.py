@@ -11,7 +11,7 @@ class CCDHandler:
         self.right = 0
         self.channel = channel  # CCD通道
 
-    def _update(self):
+    def update(self):
         """获取CCD数据"""
         self.data = ccd.get(self.channel)
 
@@ -29,8 +29,8 @@ class CCDHandler:
         return threshold
 
     def get_mid_point(self, value, reasonrange, searchgap = 0):
-        """获取中点, value: 差比和公式的值, reasonrange: 合理范围, searchgap: 搜索间隔, LeftEdge: 左边界, RightEdge: 右边界"""
-        self._update(self.channel)  # 更新数据
+        """获取中点, value: 差比和公式的值, reasonrange: 合理范围(两次差值的范围), searchgap: 搜索间隔"""
+        self.update(self.channel)  # 更新数据
         for i in range(self.last_mid - 4 - searchgap, 1, -1):  # 用差比和公式判断是否找到边线
             if (abs(self.data[i+4]-self.data[i])*100/(self.data[i + 4]+self.data[i])) > value:
                 self.left = i  # 左边点找到
@@ -47,12 +47,10 @@ class CCDHandler:
             elif i == 126:  # 如果找到126都没找到
                 self.right = 127  # 强制右左边点为127
                 break
-
         # if self.left < LeftEdge:
         #     self.lost_l = True
         # if self.right > RightEdge:
         #     self.lost_r = True
-
         self.mid = int((self.left + self.right) / 2)  # 中点计算
         if abs(self.mid - self.last_mid) > reasonrange:  # 如果中点与上次中点差距过大
             self.mid = self.last_mid # 强制令中点为上次中点
@@ -91,74 +89,109 @@ class ElementDetector:
         self.ring_progress = 0  # 圆环进度
         self.zebra_count = 0    # 斑马线特征计数
         
-    def detect(self, _ccd_f, _ccd_n, imu_data):
+    def update(self, _ccd_far, _ccd_fear, imu_data):
         """主检测函数"""
         # element = RoadElement.NORMAL
         
         # 优先检测斑马线
-        if self._check_zebra(_ccd_n):
+        if self._check_zebra(_ccd_fear):
             element = RoadElement.zebra
-        # 检测左圆环
-        elif self._check_left_ring(_ccd_f, _ccd_n, imu_data):
-            element = RoadElement.circle_l1 if self.state != RoadElement.circle_l2 else RoadElement.circle_l2
-        # 检测右圆环
-        elif self._check_right_ring(_ccd_f, _ccd_n, imu_data):
-            element = RoadElement.circle_r1 if self.state != RoadElement.circle_r2 else RoadElement.circle_r2
+        elif self._check_left_ring_1(_ccd_far, _ccd_fear, imu_data):
+            element = RoadElement.circle_l1
+        elif self._check_right_ring_1(_ccd_far, _ccd_fear, imu_data):
+            element = RoadElement.circle_r1
+        elif self._check_left_ring_2(_ccd_far, _ccd_fear, imu_data):
+            element = RoadElement.circle_l2
+        elif self._check_right_ring_2(_ccd_far, _ccd_fear, imu_data):
+            element = RoadElement.circle_r2
             
         self._update_state(element, imu_data)
         return element
     
-    def _check_left_ring(self, _ccd_f, _ccd_n, imu_data):
+    def _check_left_ring_1(self, _ccd_far, _ccd_fear, imu_data):
         """左圆环检测逻辑"""
         # 近端CCD特征检查
-        near_valid = (ccd_near_l[0] <= _ccd_n.left <= ccd_near_l[1] and 
-                     ccd_near_r[0] <= _ccd_n.right <= ccd_near_r[1])
+        near_valid = (ccd_near_l[0] <= _ccd_fear.left <= ccd_near_l[1] and 
+                     ccd_near_r[0] <= _ccd_fear.right <= ccd_near_r[1])
         
         # 远端CCD特征检查
-        far_valid = (_ccd_f.left < ccd_far_lost and 
-                    ccd_far_right[0] <= _ccd_f.right <= ccd_far_right[1])
+        far_valid = (_ccd_far.left < ccd_far_lost and 
+                    ccd_far_right[0] <= _ccd_far.right <= ccd_far_right[1])
         
         # 特征点一致性检查
-        point_diff = abs(_ccd_f.right - _ccd_n.right)
+        point_diff = abs(_ccd_far.right - _ccd_fear.right)
         
         # 陀螺仪左转趋势验证
         gyro_z_valid = imu_data[5] > 2.0  # 假设z轴角速度正值代表左转
         
         return near_valid and far_valid and (point_diff <= ccd_near_lost) and gyro_z_valid
     
-    def _check_right_ring(self, _ccd_f, _ccd_n, imu_data):
+    def _check_right_ring_1(self, _ccd_far, _ccd_fear, imu_data):
         """右圆环检测逻辑（对称实现）"""
         # 近端CCD特征检查（左右镜像）
-        near_valid = (ccd_near_r[0] <= _ccd_n.left <= ccd_near_r[1] and 
-                    ccd_near_l[0] <= _ccd_n.right <= ccd_near_l[1])
+        near_valid = (ccd_near_r[0] <= _ccd_fear.left <= ccd_near_r[1] and 
+                    ccd_near_l[0] <= _ccd_fear.right <= ccd_near_l[1])
         
         # 远端CCD特征检查（左右镜像）
-        far_valid = (_ccd_f.right > ccd_far_lost and 
-                    ccd_far_left[0] <= _ccd_f.left <= ccd_far_left[1])
+        far_valid = (_ccd_far.right > ccd_far_lost and 
+                    ccd_far_left[0] <= _ccd_far.left <= ccd_far_left[1])
         
         # 特征点一致性检查（比较左边缘）
-        point_diff = abs(_ccd_f.left - _ccd_n.left)
+        point_diff = abs(_ccd_far.left - _ccd_fear.left)
         
         # 陀螺仪右转趋势验证
         gyro_z_valid = imu_data[5] < -2.0  # z轴角速度负值代表右转
         
         return near_valid and far_valid and (point_diff <= ccd_near_lost) and gyro_z_valid
             
-    def _check_zebra(self, _ccd_n):
+
+    def _check_left_ring_2(self, _ccd_far, _ccd_near, imu_data):
+        """左圆环状态2检测：近端左丢线+特征点稳定"""
+        # 近端CCD左丢线检查（left_point_2 <=10）
+        near_left_lost = _ccd_near.left <= ccd_near_lost
+        
+        # 近端右边界有效性检查（87 <= right_point_2 <=103）
+        near_right_valid = ccd_near_r[0] <= _ccd_near.right <= ccd_near_r[1]
+        
+        # 特征点稳定性检查（|right_point_1 - right_point_2| <=12）
+        point_diff = abs(_ccd_far.right - _ccd_near.right)
+        
+        # 陀螺仪左转趋势验证（z轴角速度>1.5）
+        gyro_z_valid = imu_data[5] > 1.5
+        
+        return near_left_lost and near_right_valid and (point_diff <= 12) and gyro_z_valid
+
+    def _check_right_ring_2(self, _ccd_far, _ccd_near, imu_data):
+        """右圆环状态2检测：近端右丢线+特征点稳定"""
+        # 近端CCD右丢线检查（right_point_2 >=115）
+        near_right_lost = _ccd_near.right >= ccd_far_lost
+        
+        # 近端左边界有效性检查（31 <= left_point_2 <=44）
+        near_left_valid = ccd_near_l[0] <= _ccd_near.left <= ccd_near_l[1]
+        
+        # 特征点稳定性检查（|left_point_1 - left_point_2| <=12）
+        point_diff = abs(_ccd_far.left - _ccd_near.left)
+        
+        # 陀螺仪右转趋势验证（z轴角速度<-1.5）
+        gyro_z_valid = imu_data[5] < -1.5
+        
+        return near_right_lost and near_left_valid and (point_diff <= 12) and gyro_z_valid
+  
+    def _check_zebra(self, _ccd_fear):
         """斑马线检测"""
         transition = 0
-        prev = _ccd_n[0]
+        prev = _ccd_fear[0]
         
         # 动态阈值计算
-        avg = sum(_ccd_n[50:78]) / 28  # 中间区域平均值
+        avg = sum(_ccd_fear[50:78]) / 28  # 中间区域平均值
         threshold = avg * 0.7
         
         # 统计有效跳变
         for i in range(1, 127):
-            diff = abs(_ccd_n[i] - prev)
+            diff = abs(_ccd_fear[i] - prev)
             if diff > threshold:
                 transition += 1
-            prev = _ccd_n[i]
+            prev = _ccd_fear[i]
             
         # 有效跳变特征判断
         if transition >= 6:  # 根据实际调整阈值
