@@ -28,8 +28,9 @@ class CCDHandler:
         threshold = min(max(75, threshold), 255)  # 阈值限幅在75-256之间
         return threshold
 
-    def get_mid_point(self, value, reasonrange, searchgap = 0):
-        """获取中点, value: 差比和公式的值, reasonrange: 合理范围(两次差值的范围), searchgap: 搜索间隔"""
+    def get_mid_point(self, value, reasonrange, follow, searchgap = 0):
+        """获取中点, value: 差比和公式的值, reasonrange: 合理范围(两次差值的范围),
+        follow: if>0 补右边线，跟左边线, searchgap: 搜索间隔"""
         self.update(self.channel)  # 更新数据
         for i in range(self.last_mid - 4 - searchgap, 1, -1):  # 用差比和公式判断是否找到边线
             if (abs(self.data[i+4]-self.data[i])*100/(self.data[i + 4]+self.data[i])) > value:
@@ -52,6 +53,12 @@ class CCDHandler:
         # if self.right > RightEdge:
         #     self.lost_r = True
         self.mid = int((self.left + self.right) / 2)  # 中点计算
+
+        if follow > 0:
+            self.right = self.left + follow
+        elif follow < 0:
+            self.left = self.right + follow        
+
         if abs(self.mid - self.last_mid) > reasonrange:  # 如果中点与上次中点差距过大
             self.mid = self.last_mid # 强制令中点为上次中点
         self.last_mid = self.mid  # 更新上次中点
@@ -88,6 +95,7 @@ class ElementDetector:
         self.state = RoadElement.normal
         self.ring_progress = 0  # 圆环进度
         self.zebra_count = 0    # 斑马线特征计数
+        self.follow = 0
         
     def update(self, _ccd_far, _ccd_fear, imu_data):
         """主检测函数"""
@@ -127,7 +135,7 @@ class ElementDetector:
         return near_valid and far_valid and (point_diff <= ccd_near_lost) and gyro_z_valid
     
     def _check_right_ring_1(self, _ccd_far, _ccd_fear, imu_data):
-        """右圆环检测逻辑（对称实现）"""
+        """右圆环检测逻辑"""
         # 近端CCD特征检查（左右镜像）
         near_valid = (ccd_near_r[0] <= _ccd_fear.left <= ccd_near_r[1] and 
                     ccd_near_l[0] <= _ccd_fear.right <= ccd_near_l[1])
