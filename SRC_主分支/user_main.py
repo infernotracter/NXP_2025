@@ -74,7 +74,7 @@ pit_cont_dir = 0
 def time_pit_turnpid_handler(time):
     global ticker_flag_4ms, ticker_flag_8ms, ticker_flag_element, pit_cont_dir
     pit_cont_dir += 5
-    if (pit_cont_dir % 15 == 0):
+    if (pit_cont_dir % 10 == 0):
         ticker_flag_element = True
     if (pit_cont_dir % 20 == 0):
         ticker_flag_4ms = True
@@ -266,6 +266,7 @@ def clearall():
     key.clear(2)
     key.clear(3)
     key.clear(4)
+grzo_z = 0.0 # 陀螺仪积分值
 while True:
     if (current_roll >= 75) or (current_roll <= 20):
         stop_flag = 0
@@ -313,7 +314,7 @@ while True:
         ax, ay, az = imu_data_filtered[0], imu_data_filtered[1], imu_data_filtered[2]
         gx, gy, gz = imu_data_filtered[3], imu_data_filtered[4], imu_data_filtered[5]
         quaternion_update(ax, ay, az, gx, gy, gz)
-        print(f"{motor_l.duty()}, {motor_r.duty()}, {current_pitch}, {current_roll}, {current_yaw}")
+        print(f"{motor_l.duty()}, {motor_r.duty()}, {current_pitch}, {current_roll}, {current_yaw}, {grzo_z}")
 
         ticker_flag_5ms = False
 
@@ -343,7 +344,8 @@ while True:
         ticker_flag_speed = False
 
     if (ticker_flag_element):
-        pass
+        #模拟环内陀螺仪积分
+        grzo_z += (imu_data[5] - gyrooffsetz)  * 0.002 / 14.3
 
     if (ticker_flag_4ms):
         # profiler_4ms.update()
