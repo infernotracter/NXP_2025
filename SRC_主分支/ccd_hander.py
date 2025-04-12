@@ -224,3 +224,7 @@ class ElementDetector:
                 self.state = RoadElement.normal
                 
         # 其他状态更新...
+
+class gyro_z_test:
+    def __init__(self):
+        pass
