@@ -266,7 +266,8 @@ def clearall():
     key.clear(2)
     key.clear(3)
     key.clear(4)
-grzo_z = 0.0 # 陀螺仪积分值
+gyro_z_data = 0
+gyro_z = Gyro_Z_Test()  # 创建陀螺仪测试实例
 while True:
     if (current_roll >= 75) or (current_roll <= 20):
         stop_flag = 0
@@ -314,7 +315,7 @@ while True:
         ax, ay, az = imu_data_filtered[0], imu_data_filtered[1], imu_data_filtered[2]
         gx, gy, gz = imu_data_filtered[3], imu_data_filtered[4], imu_data_filtered[5]
         quaternion_update(ax, ay, az, gx, gy, gz)
-        print(f"{motor_l.duty()}, {motor_r.duty()}, {current_pitch}, {current_roll}, {current_yaw}, {grzo_z}")
+        print(f"{motor_l.duty()}, {motor_r.duty()}, {current_pitch}, {current_roll}, {current_yaw}, {gyro_z_data}")
 
         ticker_flag_5ms = False
 
@@ -345,7 +346,7 @@ while True:
 
     if (ticker_flag_element):
         #模拟环内陀螺仪积分
-        grzo_z += (imu_data[5] - gyrooffsetz)  * 0.002 / 14.3
+        gyro_z_data = gyro_z.update(imu_data[5])
 
     if (ticker_flag_4ms):
         # profiler_4ms.update()

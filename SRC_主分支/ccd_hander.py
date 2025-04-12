@@ -225,6 +225,28 @@ class ElementDetector:
                 
         # 其他状态更新...
 
-class gyro_z_test:
+class Gyro_Z_Test:
     def __init__(self):
-        pass
+        self.offset = [0] * 9
+        self.data = 0
+        self._getoffset(100)
+    def _getoffset(self, NUM = 100):
+        for _ in range(NUM):
+            for i in range(9):
+                self.offset[i] += imu.get(i)
+        for i in range(9):
+            self.offset[i] /= NUM
+    def update(self, data, tunnel = 5):
+        self.data += data - self.offset[tunnel]
+        return self.data
+    def reset(self):
+        self.data = 0
+
+class Distance:
+    def __init__(self):
+        self.data = 0
+    def update(self, data):
+        self.data += data
+        return self.data
+    def reset(self):
+        self.data = 0
