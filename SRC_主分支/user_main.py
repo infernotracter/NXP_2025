@@ -221,7 +221,7 @@ last_gz = 0
 def imuoffsetinit():
     global accoffsetx, accoffsety, accoffsetz, gyrooffsetx, gyrooffsety, gyrooffsetz, last_ax, last_ay, last_az, last_gx, last_gy, last_gz
     for _ in range(OFFSETNUM):
-        imu_data = imu.get()
+        imu_data = imu.read()
         accoffsetx += (imu_data[0] - last_ax)
         accoffsety += (imu_data[1] - last_ay)
         accoffsetz += (imu_data[2] - last_az)
@@ -259,15 +259,30 @@ last_imu_data = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0, 0.0, 0.0]
 data_wave = [0, 0, 0, 0, 0, 0, 0, 0]
 
 key_data = key.get()
-imu_data = imu.get()
+imu_data = imu.read()
 imu_data_filtered = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0, 0.0, 0.0]
 def clearall():
     key.clear(1)
     key.clear(2)
     key.clear(3)
     key.clear(4)
-gyro_z_data = 0
-gyro_z = Gyro_Z_Test()  # 创建陀螺仪测试实例
+
+class Gyro_Z_Test:
+    def __init__(self, offset):
+        self.offset = offset
+        self.data = 0
+    def update(self, tmpdata, channel = 5):
+        self.data += tmpdata - self.offset[channel]
+    def reset(self):
+        self.data = 0
+offset = [0] * 9
+for _ in range(100):
+    imu_data = imu.read()
+    for i in range(9):
+        offset[i] += imu_data[i]
+for i in range(9):
+    offset[i] /= 100
+gyro_z_test = Gyro_Z_Test(offset)  # 创建陀螺仪测试实例
 while True:
     if (current_roll >= 75) or (current_roll <= 20):
         stop_flag = 0
@@ -315,7 +330,7 @@ while True:
         ax, ay, az = imu_data_filtered[0], imu_data_filtered[1], imu_data_filtered[2]
         gx, gy, gz = imu_data_filtered[3], imu_data_filtered[4], imu_data_filtered[5]
         quaternion_update(ax, ay, az, gx, gy, gz)
-        print(f"{motor_l.duty()}, {motor_r.duty()}, {current_pitch}, {current_roll}, {current_yaw}, {gyro_z_data}")
+        print(f"{motor_l.duty()}, {motor_r.duty()}, {current_pitch}, {current_roll}, {current_yaw}, {gyro_z_test.data}")
 
         ticker_flag_5ms = False
 
@@ -346,7 +361,7 @@ while True:
 
     if (ticker_flag_element):
         #模拟环内陀螺仪积分
-        gyro_z_data = gyro_z.update(imu_data[5])
+        gyro_z_test.update(tmpdata = imu_data[5])
 
     if (ticker_flag_4ms):
         # profiler_4ms.update()
@@ -378,6 +393,7 @@ while True:
 
         # dir_out_out = dir_out.calculate(0, (error1 + error2) * error_k)
         ticker_flag_8ms = False
+
 
 
 
