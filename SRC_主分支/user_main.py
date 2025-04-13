@@ -268,21 +268,23 @@ def clearall():
     key.clear(4)
 
 class Gyro_Z_Test:
-    def __init__(self, offset):
-        self.offset = offset
+    def __init__(self):
+        self.offset = [0] * 9
         self.data = 0
+        self._getoffset()
+    def _getoffset(self, num = 100):
+        for _ in range(num):
+            imu_data = imu.read()
+            for i in range(9):
+                self.offset[i] += imu_data[i]
+        for i in range(9):
+            self.offset[i] /= num
     def update(self, tmpdata, channel = 5):
         self.data += tmpdata - self.offset[channel]
     def reset(self):
         self.data = 0
-offset = [0] * 9
-for _ in range(100):
-    imu_data = imu.read()
-    for i in range(9):
-        offset[i] += imu_data[i]
-for i in range(9):
-    offset[i] /= 100
-gyro_z_test = Gyro_Z_Test(offset)  # 创建陀螺仪测试实例
+
+gyro_z_test = Gyro_Z_Test()  # 创建陀螺仪测试实例
 while True:
     if (current_roll >= 75) or (current_roll <= 20):
         stop_flag = 0
