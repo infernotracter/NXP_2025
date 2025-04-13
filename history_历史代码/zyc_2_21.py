@@ -11,6 +11,9 @@ import os
 import io
 
 
+
+
+
 # 蜂鸣器初始化
 buzzer = Pin('C9', Pin.OUT, pull=Pin.PULL_UP_47K, value=0)
 
