@@ -11,10 +11,6 @@ class CCDHandler:
         self.right = 0
         self.channel = channel  # CCD通道
 
-    def update(self):
-        """获取CCD数据"""
-        self.data = ccd.get(self.channel)
-
     def _get_threshold(self):
         value_max = self.data[4]  # 从第5个元素开始考虑最大值
         value_min = self.data[4]  # 从第5个元素开始考虑最小值
@@ -28,10 +24,10 @@ class CCDHandler:
         threshold = min(max(75, threshold), 255)  # 阈值限幅在75-256之间
         return threshold
 
-    def get_mid_point(self, value, reasonrange, follow, searchgap = 0):
+    def get_mid_point(self, tmpdata,  value, reasonrange, follow, searchgap = 0):
         """获取中点, value: 差比和公式的值, reasonrange: 合理范围(两次差值的范围),
         follow: if>0 补右边线，跟左边线, searchgap: 搜索间隔"""
-        self.update(self.channel)  # 更新数据
+        self.data = tmpdata
         for i in range(self.last_mid - 4 - searchgap, 1, -1):  # 用差比和公式判断是否找到边线
             if (abs(self.data[i+4]-self.data[i])*100/(self.data[i + 4]+self.data[i])) > value:
                 self.left = i  # 左边点找到
@@ -63,11 +59,6 @@ class CCDHandler:
             self.mid = self.last_mid # 强制令中点为上次中点
         self.last_mid = self.mid  # 更新上次中点
         return self.mid  # 返回中点
-    
-# 实例
-ccd_f = CCDHandler(0)  # 创建CCDHandler实例，通道为0
-ccd_n = CCDHandler(1)  # 创建CCDHandler实例，通道为1
-
 
 # 常量定义（根据实际赛道调整）
 ccd_near_l = (30, 42)       # 左圆环阶段1近端CCD左右边点范围
@@ -89,8 +80,8 @@ class RoadElement:
     circle_r2 = 4
     zebra = 5
 
-# 元素检测器类
 class ElementDetector:
+    """赛道元素检测器"""
     def __init__(self):
         self.state = RoadElement.normal
         self.ring_progress = 0  # 圆环进度

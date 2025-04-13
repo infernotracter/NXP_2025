@@ -1,5 +1,6 @@
 # 基础库、NXP库、第三方库
 from math import *
+from basic_data import *
 from menutext import *
 from ccd_hander import *
 import gc
@@ -84,7 +85,7 @@ def time_pit_turnpid_handler(time):
 
 
 pit3 = ticker(3)
-pit3.capture_list()
+pit3.capture_list(ccd)
 pit3.callback(time_pit_turnpid_handler)
 pit3.start(5)
 
@@ -131,7 +132,6 @@ delta_T = 0.005  # 采样周期（与1ms中断对应）
 current_pitch = 0  # 当前俯仰角
 current_roll = 0  # 当前横滚角
 current_yaw = 0  # 当前偏航角
-
 
 def quaternion_update(ax, ay, az, gx, gy, gz):
     global q0, q1, q2, q3, I_ex, I_ey, I_ez, current_pitch, current_roll, current_yaw
@@ -217,6 +217,23 @@ last_gx = 0
 last_gy = 0
 last_gz = 0
 
+class Gyro_Z_Test:
+    """陀螺仪Z轴积分"""
+    def __init__(self):
+        self.offset = [0.0] * 9
+        self.data = 0.0
+        self._getoffset()
+    def _getoffset(self, num = 100):
+        for _ in range(num):
+            imu_data = imu.read()
+            for i in range(9):
+                self.offset[i] += imu_data[i]
+        for i in range(9):
+            self.offset[i] /= num
+    def update(self, tmpdata, time, channel = 5):
+        self.data += (tmpdata - self.offset[channel]) * time
+    def reset(self):
+        self.data = 0
 
 def imuoffsetinit():
     global accoffsetx, accoffsety, accoffsetz, gyrooffsetx, gyrooffsety, gyrooffsetz, last_ax, last_ay, last_az, last_gx, last_gy, last_gz
@@ -266,24 +283,9 @@ def clearall():
     key.clear(2)
     key.clear(3)
     key.clear(4)
-
-class Gyro_Z_Test:
-    def __init__(self):
-        self.offset = [0] * 9
-        self.data = 0
-        self._getoffset()
-    def _getoffset(self, num = 100):
-        for _ in range(num):
-            imu_data = imu.read()
-            for i in range(9):
-                self.offset[i] += imu_data[i]
-        for i in range(9):
-            self.offset[i] /= num
-    def update(self, tmpdata, channel = 5):
-        self.data += tmpdata - self.offset[channel]
-    def reset(self):
-        self.data = 0
-
+# 实例
+ccd_f = CCDHandler(0)  # 创建CCDHandler实例，通道为0
+ccd_n = CCDHandler(1)  # 创建CCDHandler实例，通道为1
 gyro_z_test = Gyro_Z_Test()  # 创建陀螺仪测试实例
 while True:
     if (current_roll >= 75) or (current_roll <= 20):
@@ -332,7 +334,7 @@ while True:
         ax, ay, az = imu_data_filtered[0], imu_data_filtered[1], imu_data_filtered[2]
         gx, gy, gz = imu_data_filtered[3], imu_data_filtered[4], imu_data_filtered[5]
         quaternion_update(ax, ay, az, gx, gy, gz)
-        print(f"{motor_l.duty()}, {motor_r.duty()}, {current_pitch}, {current_roll}, {current_yaw}, {gyro_z_test.data}")
+        print(f"{mid_point_f}, {mid_point_n}, {current_pitch}, {current_roll}, {current_yaw}, {gyro_z_test.data}")
 
         ticker_flag_5ms = False
 
@@ -363,8 +365,12 @@ while True:
 
     if (ticker_flag_element):
         #模拟环内陀螺仪积分
-        gyro_z_test.update(tmpdata = imu_data[5])
-
+        gyro_z_test.update(tmpdata = imu_data[5], time = 0.01)
+        tempdata = ccd.get(0)
+        mid_point_f = ccd_f.get_mid_point(tmpdata = tempdata, value = 40, reasonrange = 10, follow = 0, searchgap = 0)
+        tempdata = ccd.get(1)
+        mid_point_n = ccd_n.get_mid_point(tmpdata = tempdata, value = 40, reasonrange = 10, follow = 0, searchgap = 0)
+        
     if (ticker_flag_4ms):
         # profiler_4ms.update()
         # dir_in_out = dir_in.calculate(dir_out_out, imu[4])

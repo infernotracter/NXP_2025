@@ -37,8 +37,10 @@ end_switch = Pin('C19', Pin.IN, pull=Pin.PULL_UP_47K, value=True)
 switch_3 = Pin('B14', Pin.IN, pull=Pin.PULL_UP_47K, value=True)
 # 拨码开关3
 switch_4 = Pin('B15', Pin.IN, pull=Pin.PULL_UP_47K, value=True)
-# 调用 TSL1401 模块获取 CCD 实例
+# 这里填了 10 代表 10 次 capture/read 调用才会更新一次数据
 ccd = TSL1401(3)
+# 调整 CCD 的采样精度为 12bit
+ccd.set_resolution(TSL1401.RES_12BIT)
 # 实例化 KEY_HANDLER 模块
 key = KEY_HANDLER(10)
 
@@ -131,7 +133,8 @@ out_l = 0  # 左轮输出值
 out_r = 0  # 右轮输出值
 MedAngle = 32.5
 speed_d = 50  # 速度增量(调试用)
-
+mid_point_f = 0
+mid_point_n = 0
 
 
 
