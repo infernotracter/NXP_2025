@@ -364,8 +364,7 @@ while True:
         ticker_flag_speed = False
 
     if (ticker_flag_element):
-        #模拟环内陀螺仪积分
-        gyro_z_test.update(tmpdata = imu_data[5], time = 0.01)
+        # gyro_z_test.update(tmpdata = imu_data[5], time = 0.01)
         tempdata = ccd.get(0)
         mid_point_f = ccd_f.get_mid_point(tmpdata = tempdata, value = 40, reasonrange = 10, follow = 0, searchgap = 0)
         tempdata = ccd.get(1)
@@ -373,7 +372,7 @@ while True:
         
     if (ticker_flag_4ms):
         # profiler_4ms.update()
-        # dir_in_out = dir_in.calculate(dir_out_out, imu[4])
+        # dir_in_out = dir_in.calculate(dir_out_out, imu_data[5])
         ticker_flag_4ms = False
 
     if (ticker_flag_8ms):
