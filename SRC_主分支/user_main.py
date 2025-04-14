@@ -1,8 +1,6 @@
 # 基础库、NXP库、第三方库
 from math import *
 from basic_data import *
-from menutext import *
-from ccd_hander import *
 import gc
 import time
 import utime
@@ -18,12 +16,10 @@ pit_cont_pid = 0
 ticker_flag_gyro = False
 ticker_flag_imu = False
 ticker_flag_4ms = False
-ticker_flag_5ms = False
 ticker_flag_8ms = False
 ticker_flag_angle = False
 ticker_flag_speed = False
 ticker_flag_menu = False
-ticker_flag_element = False
 
 
 def time_pit_pid_handler(time):
@@ -57,26 +53,12 @@ pit1.capture_list(imu)
 pit1.callback(time_pit_imu_handler)
 pit1.start(5)
 
-
-def time_pit_5ms_handler(time):
-    global ticker_flag_5ms
-    ticker_flag_5ms = True
-
-
-# # 实例化 PIT ticker 模块
-pit2 = ticker(2)
-pit2.capture_list(encoder_l, encoder_r)
-pit2.callback(time_pit_5ms_handler)
-pit2.start(5)
-
 pit_cont_dir = 0
 
 
 def time_pit_turnpid_handler(time):
-    global ticker_flag_4ms, ticker_flag_8ms, ticker_flag_element, pit_cont_dir
+    global ticker_flag_4ms, ticker_flag_8ms, pit_cont_dir
     pit_cont_dir += 5
-    if (pit_cont_dir % 10 == 0):
-        ticker_flag_element = True
     if (pit_cont_dir % 20 == 0):
         ticker_flag_4ms = True
     if (pit_cont_dir >= 40):
@@ -85,7 +67,7 @@ def time_pit_turnpid_handler(time):
 
 
 pit3 = ticker(3)
-pit3.capture_list(ccd)
+pit3.capture_list()
 pit3.callback(time_pit_turnpid_handler)
 pit3.start(5)
 
@@ -132,6 +114,7 @@ delta_T = 0.005  # 采样周期（与1ms中断对应）
 current_pitch = 0  # 当前俯仰角
 current_roll = 0  # 当前横滚角
 current_yaw = 0  # 当前偏航角
+
 
 def quaternion_update(ax, ay, az, gx, gy, gz):
     global q0, q1, q2, q3, I_ex, I_ey, I_ez, current_pitch, current_roll, current_yaw
@@ -221,7 +204,7 @@ last_gz = 0
 def imuoffsetinit():
     global accoffsetx, accoffsety, accoffsetz, gyrooffsetx, gyrooffsety, gyrooffsetz, last_ax, last_ay, last_az, last_gx, last_gy, last_gz
     for _ in range(OFFSETNUM):
-        imu_data = imu.read()
+        imu_data = imu.get()
         accoffsetx += (imu_data[0] - last_ax)
         accoffsety += (imu_data[1] - last_ay)
         accoffsetz += (imu_data[2] - last_az)
@@ -247,9 +230,9 @@ def imuoffsetinit():
 # 在主程序初始化阶段创建实例
 profiler_1ms = TickerProfiler("5ms", expected_interval_ms=5)
 profiler_5ms = TickerProfiler("5ms", expected_interval_ms=5)
-profiler_gyro = TickerProfiler("Gyro", expected_interval_ms=5)  # 示例值
-profiler_angle = TickerProfiler("Angle", expected_interval_ms=25)
-profiler_speed = TickerProfiler("Speed", expected_interval_ms=125)
+profiler_gyro = TickerProfiler("Gyro", expected_interval_ms=10)  # 示例值
+profiler_angle = TickerProfiler("Angle", expected_interval_ms=50)
+profiler_speed = TickerProfiler("Speed", expected_interval_ms=100)
 profiler_4ms = TickerProfiler("20ms", expected_interval_ms=20)
 profiler_8ms = TickerProfiler("40ms", expected_interval_ms=40)
 
@@ -259,24 +242,23 @@ last_imu_data = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0, 0.0, 0.0]
 data_wave = [0, 0, 0, 0, 0, 0, 0, 0]
 
 key_data = key.get()
-imu_data = imu.read()
+imu_data = imu.get()
 imu_data_filtered = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0, 0.0, 0.0]
+
+
 def clearall():
     key.clear(1)
     key.clear(2)
     key.clear(3)
     key.clear(4)
-# 实例
-ccd_f = CCDHandler(0)  # 创建CCDHandler实例，通道为0
-ccd_n = CCDHandler(1)  # 创建CCDHandler实例，通道为1
-gyro_z_test = Gyro_Z_Test()  # 创建陀螺仪测试实例
+
+
 while True:
     if (current_roll >= 75) or (current_roll <= 20):
         stop_flag = 0
 
     motor_l.duty(my_limit(gyro_pid_out - dir_in_out, -3000, 3000))
     motor_r.duty(my_limit(gyro_pid_out + dir_in_out, -3000, 3000))
-
     # 拨码开关关中断
     if end_switch.value() == 1:
         pit1.stop()  # pit1关闭
@@ -284,24 +266,15 @@ while True:
         pit3.stop()  # pit3关闭
         break  # 跳出判断
 
-    # 1ms中断标志位
     if (ticker_flag_imu):
         # profiler_1ms.update()
         imu_data = [float(x) for x in imu.get()]
         ticker_flag_imu = False
-
-    if (ticker_flag_5ms):
-        # profiler_5ms.update()
-        encl_data = encoder_l.get()  # 读取左编码器的数据
-        encr_data = encoder_r.get()  # 读取右编码器的数据
-        # 原函数此时为圆环处理
-
-        # 低通滤波处理（加速度计）
         alpha = 0.5
         for i in range(3):
             # 先进行零偏校正和单位转换
             current_processed = (
-                imu_data[i] - [accoffsetx, accoffsety, accoffsetz][i]) / ACC_SPL
+                                        imu_data[i] - [accoffsetx, accoffsety, accoffsetz][i]) / ACC_SPL
             # 再应用滤波，使用上一次的滤波结果
             imu_data_filtered[i] = alpha * current_processed + \
                                    (1 - alpha) * last_imu_data[i]
@@ -317,11 +290,9 @@ while True:
         ax, ay, az = imu_data_filtered[0], imu_data_filtered[1], imu_data_filtered[2]
         gx, gy, gz = imu_data_filtered[3], imu_data_filtered[4], imu_data_filtered[5]
         quaternion_update(ax, ay, az, gx, gy, gz)
-        print(f"{mid_point_f}, {mid_point_n}, {current_pitch}, {current_roll}, {current_yaw}, {gyro_z_test.data}")
+        # print(f"{motor_l.duty()}, {motor_r.duty()}, {current_pitch}, {current_roll}, {current_yaw}")
 
-        ticker_flag_5ms = False
-
-    if (ticker_flag_gyro):  # kp=100.1  ki=2.0000001
+    if (ticker_flag_gyro):
         # profiler_gyro.update()
         gyro_pid_out = gyro_pid.calculate(angle_pid_out, imu_data[3])
         ticker_flag_gyro = False
@@ -331,31 +302,26 @@ while True:
         angle_pid_out = angle_pid.calculate(
             speed_pid_out + MedAngle, current_roll)
         ticker_flag_angle = False
-        
+
     if (ticker_flag_menu):
-        menu(key_data)
+        # menu(key_data)
         key_data = key.get()
-        if(key_data[0] or key_data[1] or key_data[2] or key_data[3]):
-            stop_flag=1
+        if (key_data[0] or key_data[1] or key_data[2] or key_data[3]):
+            stop_flag = 1
             clearall()
         ticker_flag_menu = False
 
     if (ticker_flag_speed):
         # profiler_speed.update()
+        encl_data = encoder_l.get()  # 读取左编码器的数据
+        encr_data = encoder_r.get()  # 读取右编码器的数据
         speed_pid_out = speed_pid.calculate(
-            aim_speed, (encl_data + encr_data) / 2)
+            0, (encl_data + encr_data) / 2)
         ticker_flag_speed = False
 
-    if (ticker_flag_element):
-        # gyro_z_test.update(tmpdata = imu_data[5], time = 0.01)
-        tempdata = ccd.get(0)
-        mid_point_f = ccd_f.get_mid_point(tmpdata = tempdata, value = 40, reasonrange = 10, follow = 0, searchgap = 0)
-        tempdata = ccd.get(1)
-        mid_point_n = ccd_n.get_mid_point(tmpdata = tempdata, value = 40, reasonrange = 10, follow = 0, searchgap = 0)
-        
     if (ticker_flag_4ms):
         # profiler_4ms.update()
-        # dir_in_out = dir_in.calculate(dir_out_out, imu_data[5])
+        # dir_in_out = dir_in.calculate(dir_out_out, imu[4])
         ticker_flag_4ms = False
 
     if (ticker_flag_8ms):
@@ -376,10 +342,12 @@ while True:
                 angle_pid.kp = data_wave[3]
                 angle_pid.ki = data_wave[4]
                 angle_pid.kd = data_wave[5]
+                speed_pid.kp = data_wave[6]
+                speed_pid.ki = data_wave[7]
         # 将数据发送到示波器
         wireless.send_oscilloscope(
             gyro_pid.kp, gyro_pid.ki, gyro_pid.kd, angle_pid.kp,
-            angle_pid.ki, angle_pid.kd, current_roll, motor_l.duty())
+            angle_pid.ki, angle_pid.kd, speed_pid.kp, speed_pid.ki)
 
         # dir_out_out = dir_out.calculate(0, (error1 + error2) * error_k)
         ticker_flag_8ms = False

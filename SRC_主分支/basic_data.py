@@ -37,10 +37,8 @@ end_switch = Pin('C19', Pin.IN, pull=Pin.PULL_UP_47K, value=True)
 switch_3 = Pin('B14', Pin.IN, pull=Pin.PULL_UP_47K, value=True)
 # 拨码开关3
 switch_4 = Pin('B15', Pin.IN, pull=Pin.PULL_UP_47K, value=True)
-# 这里填了 10 代表 10 次 capture/read 调用才会更新一次数据
-ccd = TSL1401(3)
-# 调整 CCD 的采样精度为 12bit
-ccd.set_resolution(TSL1401.RES_12BIT)
+# 调用 TSL1401 模块获取 CCD 实例
+ccd = TSL1401(5)
 # 实例化 KEY_HANDLER 模块
 key = KEY_HANDLER(10)
 
@@ -89,21 +87,21 @@ class PID:
 
 
 # 特殊输出调整函数
-
+MedAngle=35.8
 
 def gyro_adjustment(output):
     return output + 700 if output >= 0 else output - 700
 
 
 # PID实例化
-speed_pid = PID(kp=0.0, ki=0.0, integral_limits=(-2000, 2000))
-# output_limits=(-500, 500))
+speed_pid = PID(kp=-0.06960005, ki=-0.008999997, integral_limits=(-2000, 2000))
+                #output_limits=(-500, 500)
 
+#
 
-angle_pid = PID(kp=0.0, kd=0.0)
-# , integral_limits=(-2000, 2000))
+angle_pid = PID(kp=87.1,ki=0.0, kd=0.0, integral_limits=(-2000, 2000))
 
-gyro_pid = PID(kp=0.9, ki=0.2,kd=0.8,#integral_limits=(-2000, 2000),
+gyro_pid = PID(kp=1.22, ki=0.236,kd=1.63,integral_limits=(-2000, 2000),
                # output_limits=(-500, 500),
                output_adjustment=gyro_adjustment)
 
@@ -131,10 +129,9 @@ aim_speed_l = 0  # 左轮期望速度
 aim_speed_r = 0  # 右轮期望速度
 out_l = 0  # 左轮输出值
 out_r = 0  # 右轮输出值
-MedAngle = 32.5
 speed_d = 50  # 速度增量(调试用)
-mid_point_f = 0
-mid_point_n = 0
+
+
 
 
 
