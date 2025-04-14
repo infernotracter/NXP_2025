@@ -94,14 +94,12 @@ def gyro_adjustment(output):
 
 
 # PID实例化
-speed_pid = PID(kp=-0.06960005, ki=-0.008999997, integral_limits=(-2000, 2000))
+speed_pid = PID(kp=-0.13, ki=-0.016, integral_limits=(-2000, 2000))
                 #output_limits=(-500, 500)
 
-#
+angle_pid = PID(kp=83.8)
 
-angle_pid = PID(kp=87.1,ki=0.0, kd=0.0, integral_limits=(-2000, 2000))
-
-gyro_pid = PID(kp=1.22, ki=0.236,kd=1.63,integral_limits=(-2000, 2000),
+gyro_pid = PID(kp=1.05, ki=0.128,kd=1.3,integral_limits=(-2000, 2000),
                # output_limits=(-500, 500),
                output_adjustment=gyro_adjustment)
 
@@ -111,9 +109,7 @@ dir_in = PID(kp=0.0, ki=0.0)
 dir_out = PID(kp=0.0, kd=0.0)
 
 # 串级PID相关变量
-speed_pid_out = 0
-angle_pid_out = 0
-gyro_pid_out = 0
+
 dir_in_out = 0
 dir_out_out = 0
 
