@@ -1,6 +1,7 @@
 # 基础库、NXP库、第三方库
 from math import *
 from basic_data import *
+from ccd_hander import *
 import gc
 import time
 import utime
@@ -252,13 +253,18 @@ def clearall():
     key.clear(3)
     key.clear(4)
 
-
+ccd_n = CCDHandler(0)
+print("Started successfully!")
 while True:
     if (current_roll >= 75) or (current_roll <= 20):
         stop_flag = 0
 
     motor_l.duty(my_limit(gyro_pid_out - dir_in_out, -3000, 3000))
     motor_r.duty(my_limit(gyro_pid_out + dir_in_out, -3000, 3000))
+
+    ccd_temp_data = ccd.get()
+    ccd_mid_point = ccd_n.get_mid_point(tmpdata = ccd_temp_data, value = 50, reasonrange = 30, follow = 0, searchgap = 0)
+    print("ccd_mid_point:", ccd_mid_point)
     # 拨码开关关中断
     if end_switch.value() == 1:
         pit1.stop()  # pit1关闭
