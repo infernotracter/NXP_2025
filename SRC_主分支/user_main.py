@@ -217,23 +217,6 @@ last_gx = 0
 last_gy = 0
 last_gz = 0
 
-class Gyro_Z_Test:
-    """陀螺仪Z轴积分"""
-    def __init__(self):
-        self.offset = [0.0] * 9
-        self.data = 0.0
-        self._getoffset()
-    def _getoffset(self, num = 100):
-        for _ in range(num):
-            imu_data = imu.read()
-            for i in range(9):
-                self.offset[i] += imu_data[i]
-        for i in range(9):
-            self.offset[i] /= num
-    def update(self, tmpdata, time, channel = 5):
-        self.data += (tmpdata - self.offset[channel]) * time
-    def reset(self):
-        self.data = 0
 
 def imuoffsetinit():
     global accoffsetx, accoffsety, accoffsetz, gyrooffsetx, gyrooffsety, gyrooffsetz, last_ax, last_ay, last_az, last_gx, last_gy, last_gz

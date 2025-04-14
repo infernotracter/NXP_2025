@@ -1,6 +1,23 @@
 from basic_data import *
 
 
+
+def check_tuple(data: tuple, count_up: int, count_down: int) -> int:
+    threshold = 0.85 * 128
+    
+    up_count = down_count = 0
+    for num in data:
+        if num > count_up:
+            up_count += 1
+        elif num < count_down:
+            down_count += 1
+    
+    if up_count >= threshold:
+        return 1  # 超过上限状态
+    elif down_count >= threshold:
+        return -1  # 低于下限状态
+    return 0  # 正常状态
+
 class CCDHandler:
     def __init__(self, channel):
         """CCD数据处理类, channel: CCD通道"""
@@ -10,6 +27,7 @@ class CCDHandler:
         self.left = 0
         self.right = 0
         self.channel = channel  # CCD通道
+        self.flag_bright = 0
 
     def _get_threshold(self):
         value_max = self.data[4]  # 从第5个元素开始考虑最大值
@@ -30,6 +48,9 @@ class CCDHandler:
         self.data = tmpdata
         count_up = 0
         count_down = 0
+        # 计算上限和下限
+        self.flag_bright = check_tuple(self.data, count_up, count_down)
+
         for i in range(self.last_mid - 4 - searchgap, 1, -1):  # 用差比和公式判断是否找到边线
             if (abs(self.data[i+4]-self.data[i])*100/(self.data[i + 4]+self.data[i])) > value:
                 self.left = i  # 左边点找到
@@ -82,22 +103,29 @@ class RoadElement:
     circle_r2 = 4
     zebra = 5
 
+GYRO_Z_data = 0.8
+DISTANCE_data = 0.1
+GYRO_Z_ring_data = 40
+DISTANCE_ring_out_data = 0.15
 class ElementDetector:
     """赛道元素检测器"""
-    def __init__(self):
+    def __init__(self, delta_t):
+        self.delta_t = delta_t
         self.state = RoadElement.normal
         self.ring_progress = 0  # 圆环进度
         self.zebra_count = 0    # 斑马线特征计数
         self._ccd_far = 0
         self._ccd_near = 0
-        self.imu_data = 0
+        self.imu_data = [0] * 9
+        self.enc_data = 0
         self.follow = 0
         
-    def update(self, _ccd_far, _ccd_near, imu_data):
+    def update(self, _ccd_far, _ccd_near, imu_data, enc_data):
         """主检测函数"""
         self._ccd_far = _ccd_far
         self._ccd_near = _ccd_near
         self.imu_data = imu_data
+        self.enc_data = enc_data
         
         # if self._check_zebra(self._ccd_near):
         #     element = RoadElement.zebra
@@ -209,9 +237,28 @@ class ElementDetector:
         # return False
         pass
 
-    def _check_ring_right_3(self, imu_data):
-        pass
-    
+    def _check_ring_right_3(self):
+        gyro_z.update(tmpdata = self.imu_data[5], time = self.delta_t)
+        distance.update(self.enc_data)
+        if -GYRO_Z_data < gyro_z.data < GYRO_Z_data:
+            if distance > DISTANCE_data:
+                gyro_z.reset()
+                distance.reset()
+                return True
+        if gyro_z.data > GYRO_Z_data or gyro_z.data < -GYRO_Z_data:
+            self.state = RoadElement.normal
+            gyro_z.reset()
+            distance.reset()
+    def _check_ring_right_in(self):
+        gyro_z.update(self.imu_data[5])
+        if gyro_z.data() > GYRO_Z_ring_data:
+            return True
+    def _check_ring_right_out(self):
+        distance.update(self.enc_data)
+        if distance.data > DISTANCE_ring_out_data:
+            self.state = RoadElement.normal
+            distance.reset()
+        
     def _update_state(self, element, imu_data):
         """状态机更新"""
         if element == RoadElement.circle_l1:
@@ -230,7 +277,30 @@ class Distance:
     def __init__(self):
         self.data = 0
     def update(self, data):
-        self.data += data
+        self.data += data / 1024 * 30 / 50 * 0.05 * 3.1415926
         return self.data
     def reset(self):
         self.data = 0
+distance = Distance()
+
+class Gyro_Z_Test:
+    """陀螺仪Z轴积分"""
+    def __init__(self):
+        self.offset = [0.0] * 9
+        self.data = 0.0
+        self._getoffset()
+    def _getoffset(self, num = 100):
+        for _ in range(num):
+            imu_data = imu.read()
+            for i in range(9):
+                self.offset[i] += imu_data[i]
+        for i in range(9):
+            self.offset[i] /= num
+    def update(self, tmpdata, time, channel = 5):
+        self.data += (tmpdata - self.offset[channel]) * time
+    def reset(self):
+        self.data = 0
+
+gyro_z = Gyro_Z_Test()
+
+
