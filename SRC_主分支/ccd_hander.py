@@ -103,9 +103,9 @@ class RoadElement:
     circle_r2 = 4
     zebra = 5
 
-GYRO_Z_data = 0.8
-DISTANCE_data = 0.1
-GYRO_Z_ring_data = 40
+GYRO_Z_ring3_data = 0.8
+DISTANCE_ring3_data = 0.1
+GYRO_Z_ring_in_data = 40
 DISTANCE_ring_out_data = 0.15
 class ElementDetector:
     """赛道元素检测器"""
@@ -154,10 +154,7 @@ class ElementDetector:
         # 特征点一致性检查
         point_diff = abs(self._ccd_far.right - self._ccd_near.right)
         
-        # 陀螺仪左转趋势验证
-        gyro_z_valid = self.imu_data[5] > 2.0  # 假设z轴角速度正值代表左转
-        
-        return near_valid and far_valid and (point_diff <= ccd_near_lost) and gyro_z_valid
+        return near_valid and far_valid and (point_diff <= ccd_near_lost)
     
     def _check_right_ring_1(self):
         """右圆环检测逻辑"""
@@ -172,10 +169,7 @@ class ElementDetector:
         # 特征点一致性检查（比较左边缘）
         point_diff = abs(self._ccd_far.left - self._ccd_near.left)
         
-        # 陀螺仪右转趋势验证
-        gyro_z_valid = self.imu_data[5] < -2.0  # z轴角速度负值代表右转
-        
-        return near_valid and far_valid and (point_diff <= ccd_near_lost) and gyro_z_valid
+        return near_valid and far_valid and (point_diff <= ccd_near_lost)
             
 
     def _check_left_ring_2(self):
@@ -188,11 +182,8 @@ class ElementDetector:
         
         # 特征点稳定性检查（|right_point_1 - right_point_2| <=12）
         point_diff = abs(self._ccd_far.right - self._ccd_near.right)
-        
-        # 陀螺仪左转趋势验证（z轴角速度>1.5）
-        gyro_z_valid = self.imu_data[5] > 1.5
-        
-        return near_left_lost and near_right_valid and (point_diff <= 12) and gyro_z_valid
+
+        return near_left_lost and near_right_valid and (point_diff <= 12)
 
     def _check_right_ring_2(self):
         """右圆环状态2检测：近端右丢线+特征点稳定"""
@@ -205,10 +196,7 @@ class ElementDetector:
         # 特征点稳定性检查（|left_point_1 - left_point_2| <=12）
         point_diff = abs(self._ccd_far.left - self._ccd_near.left)
         
-        # 陀螺仪右转趋势验证（z轴角速度<-1.5）
-        gyro_z_valid = self.imu_data[5] < -1.5
-        
-        return near_right_lost and near_left_valid and (point_diff <= 12) and gyro_z_valid
+        return near_right_lost and near_left_valid and (point_diff <= 12)
   
     def _check_zebra(self, _ccd_near):
         """斑马线检测"""
@@ -240,38 +228,40 @@ class ElementDetector:
     def _check_ring_right_3(self):
         gyro_z.update(tmpdata = self.imu_data[5], time = self.delta_t)
         distance.update(self.enc_data)
-        if -GYRO_Z_data < gyro_z.data < GYRO_Z_data:
-            if distance > DISTANCE_data:
+        if -GYRO_Z_ring3_data < gyro_z.data < GYRO_Z_ring3_data:
+            if distance > DISTANCE_ring3_data:
                 gyro_z.reset()
                 distance.reset()
                 return True
-        if gyro_z.data > GYRO_Z_data or gyro_z.data < -GYRO_Z_data:
+        if gyro_z.data > GYRO_Z_ring3_data or gyro_z.data < -GYRO_Z_ring3_data:
             self.state = RoadElement.normal
             gyro_z.reset()
             distance.reset()
+
     def _check_ring_right_in(self):
         gyro_z.update(self.imu_data[5])
-        if gyro_z.data() > GYRO_Z_ring_data:
+        if gyro_z.data > GYRO_Z_ring_in_data or gyro_z.data() < -GYRO_Z_ring_in_data:
             return True
+
     def _check_ring_right_out(self):
         distance.update(self.enc_data)
-        if distance.data > DISTANCE_ring_out_data:
+        if distance.data > DISTANCE_ring_out_data or distance.data < -DISTANCE_ring_out_data:
             self.state = RoadElement.normal
             distance.reset()
         
-    def _update_state(self, element, imu_data):
-        """状态机更新"""
-        if element == RoadElement.circle_l1:
-            if self.state != RoadElement.circle_l2:
-                self.ring_progress = 0
-                self.state = RoadElement.circle_l1
+    # def _update_state(self, element, imu_data):
+    #     """状态机更新"""
+    #     if element == RoadElement.circle_l1:
+    #         if self.state != RoadElement.circle_l2:
+    #             self.ring_progress = 0
+    #             self.state = RoadElement.circle_l1
                 
-        elif element == RoadElement.circle_l2:
-            self.ring_progress += abs(imu_data[5]) * 0.002  # 积分角速度计算进度
-            if self.ring_progress >= 360:  # 完成一圈
-                self.state = RoadElement.normal
+    #     elif element == RoadElement.circle_l2:
+    #         self.ring_progress += abs(imu_data[5]) * 0.002  # 积分角速度计算进度
+    #         if self.ring_progress >= 360:  # 完成一圈
+    #             self.state = RoadElement.normal
                 
-        # 其他状态更新...
+    #     # 其他状态更新...
 
 class Distance:
     def __init__(self):
@@ -300,7 +290,6 @@ class Gyro_Z_Test:
         self.data += (tmpdata - self.offset[channel]) * time
     def reset(self):
         self.data = 0
-
 gyro_z = Gyro_Z_Test()
 
 
