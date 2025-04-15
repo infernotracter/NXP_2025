@@ -103,7 +103,7 @@ gyro_pid = PID(kp=1.05, ki=0.128,kd=1.3,integral_limits=(-2000, 2000),
                # output_limits=(-500, 500),
                output_adjustment=gyro_adjustment)
 
-dir_in = PID(kp=0.0, ki=0.0)
+dir_in = PID(kp=1.45, ki=1.419)
 #  integral_limits=(-2000, 2000))
 
 dir_out = PID(kp=0.0, kd=0.0)
@@ -113,7 +113,9 @@ dir_out = PID(kp=0.0, kd=0.0)
 dir_in_out = 0
 dir_out_out = 0
 
-
+gyro_pid_out=0
+angle_pid_out=0
+speed_pid_out=0
 
 key_data =[0]*4
 ccd_data1 = [0] * 128  # ccd1原始数组
