@@ -272,9 +272,6 @@ while True:
     #print("ccd_mid_point:", ccd_mid_point)
     # 拨码开关关中断
     if end_switch.value() == 1:
-        pit1.stop()  # pit1关闭
-        pit2.stop()  # pit2关闭
-        pit3.stop()  # pit3关闭
         break  # 跳出判断
 
     if (ticker_flag_imu):
@@ -332,7 +329,7 @@ while True:
 
     if (ticker_flag_4ms):
         # profiler_4ms.update()
-        dir_in_out = dir_in.calculate(dir_out_out, imu_data[4])
+        dir_in_out = dir_in.calculate(dir_out_out, imu_data[5]-gyrooffsetz)
         ticker_flag_4ms = False
 
     if (ticker_flag_8ms):
@@ -355,8 +352,9 @@ while True:
                 dir_out.ki=data_wave[4]
                 dir_out.kd=data_wave[5]
                 aim_speed=data_wave[6]
+                ccd_mid_point=data_wave[7]
         # 将数据发送到示波器
-        wireless.send_oscilloscope(dir_in.kp,dir_in.ki,dir_in.kd,dir_out.kp,dir_out.ki,dir_out.kd,aim_speed)
+        wireless.send_oscilloscope(dir_in.kp,dir_in.ki,dir_in.kd,dir_out.kp,dir_out.ki,dir_out.kd,aim_speed,ccd_mid_point)
         ticker_flag_8ms = False
 
 
