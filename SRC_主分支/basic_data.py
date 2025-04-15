@@ -109,9 +109,7 @@ dir_in = PID(kp=1.45, ki=1.419)
 dir_out = PID(kp=0.0, kd=0.0)
 
 # 串级PID相关变量
-speed_pid_out = 0
-angle_pid_out = 0
-gyro_pid_out = 0
+
 dir_in_out = 0
 dir_out_out = 0
 

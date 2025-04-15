@@ -1,10 +1,5 @@
 # 基础库、NXP库、第三方库
 from math import *
-<<<<<<< HEAD
-=======
-from basic_data import *
-from ccd_hander import *
->>>>>>> bf89966d6bce0760dc819a1d42228825eed4de81
 import gc
 import time
 import utime
@@ -261,35 +256,20 @@ def clearall():
     key.clear(3)
     key.clear(4)
 
-<<<<<<< HEAD
-=======
-ccd_n = CCDHandler(0)
-print("Started successfully!")
->>>>>>> bf89966d6bce0760dc819a1d42228825eed4de81
 while True:
     if (current_roll >= 75) or (current_roll <= 20):
         stop_flag = 0
     
     motor_l.duty(my_limit(gyro_pid_out - dir_in_out, -3000, 3000))
     motor_r.duty(my_limit(gyro_pid_out + dir_in_out, -3000, 3000))
-<<<<<<< HEAD
     ccd_temp_data = ccd.get(0)
     ccd_mid_point = ccd_n.get_mid_point(tmpdata = ccd_temp_data, value = 50, reasonrange = 30, follow = 0, searchgap = 0)
     
     error1=abs(ccd_mid_point-64)
     error2=0
     #print("ccd_mid_point:", ccd_mid_point)
-=======
-
-    ccd_temp_data = ccd.get()
-    ccd_mid_point = ccd_n.get_mid_point(tmpdata = ccd_temp_data, value = 50, reasonrange = 30, follow = 0, searchgap = 0)
-    print("ccd_mid_point:", ccd_mid_point)
->>>>>>> bf89966d6bce0760dc819a1d42228825eed4de81
     # 拨码开关关中断
     if end_switch.value() == 1:
-        pit1.stop()  # pit1关闭
-        pit2.stop()  # pit2关闭
-        pit3.stop()  # pit3关闭
         break  # 跳出判断
 
     if (ticker_flag_imu):
@@ -347,7 +327,7 @@ while True:
 
     if (ticker_flag_4ms):
         # profiler_4ms.update()
-        dir_in_out = dir_in.calculate(dir_out_out, imu_data[4])
+        dir_in_out = dir_in.calculate(dir_out_out, imu_data[5]-gyrooffsetz)
         ticker_flag_4ms = False
 
     if (ticker_flag_8ms):
@@ -370,8 +350,9 @@ while True:
                 dir_out.ki=data_wave[4]
                 dir_out.kd=data_wave[5]
                 aim_speed=data_wave[6]
+                ccd_mid_point=data_wave[7]
         # 将数据发送到示波器
-        wireless.send_oscilloscope(dir_in.kp,dir_in.ki,dir_in.kd,dir_out.kp,dir_out.ki,dir_out.kd,aim_speed)
+        wireless.send_oscilloscope(dir_in.kp,dir_in.ki,dir_in.kd,dir_out.kp,dir_out.ki,dir_out.kd,aim_speed,ccd_mid_point)
         ticker_flag_8ms = False
 
 
