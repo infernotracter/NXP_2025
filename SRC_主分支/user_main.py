@@ -6,8 +6,6 @@ import gc
 import time
 import utime
 import math
-from basic_data import *
-from ccd_hander import *
 
 ccd_n = CCDHandler(0)
 # 单位换算用
@@ -269,7 +267,6 @@ while True:
     
     error1=abs(ccd_mid_point-64)
     error2=0
-    #print("ccd_mid_point:", ccd_mid_point)
     # 拨码开关关中断
     if end_switch.value() == 1:
         break  # 跳出判断

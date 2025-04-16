@@ -56,7 +56,7 @@ class CCDHandler:
                 self.left = i  # 左边点找到
                 break
             elif i == 1:  # 如果找到1都没找到
-                self.left = 0  # 强制令左边点为0
+                self.left = 1  # 强制令左边点为0
                 break
 
         # 搜索右边点，以上次中点作为这次的起搜点
@@ -65,18 +65,21 @@ class CCDHandler:
                 self.right = i  # 右边点找到
                 break
             elif i == 126:  # 如果找到126都没找到
-                self.right = 127  # 强制右左边点为127
+                self.right = 126  # 强制右左边点为127
                 break
         # if self.left < LeftEdge:
         #     self.lost_l = True
         # if self.right > RightEdge:
         #     self.lost_r = True
+        if self.right == 126 and self.left == 1:  # 如果左右边点都没找到
+            return 64
+
         self.mid = int((self.left + self.right) / 2)  # 中点计算
 
-        if follow > 0 and self.right == 127:
+        if follow > 0 and self.right == 126:
             self.right = self.left + follow
-        if follow < 0 and self.left == 0:
-            self.left = self.right + follow        
+        if follow < 0 and self.left == 1:
+            self.left = self.right + follow
 
         if abs(self.mid - self.last_mid) > reasonrange:  # 如果中点与上次中点差距过大
             self.mid = self.last_mid # 强制令中点为上次中点
