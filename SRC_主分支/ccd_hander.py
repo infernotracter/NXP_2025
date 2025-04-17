@@ -56,7 +56,7 @@ class CCDHandler:
                 self.left = i  # 左边点找到
                 break
             elif i == 1:  # 如果找到1都没找到
-                self.left = 1  # 强制令左边点为0
+                self.left = 0  # 强制令左边点为0
                 break
 
         # 搜索右边点，以上次中点作为这次的起搜点
@@ -65,13 +65,13 @@ class CCDHandler:
                 self.right = i  # 右边点找到
                 break
             elif i == 126:  # 如果找到126都没找到
-                self.right = 126  # 强制右左边点为127
+                self.right = 127  # 强制右左边点为127
                 break
         # if self.left < LeftEdge:
         #     self.lost_l = True
         # if self.right > RightEdge:
         #     self.lost_r = True
-        if self.right == 126 and self.left == 1:  # 如果左右边点都没找到
+        if self.right == 127 and self.left == 0:  # 如果左右边点都没找到
             return 64
 
         self.mid = int((self.left + self.right) / 2)  # 中点计算
@@ -85,6 +85,30 @@ class CCDHandler:
             self.mid = self.last_mid # 强制令中点为上次中点
         self.last_mid = self.mid  # 更新上次中点
         return self.mid  # 返回中点
+    def _check_peak(self, tmpdata):
+        minn = tmpdata[5]
+        maxn = tmpdata[5]
+        for i in range(0, 128, 1):
+            if tmpdata[i] > maxn:
+                maxn = tmpdata[i]
+            if tmpdata[i] < minn:
+                minn = tmpdata[i]
+        l, r = 0, 127
+        while l + 1 < r:
+            mid = (l + r) // 2
+            if self._check_peak_mid(tmpdata, mid):
+                l = mid
+            else:
+                r = mid
+    def _check_peak_mid(self, mid):
+        cnt = 0
+        for i in range(5, 127):
+            if (abs(self.data[i-4]-self.data[i])*100/(self.data[i-4]+self.data[i]) + 1) > mid:
+                cnt += 1
+        if cnt > 2:
+            return True
+        else:
+            return False
 
 # 常量定义（根据实际赛道调整）
 ccd_near_l = (30, 42)       # 左圆环阶段1近端CCD左右边点范围
