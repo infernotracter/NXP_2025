@@ -72,7 +72,7 @@ class CCDHandler:
         # if self.right > RightEdge:
         #     self.lost_r = True
         if self.right == 127 and self.left == 0:  # 如果左右边点都没找到
-            return 64
+            return 0
 
         self.mid = int((self.left + self.right) / 2)  # 中点计算
 
