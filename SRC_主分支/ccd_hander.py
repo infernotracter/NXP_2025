@@ -4,7 +4,6 @@ from basic_data import *
 
 def check_tuple(data: tuple, count_up: int, count_down: int) -> int:
     threshold = 0.85 * 128
-    
     up_count = down_count = 0
     for num in data:
         if num > count_up:
@@ -50,7 +49,6 @@ class CCDHandler:
         count_down = 0
         # 计算上限和下限
         self.flag_bright = check_tuple(self.data, count_up, count_down)
-        self.last_mid=64
         for i in range(self.last_mid - 4 - searchgap, 1, -1):  # 用差比和公式判断是否找到边线
             if (abs(self.data[i+4]-self.data[i])*100/(self.data[i + 4]+self.data[i]+2)) > value:
                 self.left = i  # 左边点找到
@@ -248,6 +246,12 @@ class ElementDetector:
         if distance.data > DISTANCE_ring_out_data or distance.data < -DISTANCE_ring_out_data:
             self.state = RoadElement.normal
             distance.reset()
+            
+    def _crossroad(self,_ccd_near,_ccd_far):
+        #1如果近端ccd的左右边的灰度值为白，而远端ccd的左右两边为黑，则为十字路口。
+        #2再写一个返回左右边线的函数，如果近端ccd边线为左右两端（即1和127附近）远端值正常，则为十字路口
+        pass
+        
         
     # def _update_state(self, element, imu_data):
     #     """状态机更新"""
