@@ -22,10 +22,10 @@ class CCDHandler:
     def __init__(self, channel):
         """CCD数据处理类, channel: CCD通道"""
         self.data = [0] * 128
-        self.last_mid = 0
-        self.mid = 0
+        self.last_mid = 64
+        self.mid = 64
         self.left = 0
-        self.right = 0
+        self.right = 127
         self.channel = channel  # CCD通道
         self.flag_bright = 0
 
