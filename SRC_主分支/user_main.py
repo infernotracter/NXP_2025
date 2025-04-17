@@ -1,11 +1,11 @@
 # 基础库、NXP库、第三方库
 from math import *
-from basic_data import *
-from ccd_hander import *
 import gc
 import time
 import utime
 import math
+from basic_data import *
+from ccd_hander import *
 
 ccd_n = CCDHandler(0)
 # 单位换算用
@@ -255,7 +255,6 @@ def clearall():
     key.clear(2)
     key.clear(3)
     key.clear(4)
-
 while True:
     if (current_roll >= 75) or (current_roll <= 20):
         stop_flag = 0
@@ -263,8 +262,11 @@ while True:
     motor_l.duty(my_limit(gyro_pid_out - dir_in_out, -3000, 3000))
     motor_r.duty(my_limit(gyro_pid_out + dir_in_out, -3000, 3000))
     ccd_temp_data = ccd.get(0)
-    error1 = ccd_n.get_mid_point(tmpdata = ccd_temp_data, value = 50, reasonrange = 30, follow = 0, searchgap = 0)
+    ccd_mid_point = ccd_n.get_mid_point(tmpdata = ccd_temp_data, value =31, reasonrange = 30, follow = 0, searchgap = 0)
+    
+    error1=ccd_mid_point-64
     error2=0
+    #print("ccd_mid_point:", ccd_mid_point)
     # 拨码开关关中断
     if end_switch.value() == 1:
         break  # 跳出判断
@@ -277,7 +279,7 @@ while True:
         for i in range(3):
             # 先进行零偏校正和单位转换
             current_processed = (
-                imu_data[i] - [accoffsetx, accoffsety, accoffsetz][i]) / ACC_SPL
+                                        imu_data[i] - [accoffsetx, accoffsety, accoffsetz][i]) / ACC_SPL
             # 再应用滤波，使用上一次的滤波结果
             imu_data_filtered[i] = alpha * current_processed + \
                                    (1 - alpha) * last_imu_data[i]
@@ -324,7 +326,7 @@ while True:
 
     if (ticker_flag_4ms):
         # profiler_4ms.update()
-        dir_in_out = dir_in.calculate(dir_out_out, imu_data[5]-gyrooffsetz)
+        dir_in_out = dir_in.calculate(dir_out_out, imu_data[4]-gyrooffsety)
         ticker_flag_4ms = False
 
     if (ticker_flag_8ms):
@@ -340,18 +342,14 @@ while True:
                 # 将更新的通道数据输出到 Thonny 的控制台
                 print("Data[{:<6}] updata : {:<.3f}.\r\n".format(
                     i, data_wave[i]))
-                dir_in.kp=data_wave[0]
-                dir_in.ki=data_wave[1]
-                dir_in.kd=data_wave[2]
-                dir_out.kp=data_wave[3]
-                dir_out.ki=data_wave[4]
-                dir_out.kd=data_wave[5]
-                aim_speed=data_wave[6]
-                error1=data_wave[7]
+                dir_out.kp=data_wave[0]
+                dir_out.ki=data_wave[1]
+                dir_out.kd=data_wave[2]
+                aim_speed=data_wave[3]
+                ccd_mid_point=data_wave[4]
         # 将数据发送到示波器
-        wireless.send_oscilloscope(dir_in.kp,dir_in.ki,dir_in.kd,dir_out.kp,dir_out.ki,dir_out.kd,aim_speed,error1)
+        wireless.send_oscilloscope(dir_out.kp,dir_out.ki,dir_out.kd,aim_speed,ccd_mid_point)
         ticker_flag_8ms = False
-
 
 
 

@@ -50,9 +50,9 @@ class CCDHandler:
         count_down = 0
         # 计算上限和下限
         self.flag_bright = check_tuple(self.data, count_up, count_down)
-
+        self.last_mid=64
         for i in range(self.last_mid - 4 - searchgap, 1, -1):  # 用差比和公式判断是否找到边线
-            if (abs(self.data[i+4]-self.data[i])*100/(self.data[i + 4]+self.data[i]) + 1) > value:
+            if (abs(self.data[i+4]-self.data[i])*100/(self.data[i + 4]+self.data[i]+2)) > value:
                 self.left = i  # 左边点找到
                 break
             elif i == 1:  # 如果找到1都没找到
@@ -61,7 +61,7 @@ class CCDHandler:
 
         # 搜索右边点，以上次中点作为这次的起搜点
         for i in range(self.last_mid + 4 + searchgap, 126):  # 注意这里应该是128，因为索引是从0开始的
-            if (abs(self.data[i-4]-self.data[i])*100/(self.data[i-4]+self.data[i]) + 1) > value:  # 判断是否与右边点一致
+            if (abs(self.data[i-4]-self.data[i])*100/(self.data[i-4]+self.data[i]+1)) > value:  # 判断是否与右边点一致
                 self.right = i  # 右边点找到
                 break
             elif i == 126:  # 如果找到126都没找到
@@ -71,44 +71,17 @@ class CCDHandler:
         #     self.lost_l = True
         # if self.right > RightEdge:
         #     self.lost_r = True
-        if self.right == 127 and self.left == 0:  # 如果左右边点都没找到
-            return 0
-
         self.mid = int((self.left + self.right) / 2)  # 中点计算
 
-        if follow > 0 and self.right == 126:
+        if follow > 0 and self.right == 127:
             self.right = self.left + follow
-        if follow < 0 and self.left == 1:
-            self.left = self.right + follow
+        if follow < 0 and self.left == 0:
+            self.left = self.right + follow        
 
         if abs(self.mid - self.last_mid) > reasonrange:  # 如果中点与上次中点差距过大
             self.mid = self.last_mid # 强制令中点为上次中点
         self.last_mid = self.mid  # 更新上次中点
-        return self.left + self.right - 127
-    def _check_peak(self, tmpdata):
-        minn = tmpdata[5]
-        maxn = tmpdata[5]
-        for i in range(0, 128, 1):
-            if tmpdata[i] > maxn:
-                maxn = tmpdata[i]
-            if tmpdata[i] < minn:
-                minn = tmpdata[i]
-        l, r = 0, 127
-        while l + 1 < r:
-            mid = (l + r) // 2
-            if self._check_peak_mid(tmpdata, mid):
-                l = mid
-            else:
-                r = mid
-    def _check_peak_mid(self, mid):
-        cnt = 0
-        for i in range(5, 127):
-            if (abs(self.data[i-4]-self.data[i])*100/(self.data[i-4]+self.data[i]) + 1) > mid:
-                cnt += 1
-        if cnt > 2:
-            return True
-        else:
-            return False
+        return self.mid  # 返回中点
 
 # 常量定义（根据实际赛道调整）
 ccd_near_l = (30, 42)       # 左圆环阶段1近端CCD左右边点范围
