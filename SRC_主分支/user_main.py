@@ -263,9 +263,7 @@ while True:
     motor_l.duty(my_limit(gyro_pid_out - dir_in_out, -3000, 3000))
     motor_r.duty(my_limit(gyro_pid_out + dir_in_out, -3000, 3000))
     ccd_temp_data = ccd.get(0)
-    ccd_mid_point = ccd_n.get_mid_point(tmpdata = ccd_temp_data, value = 50, reasonrange = 30, follow = 0, searchgap = 0)
-    
-    error1=abs(ccd_mid_point-64)
+    error1 = ccd_n.get_mid_point(tmpdata = ccd_temp_data, value = 50, reasonrange = 30, follow = 0, searchgap = 0)
     error2=0
     # 拨码开关关中断
     if end_switch.value() == 1:
@@ -279,7 +277,7 @@ while True:
         for i in range(3):
             # 先进行零偏校正和单位转换
             current_processed = (
-                                        imu_data[i] - [accoffsetx, accoffsety, accoffsetz][i]) / ACC_SPL
+                imu_data[i] - [accoffsetx, accoffsety, accoffsetz][i]) / ACC_SPL
             # 再应用滤波，使用上一次的滤波结果
             imu_data_filtered[i] = alpha * current_processed + \
                                    (1 - alpha) * last_imu_data[i]
@@ -349,9 +347,9 @@ while True:
                 dir_out.ki=data_wave[4]
                 dir_out.kd=data_wave[5]
                 aim_speed=data_wave[6]
-                ccd_mid_point=data_wave[7]
+                error1=data_wave[7]
         # 将数据发送到示波器
-        wireless.send_oscilloscope(dir_in.kp,dir_in.ki,dir_in.kd,dir_out.kp,dir_out.ki,dir_out.kd,aim_speed,ccd_mid_point)
+        wireless.send_oscilloscope(dir_in.kp,dir_in.ki,dir_in.kd,dir_out.kp,dir_out.ki,dir_out.kd,aim_speed,error1)
         ticker_flag_8ms = False
 
 

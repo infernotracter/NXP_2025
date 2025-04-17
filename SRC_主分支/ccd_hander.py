@@ -52,7 +52,7 @@ class CCDHandler:
         self.flag_bright = check_tuple(self.data, count_up, count_down)
 
         for i in range(self.last_mid - 4 - searchgap, 1, -1):  # 用差比和公式判断是否找到边线
-            if (abs(self.data[i+4]-self.data[i])*100/(self.data[i + 4]+self.data[i])) > value:
+            if (abs(self.data[i+4]-self.data[i])*100/(self.data[i + 4]+self.data[i]) + 1) > value:
                 self.left = i  # 左边点找到
                 break
             elif i == 1:  # 如果找到1都没找到
@@ -61,7 +61,7 @@ class CCDHandler:
 
         # 搜索右边点，以上次中点作为这次的起搜点
         for i in range(self.last_mid + 4 + searchgap, 126):  # 注意这里应该是128，因为索引是从0开始的
-            if (abs(self.data[i-4]-self.data[i])*100/(self.data[i-4]+self.data[i])) > value:  # 判断是否与右边点一致
+            if (abs(self.data[i-4]-self.data[i])*100/(self.data[i-4]+self.data[i]) + 1) > value:  # 判断是否与右边点一致
                 self.right = i  # 右边点找到
                 break
             elif i == 126:  # 如果找到126都没找到
@@ -84,7 +84,7 @@ class CCDHandler:
         if abs(self.mid - self.last_mid) > reasonrange:  # 如果中点与上次中点差距过大
             self.mid = self.last_mid # 强制令中点为上次中点
         self.last_mid = self.mid  # 更新上次中点
-        return self.mid  # 返回中点
+        return self.left + self.right - 127
     def _check_peak(self, tmpdata):
         minn = tmpdata[5]
         maxn = tmpdata[5]
