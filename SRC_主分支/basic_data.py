@@ -108,7 +108,7 @@ gyro_pid = PID(kp=1.22, ki=0.236,kd=1.63,integral_limits=(-2000, 2000),
 dir_in = PID(kp=1.4, ki=0)
 #  integral_limits=(-2000, 2000))
 
-dir_out = PID(kp=0.0, kd=0.0)
+dir_out = PID(kp=200, kd=0.0)
 
 # 串级PID相关变量
 speed_pid_out = 0

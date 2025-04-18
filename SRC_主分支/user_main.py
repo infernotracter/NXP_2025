@@ -248,7 +248,7 @@ data_wave = [0, 0, 0, 0, 0, 0, 0, 0]
 key_data = key.get()
 imu_data = imu.get()
 imu_data_filtered = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0, 0.0, 0.0]
-target_gyro=0
+
 
 def clearall():
     key.clear(1)
@@ -268,8 +268,7 @@ while True:
     error2=0
     #print("ccd_mid_point:", ccd_mid_point)
     if(key_data[0]):
-        aim_speed=30
-        dir_out.kp=20
+        aim_speed=35
         key.clear(1)
     # 拨码开关关中断
     if end_switch.value() == 1:
@@ -330,7 +329,7 @@ while True:
 
     if (ticker_flag_4ms):
         # profiler_4ms.update()
-        dir_in_out = dir_in.calculate(dir_out_out+target_gyro, imu_data[4]-gyrooffsety)
+        dir_in_out = dir_in.calculate(dir_out_out, imu_data[4]-gyrooffsety)
         ticker_flag_4ms = False
 
     if (ticker_flag_8ms):
@@ -346,13 +345,11 @@ while True:
                 # 将更新的通道数据输出到 Thonny 的控制台
                 print("Data[{:<6}] updata : {:<.3f}.\r\n".format(
                     i, data_wave[i]))
-                target_gyro=data_wave[0]
+                dir_out.kp=data_wave[0]
                 dir_out.ki=data_wave[1]
                 dir_out.kd=data_wave[2]
-                aim_speed=data_wave[3]
-                ccd_mid_point=data_wave[4]
         # 将数据发送到示波器
-        wireless.send_oscilloscope(target_gyro,imu_data[4],dir_out.kd,aim_speed,ccd_mid_point)
+        wireless.send_oscilloscope(dir_out.kp,dir_out.ki,dir_out.kd,ccd_mid_point)
         ticker_flag_8ms = False
 
 
