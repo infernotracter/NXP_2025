@@ -28,7 +28,7 @@ class CCDHandler:
         self.channel = channel  # CCD通道
         self.flag_bright = 0
 
-    def _get_threshold(self):
+    def get_threshold(self):
         value_max = self.data[4]  # 从第5个元素开始考虑最大值
         value_min = self.data[4]  # 从第5个元素开始考虑最小值
 
@@ -37,8 +37,8 @@ class CCDHandler:
             value_max = max(value_max, self.data[i])  # 限幅在最大传入数据和第5个元素值上
             value_min = min(value_min, self.data[i])  # 限幅在最小传入数据和第5个元素值上
 
-        threshold = (value_max + value_min) / 2  # 计算阈值
-        threshold = min(max(75, threshold), 255)  # 阈值限幅在75-256之间
+        threshold = (value_max + value_min) // 2  # 计算阈值
+        # threshold = min(max(75, threshold), 255)  # 阈值限幅在75-256之间
         return threshold
 
     def get_mid_point(self, tmpdata,  value, reasonrange, follow, searchgap = 0):
@@ -47,6 +47,11 @@ class CCDHandler:
         self.data = tmpdata
         count_up = 0
         count_down = 0
+        # 判断中点值是否在赛道内，防止一直扫一边线
+        if self.last_mid < 30 or self.last_mid > 100:
+            tmpthreshold = self.get_threshold()  # 计算阈值
+            if self.data[self.last_mid] < tmpthreshold:
+                self.last_mid = 64 
         # 计算上限和下限
         self.flag_bright = check_tuple(self.data, count_up, count_down)
         for i in range(self.last_mid - 4 - searchgap, 1, -1):  # 用差比和公式判断是否找到边线
@@ -69,7 +74,7 @@ class CCDHandler:
         #     self.lost_l = True
         # if self.right > RightEdge:
         #     self.lost_r = True
-        self.mid = int((self.left + self.right) / 2)  # 中点计算
+        self.mid = (self.left + self.right) // 2
 
         if follow > 0 and self.right == 127:
             self.right = self.left + follow
@@ -136,7 +141,7 @@ class ElementDetector:
         if self._check_right_ring_2(self._ccd_far, self._ccd_near) and element == RoadElement.circle_r1:
             element = RoadElement.circle_r2
             
-        self._update_state(element)
+        # self._update_state(element)
         return element
     
     def _check_left_ring_1(self):
@@ -268,6 +273,7 @@ class ElementDetector:
     #     # 其他状态更新...
 
 class Distance:
+    """行驶距离"""
     def __init__(self):
         self.data = 0
     def update(self, data):
