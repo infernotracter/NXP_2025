@@ -27,6 +27,7 @@ class CCDHandler:
         self.right = 127
         self.channel = channel  # CCD通道
         self.flag_bright = 0
+        self.error=0
 
     def get_threshold(self):
         value_max = self.data[4]  # 从第5个元素开始考虑最大值
@@ -85,7 +86,9 @@ class CCDHandler:
             self.mid = self.last_mid # 强制令中点为上次中点
         self.last_mid = self.mid  # 更新上次中点
         return self.mid  # 返回中点
-
+ccd_n = CCDHandler(0)
+far_ccd=CCDHandler(1)
+ccd_near_lenth=50 #待测
 # 常量定义（根据实际赛道调整）
 ccd_near_l = (30, 42)       # 左圆环阶段1近端CCD左右边点范围
 ccd_near_r = (90, 108)
@@ -96,6 +99,8 @@ ccd_far_left = (30, 42)         # 远端CCD左边点范围
 ccd_far_lost = 7                 # 远端CCD左丢线阈值
 
 ccd_near_lost = 10             # 特征点差异阈值
+
+
 
 # 赛道元素状态枚举
 class RoadElement:
@@ -110,6 +115,14 @@ GYRO_Z_ring3_data = 0.8
 DISTANCE_ring3_data = 0.1
 GYRO_Z_ring_in_data = 40
 DISTANCE_ring_out_data = 0.15
+
+
+#-------------------我们的gyro圆环识别数据-------------------
+gyro_z_ring3=0.8  #待测
+gyro_z_ring4=1.0  #待测
+
+#-----------------------------------------------------------
+
 class ElementDetector:
     """赛道元素检测器"""
     def __init__(self, delta_t):
@@ -122,6 +135,8 @@ class ElementDetector:
         self.imu_data = [0] * 9
         self.enc_data = 0
         self.follow = 0
+        self.tmperror=0   #误差缓存
+        self.outflag=0
         
     def update(self, _ccd_far, _ccd_near, imu_data, enc_data):
         """主检测函数"""
@@ -191,7 +206,7 @@ class ElementDetector:
     def _check_right_ring_2(self):
         """右圆环状态2检测：近端右丢线+特征点稳定"""
         # 近端CCD右丢线检查（right_point_2 >=115）
-        near_right_lost = self._ccd_near.right >= ccd_far_lost
+        near_right_lost = self._ccd_near.right >= ccd_near_lost
         
         # 近端左边界有效性检查（31 <= left_point_2 <=44）
         near_left_valid = ccd_near_l[0] <= self._ccd_near.left <= ccd_near_l[1]
@@ -239,7 +254,7 @@ class ElementDetector:
         if gyro_z.data > GYRO_Z_ring3_data or gyro_z.data < -GYRO_Z_ring3_data:
             self.state = RoadElement.normal
             gyro_z.reset()
-            distance.reset()
+            distance.reset()        
 
     def _check_ring_right_in(self):
         gyro_z.update(self.imu_data[5])
@@ -251,11 +266,51 @@ class ElementDetector:
         if distance.data > DISTANCE_ring_out_data or distance.data < -DISTANCE_ring_out_data:
             self.state = RoadElement.normal
             distance.reset()
+
+
+#-----------------------------------我们自己的圆环识别-------------------------------------------------
+# ---------------------------------------------------------------------------------------------------        
             
-    def _crossroad(self,_ccd_near,_ccd_far):
-        #1如果近端ccd的左右边的灰度值为白，而远端ccd的左右两边为黑，则为十字路口。
-        #2再写一个返回左右边线的函数，如果近端ccd边线为左右两端（即1和127附近）远端值正常，则为十字路口
-        pass
+    def _c_ring_left_3(self):
+        near_right_lost=self._ccd_near.right>= ccd_near_r[1]
+        gyro_z.update(self.imu_data[5])
+        if near_right_lost and abs(gyro_z.data) > gyro_z_ring3:
+            return self.tmperror
+        
+    def _c_ring_right_3(self):
+        near_left_lost=self._ccd_near.left<= ccd_near_l[0]
+        gyro_z.update(self.imu_data[5])
+        if near_left_lost and abs(gyro_z.data) > gyro_z_ring3:
+            return self.tmperror
+        
+    def _c_ring_left_4(self):
+        gyro_z.update(self.imu_data[5])
+        point_diff = abs(self._ccd_far.right - self._ccd_near.right)
+        if abs(gyro_z.data)>gyro_z_ring4 and point_diff:
+            ccd_n.left=ccd_n.right-ccd_near_lenth
+            self.outflag=1
+
+    def _c_ring_right_4(self):
+        gyro_z.update(self.imu_data[5])
+        point_diff = abs(self._ccd_far.left - self._ccd_near.left)
+        if abs(gyro_z.data)>gyro_z_ring4 and point_diff:
+            ccd_n.right=ccd_n.left+ccd_near_lenth
+            self.outflag=1
+        
+    def _c_ring_out(self):
+        near_valid = (ccd_near_r[0] <= self._ccd_near.left <= ccd_near_r[1] and 
+                    ccd_near_l[0] <= self._ccd_near.right <= ccd_near_l[1])
+        if self.outflag and near_valid:
+            self.outflag=0
+        gyro_z.reset()
+
+#---------------------------------------------------------------------------------------------
+
+    def _crossroad(self):
+        near_ccd_lost= (ccd_n.left <= ccd_near_l[0] and ccd_n.right >= ccd_near_r[1])
+        far_ccd_normal=(ccd_far_left[0]<=far_ccd.left<=ccd_far_left[1] and ccd_far_right[0]<=far_ccd.right<=ccd_far_right[1])
+        return near_ccd_lost and far_ccd_normal
+        
         
         
     # def _update_state(self, element, imu_data):

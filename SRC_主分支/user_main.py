@@ -7,7 +7,7 @@ import math
 from basic_data import *
 from ccd_hander import *
 
-ccd_n = CCDHandler(0)
+
 # 单位换算用
 ACC_SPL = 4096.0
 GYRO_SPL = 16.4
