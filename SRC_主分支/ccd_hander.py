@@ -110,7 +110,7 @@ GYRO_Z_ring3_data = 0.8
 DISTANCE_ring3_data = 0.1
 GYRO_Z_ring_in_data = 40
 DISTANCE_ring_out_data = 0.15
-class ElementDetector:
+class ElementDetector_old:
     """赛道元素检测器"""
     def __init__(self, delta_t):
         self.delta_t = delta_t
