@@ -143,9 +143,10 @@ def main_menu(key_data):  # 一级菜单
 
 def sec_menu_01(key_data):
     global aim_speed, speed_flag, main_menu_flag, main_point_item, car_go_flag
-    lcd.str24(60, 0, "car_go", 0x07E0)
-    lcd.str16(16, 62, "return", 0xFFFF)
-    lcd.str16(16, 46, "It's mygo", 0xFFFF)
+    lcd.str24(60, 0, "car_go_mode", 0x07E0)
+    lcd.str16(16, 46, "car_mode", 0x07E0)   #寻圆环/不寻圆环
+    lcd.str16(16, 62, "car_speed_1", 0xFFFF)
+    lcd.str16(16, 78, "car_speed_2",0xFFFF)
     lcd.str12(0, main_point_item, ">", 0xF800)
 
     point_move(62, 30, key_data)

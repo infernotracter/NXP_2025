@@ -92,7 +92,8 @@ ccd_near_lenth=50 #待测
 # 常量定义（根据实际赛道调整）
 ccd_near_l = (30, 42)       # 左圆环阶段1近端CCD左右边点范围
 ccd_near_r = (90, 108)
-ccd_near_lost = 10
+ccd_near_l_lost = 10
+ccd_near_r_lost = 115
 
 ccd_far_right = (88, 101)        # 远端CCD右边点范围
 ccd_far_left = (30, 42)         # 远端CCD左边点范围
@@ -193,7 +194,7 @@ class ElementDetector:
     def _check_left_ring_2(self):
         """左圆环状态2检测：近端左丢线+特征点稳定"""
         # 近端CCD左丢线检查（left_point_2 <=10）
-        near_left_lost = self._ccd_near.left <= ccd_near_lost
+        near_left_lost = self._ccd_near.left <= ccd_near_l_lost
         
         # 近端右边界有效性检查（87 <= right_point_2 <=103）
         near_right_valid = ccd_near_r[0] <= self._ccd_near.right <= ccd_near_r[1]
@@ -206,7 +207,7 @@ class ElementDetector:
     def _check_right_ring_2(self):
         """右圆环状态2检测：近端右丢线+特征点稳定"""
         # 近端CCD右丢线检查（right_point_2 >=115）
-        near_right_lost = self._ccd_near.right >= ccd_near_lost
+        near_right_lost = self._ccd_near.right >= ccd_near_r_lost
         
         # 近端左边界有效性检查（31 <= left_point_2 <=44）
         near_left_valid = ccd_near_l[0] <= self._ccd_near.left <= ccd_near_l[1]
