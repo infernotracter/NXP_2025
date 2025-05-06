@@ -42,19 +42,70 @@ class CCDHandler:
         # threshold = min(max(75, threshold), 255)  # 阈值限幅在75-256之间
         return threshold
 
-    def get_mid_point(self, tmpdata,  value, reasonrange, follow, searchgap = 0):
+    def get_mid_point(self, tmpdata,  value, reasonrange, follow = 0, searchgap = 0):
         """获取中点, value: 差比和公式的值, reasonrange: 合理范围(两次差值的范围),
         follow: if>0 补右边线，跟左边线, searchgap: 搜索间隔"""
         self.data = tmpdata
-        count_up = 0
-        count_down = 0
         # 判断中点值是否在赛道内，防止一直扫一边线
-        if self.last_mid < 30 or self.last_mid > 100:
-            tmpthreshold = self.get_threshold()  # 计算阈值
-            if self.data[self.last_mid] < tmpthreshold:
-                self.last_mid = 64 
+        #True: 这里的判断条件是为了防止中点值一直在赛道内
+        # if self.last_mid < 30 or self.last_mid > 100:
+        tmpthreshold = self.get_threshold()  # 计算阈值
+        if self.data[self.last_mid] < tmpthreshold:
+            self.midpoint_invalid()
         # 计算上限和下限
-        self.flag_bright = check_tuple(self.data, count_up, count_down)
+        self.flag_bright = check_tuple(self.data, 100, 100) # 100是上限,超过了就不正常 
+        # 主代码
+        # 搜索边线
+        self.search(searchgap, value)
+        if self.left == 0:
+            self.left = self.right - ccd_near_lenth
+        if self.right == 127:
+            self.right = self.left + ccd_near_lenth
+        self.mid = (self.left + self.right) // 2
+
+        if follow > 0 and self.right == 127:
+            self.right = self.left + follow
+        if follow < 0 and self.left == 0:
+            self.left = self.right + follow        
+
+        if abs(self.mid - self.last_mid) > reasonrange:  # 如果中点与上次中点差距过大
+            self.mid = self.last_mid # 强制令中点为上次中点
+        self.last_mid = self.mid  # 更新上次中点
+        return self.mid  # 返回中点
+    def midpoint_invalid(self, searchgap, value):
+        if self.last_mid > 64:
+            for i in range(self.last_mid - searchgap, 1, -1):  # 用差比和公式判断是否找到边线
+                if (abs(self.data[i+4]-self.data[i])*100/(self.data[i + 4]+self.data[i]+2)) > value:
+                    self.right = i
+                    break
+                elif i == 1:  # 如果找到1都没找到
+                    self.right = 0
+                    break
+            for i in range(self.right - searchgap, 1, -1):  # 用差比和公式判断是否找到边线
+                if (abs(self.data[i+4]-self.data[i])*100/(self.data[i + 4]+self.data[i]+2)) > value:
+                    self.left = i  # 左边点找到
+                    break
+                elif i == 1:  # 如果找到1都没找到
+                    self.left = 0  # 强制令左边点为0
+                    break
+        elif self.last_mid < 64:
+            for i in range(self.last_mid + searchgap, 126):
+                if (abs(self.data[i-4]-self.data[i])*100/(self.data[i-4]+self.data[i]+1)) > value:
+                    self.left = i  # 右边点找到
+                    break
+                elif i == 126:  # 如果找到126都没找到
+                    self.left = 127  # 强制右左边点为127
+                    break
+            for i in range(self.left + searchgap, 126):
+                if (abs(self.data[i-4]-self.data[i])*100/(self.data[i-4]+self.data[i]+1)) > value:
+                    self.right = i
+                    break
+                elif i == 126:  # 如果找到126都没找到
+                    self.right = 127  # 强制右左边点为127
+                    break
+        else:
+            pass
+    def search(self, searchgap, value):
         for i in range(self.last_mid - 4 - searchgap, 1, -1):  # 用差比和公式判断是否找到边线
             if (abs(self.data[i+4]-self.data[i])*100/(self.data[i + 4]+self.data[i]+2)) > value:
                 self.left = i  # 左边点找到
@@ -71,21 +122,7 @@ class CCDHandler:
             elif i == 126:  # 如果找到126都没找到
                 self.right = 127  # 强制右左边点为127
                 break
-        # if self.left < LeftEdge:
-        #     self.lost_l = True
-        # if self.right > RightEdge:
-        #     self.lost_r = True
-        self.mid = (self.left + self.right) // 2
-
-        if follow > 0 and self.right == 127:
-            self.right = self.left + follow
-        if follow < 0 and self.left == 0:
-            self.left = self.right + follow        
-
-        if abs(self.mid - self.last_mid) > reasonrange:  # 如果中点与上次中点差距过大
-            self.mid = self.last_mid # 强制令中点为上次中点
-        self.last_mid = self.mid  # 更新上次中点
-        return self.mid  # 返回中点
+        
 ccd_n = CCDHandler(0)
 far_ccd=CCDHandler(1)
 ccd_near_lenth=50 #待测
