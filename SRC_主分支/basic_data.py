@@ -41,7 +41,7 @@ switch_4 = Pin('B15', Pin.IN, pull=Pin.PULL_UP_47K, value=True)
 ccd = TSL1401(5)
 # 实例化 KEY_HANDLER 模块
 key = KEY_HANDLER(10)
-
+tof = DL1B(5)
 
 def my_limit(value, min_val, max_val):
     return max(min_val, min(value, max_val))

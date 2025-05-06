@@ -40,7 +40,7 @@ def time_pit_pid_handler(time):
 
 # 实例化 PIT ticker 模块
 pit0 = ticker(0)
-pit0.capture_list(ccd, key, encoder_l, encoder_r)
+pit0.capture_list(ccd, key, encoder_l, encoder_r,tof)
 pit0.callback(time_pit_pid_handler)
 pit0.start(5)
 
