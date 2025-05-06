@@ -276,13 +276,13 @@ class ElementDetector:
         near_right_lost=self._ccd_near.right>= ccd_near_r[1]
         gyro_z.update(self.imu_data[5])
         if near_right_lost and abs(gyro_z.data) > gyro_z_ring3:
-            return self.tmperror
+            ccd_n.error=self.tmperror
         
     def _c_ring_right_3(self):
         near_left_lost=self._ccd_near.left<= ccd_near_l[0]
         gyro_z.update(self.imu_data[5])
         if near_left_lost and abs(gyro_z.data) > gyro_z_ring3:
-            return self.tmperror
+            ccd_n.error=self.tmperror
         
     def _c_ring_left_4(self):
         gyro_z.update(self.imu_data[5])
