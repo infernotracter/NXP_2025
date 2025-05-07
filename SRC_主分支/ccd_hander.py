@@ -1,6 +1,12 @@
 from basic_data import *
 
-
+class MovementType:
+    default = 0
+    1 = 1
+    2 = 2
+    3 = 3
+    4 = 4
+    5 = 5
 
 def check_tuple(data: tuple, count_up: int, count_down: int) -> int:
     threshold = 0.85 * 128
@@ -103,8 +109,7 @@ class CCDHandler:
                 elif i == 126:  # 如果找到126都没找到
                     self.right = 127  # 强制右左边点为127
                     break
-        else:
-            pass
+
     def search(self, searchgap, value):
         for i in range(self.last_mid - 4 - searchgap, 1, -1):  # 用差比和公式判断是否找到边线
             if (abs(self.data[i+4]-self.data[i])*100/(self.data[i + 4]+self.data[i]+2)) > value:
