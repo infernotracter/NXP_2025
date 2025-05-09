@@ -138,3 +138,7 @@ class MovementType:
     Mode_3 = 3
     Mode_4 = 4
     Mode_5 = 5
+    def __init__(self):
+        self.mode = MovementType.default
+    def update(self):
+        if 
