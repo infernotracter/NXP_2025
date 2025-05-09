@@ -9,6 +9,7 @@ class MovementType:
     5 = 5
 
 def check_tuple(data: tuple, count_up: int, count_down: int) -> int:
+    """data: 数据， count_up: 白点， count_down: 黑点"""
     threshold = 0.85 * 128
     up_count = down_count = 0
     for num in data:
@@ -32,7 +33,6 @@ class CCDHandler:
         self.left = 0
         self.right = 127
         self.channel = channel  # CCD通道
-        self.flag_bright = 0
         self.error=0
 
     def get_threshold(self):
@@ -58,8 +58,7 @@ class CCDHandler:
         tmpthreshold = self.get_threshold()  # 计算阈值
         if self.data[self.last_mid] < tmpthreshold:
             self.midpoint_invalid()
-        # 计算上限和下限
-        self.flag_bright = check_tuple(self.data, 100, 100) # 100是上限,超过了就不正常 
+            return self.mid
         # 主代码
         # 搜索边线
         self.search(searchgap, value)
@@ -147,12 +146,19 @@ ccd_near_lost = 10             # 特征点差异阈值
 
 # 赛道元素状态枚举
 class RoadElement:
+    stop = -1
     normal = 0
-    circle_l1 = 1
-    circle_l2 = 2
-    circle_r1 = 3
-    circle_r2 = 4
-    zebra = 5
+    l1 = 1
+    l2 = 2
+    r1 = 3
+    r2 = 4
+    l3 = 5
+    r3 = 6
+    lin = 7
+    lout = 8
+    rin = 9
+    rout = 10
+    zebra = 9
 
 GYRO_Z_ring3_data = 0.8
 DISTANCE_ring3_data = 0.1
@@ -187,22 +193,48 @@ class ElementDetector:
         self._ccd_near = _ccd_near
         self.imu_data = imu_data
         self.enc_data = enc_data
-        
+        # 判断全黑全白
+        if check_tuple(self._ccd_near, 100, 100):
+            self.state = RoadElement.stop # 跑出去了,别把碳秆撞坏了
         # if self._check_zebra(self._ccd_near):
         #     element = RoadElement.zebra
-        if self._check_left_ring_1(self._ccd_far, self._ccd_near):
-            element = RoadElement.circle_l1
-        if self._check_right_ring_1(self._ccd_far, self._ccd_near):
-            element = RoadElement.circle_r1
-        if self._check_left_ring_2(self._ccd_far, self._ccd_near) and element == RoadElement.circle_l1:
-            element = RoadElement.circle_l2
-        if self._check_right_ring_2(self._ccd_far, self._ccd_near) and element == RoadElement.circle_r1:
-            element = RoadElement.circle_r2
-            
+        if self._check_left_1(self._ccd_far, self._ccd_near):
+            self.state = RoadElement.l1
+        if self._check_right_1(self._ccd_far, self._ccd_near):
+            self.state = RoadElement.r1
+        if self._check_left_2(self._ccd_far, self._ccd_near) and self.state == RoadElement.l1:
+            self.state = RoadElement.l2
+            self.follow = -ccd_near_lenth
+        if self._check_right_2(self._ccd_far, self._ccd_near) and self.state == RoadElement.r1:
+            self.state = RoadElement.r2
+            self.follow = ccd_near_lenth
+
+        # 防误判圆环
+        if self._check_right_3() and self.state == RoadElement.r2:
+            self.state = RoadElement.r3
+            self.follow = -ccd_near_lenth
+        if self._check_left_3() and self.state == RoadElement.l2:
+            self.state = RoadElement.l3
+            self.follow = ccd_near_lenth
+
+        # 圆环内部
+        if self._check_right_in() and self.state == RoadElement.r3:
+            self.state = RoadElement.rin
+            self.follow = ccd_near_lenth
+        if self._check_left_in() and self.state == RoadElement.l3:
+            self.state = RoadElement.lin
+            self.follow = -ccd_near_lenth
+
+        # 出圆环
+        if self._check_right_out and self.state == RoadElement.rin():
+            self.state = RoadElement.rout
+        if self._check_left_out and self.state == RoadElement.lin():
+            self.state = RoadElement.lout
+        
         # self._update_state(element)
-        return element
+        return self.state
     
-    def _check_left_ring_1(self):
+    def _check_left_1(self):
         """左圆环检测逻辑"""
         # 近端CCD特征检查
         near_valid = (ccd_near_l[0] <= self._ccd_near.left <= ccd_near_l[1] and 
@@ -217,7 +249,7 @@ class ElementDetector:
         
         return near_valid and far_valid and (point_diff <= ccd_near_lost)
     
-    def _check_right_ring_1(self):
+    def _check_right_1(self):
         """右圆环检测逻辑"""
         # 近端CCD特征检查（左右镜像）
         near_valid = (ccd_near_r[0] <= self._ccd_near.left <= ccd_near_r[1] and 
@@ -233,7 +265,7 @@ class ElementDetector:
         return near_valid and far_valid and (point_diff <= ccd_near_lost)
             
 
-    def _check_left_ring_2(self):
+    def _check_left_2(self):
         """左圆环状态2检测：近端左丢线+特征点稳定"""
         # 近端CCD左丢线检查（left_point_2 <=10）
         near_left_lost = self._ccd_near.left <= ccd_near_l_lost
@@ -246,7 +278,7 @@ class ElementDetector:
 
         return near_left_lost and near_right_valid and (point_diff <= 12)
 
-    def _check_right_ring_2(self):
+    def _check_right_2(self):
         """右圆环状态2检测：近端右丢线+特征点稳定"""
         # 近端CCD右丢线检查（right_point_2 >=115）
         near_right_lost = self._ccd_near.right >= ccd_near_r_lost
@@ -286,7 +318,7 @@ class ElementDetector:
         # return False
         pass
 
-    def _check_ring_right_3(self):
+    def _check_right_3(self):
         gyro_z.update(tmpdata = self.imu_data[5], time = self.delta_t)
         distance.update(self.enc_data)
         if -GYRO_Z_ring3_data < gyro_z.data < GYRO_Z_ring3_data:
@@ -299,14 +331,40 @@ class ElementDetector:
             gyro_z.reset()
             distance.reset()        
 
-    def _check_ring_right_in(self):
+    def _check_right_in(self):
         gyro_z.update(self.imu_data[5])
         if gyro_z.data > GYRO_Z_ring_in_data or gyro_z.data() < -GYRO_Z_ring_in_data:
             return True
 
-    def _check_ring_right_out(self):
+    def _check_right_out(self):
         distance.update(self.enc_data)
         if distance.data > DISTANCE_ring_out_data or distance.data < -DISTANCE_ring_out_data:
+            self.state = RoadElement.normal
+            distance.reset()
+
+    def _check_left_3(self):
+        gyro_z.update(tmpdata = self.imu_data[5], time = self.delta_t)
+        distance.update(self.enc_data)
+        if -GYRO_Z_ring3_data < gyro_z.data < GYRO_Z_ring3_data:
+            if distance.data < -DISTANCE_ring3_data:  # 距离方向取反
+                gyro_z.reset()
+                distance.reset()
+                return True
+        if gyro_z.data > GYRO_Z_ring3_data or gyro_z.data < -GYRO_Z_ring3_data:
+            self.state = RoadElement.normal
+            gyro_z.reset()
+            distance.reset()
+
+    def _check_left_in(self):
+        gyro_z.update(self.imu_data[5])
+        # 陀螺仪极性取反（原右转检测正方向，左转检测负方向）
+        if gyro_z.data < -GYRO_Z_ring_in_data or gyro_z.data > GYRO_Z_ring_in_data:
+            return True
+
+    def _check_left_out(self):
+        distance.update(self.enc_data)
+        # 距离方向取反（原检测正方向，镜像后检测负方向）
+        if distance.data < -DISTANCE_ring_out_data or distance.data > DISTANCE_ring_out_data:
             self.state = RoadElement.normal
             distance.reset()
 
@@ -347,8 +405,7 @@ class ElementDetector:
             self.outflag=0
         gyro_z.reset()
 
-#---------------------------------------------------------------------------------------------
-
+    # 十字判断
     def _crossroad(self):
         near_ccd_lost= (ccd_n.left <= ccd_near_l[0] and ccd_n.right >= ccd_near_r[1])
         far_ccd_normal=(ccd_far_left[0]<=far_ccd.left<=ccd_far_left[1] and ccd_far_right[0]<=far_ccd.right<=ccd_far_right[1])
