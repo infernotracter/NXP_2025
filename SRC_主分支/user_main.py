@@ -6,11 +6,12 @@ import utime
 import math
 from basic_data import *
 from ccd_hander import *
-
+from menutext import *
 
 # 单位换算用
 ACC_SPL = 4096.0
 GYRO_SPL = 16.4
+
 
 pit_cont_pid = 0
 
@@ -351,9 +352,3 @@ while True:
         # 将数据发送到示波器
         wireless.send_oscilloscope(dir_out.kp,dir_out.ki,dir_out.kd,ccd_mid_point)
         ticker_flag_8ms = False
-
-
-
-
-
-
