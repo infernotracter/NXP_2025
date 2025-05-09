@@ -6,7 +6,7 @@ import utime
 import math
 from basic_data import *
 from ccd_hander import *
-
+from menutext import *
 
 # 单位换算用
 ACC_SPL = 4096.0
@@ -40,7 +40,7 @@ def time_pit_pid_handler(time):
 
 # 实例化 PIT ticker 模块
 pit0 = ticker(0)
-pit0.capture_list(ccd, key, encoder_l, encoder_r,tof)
+pit0.capture_list(ccd, key, encoder_l, encoder_r)
 pit0.callback(time_pit_pid_handler)
 pit0.start(5)
 
@@ -241,7 +241,6 @@ profiler_4ms = TickerProfiler("20ms", expected_interval_ms=20)
 profiler_8ms = TickerProfiler("40ms", expected_interval_ms=40)
 
 imuoffsetinit()
-stop_flag = 1
 last_imu_data = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0, 0.0, 0.0]
 data_wave = [0, 0, 0, 0, 0, 0, 0, 0]
 
@@ -267,9 +266,6 @@ while True:
     error1=ccd_mid_point-64
     error2=0
     #print("ccd_mid_point:", ccd_mid_point)
-    if(key_data[0]):
-        aim_speed=35
-        key.clear(1)
     # 拨码开关关中断
     if end_switch.value() == 1:
         break  # 跳出判断
@@ -312,11 +308,8 @@ while True:
         ticker_flag_angle = False
 
     if (ticker_flag_menu):
-        #menu(key_data)
+        menu(key_data)
         key_data = key.get()
-        if (key_data[0] or key_data[1] or key_data[2] or key_data[3]):
-            stop_flag = 1
-            clearall()
         ticker_flag_menu = False
 
     if (ticker_flag_speed):
@@ -351,9 +344,3 @@ while True:
         # 将数据发送到示波器
         wireless.send_oscilloscope(dir_out.kp,dir_out.ki,dir_out.kd,ccd_mid_point)
         ticker_flag_8ms = False
-
-
-
-
-
-
