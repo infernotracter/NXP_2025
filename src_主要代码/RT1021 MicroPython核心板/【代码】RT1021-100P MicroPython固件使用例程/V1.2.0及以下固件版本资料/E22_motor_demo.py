@@ -42,10 +42,10 @@ motor_r = MOTOR_CONTROLLER(MOTOR_CONTROLLER.PWM_C24_DIR_C26, 13000, duty = 0, in
 
 motor_dir = 1
 motor_duty = 0
-motor_duty_max = 1000
+motor_duty_max = 10000
 
 while True:
-    time.sleep_ms(100)
+    time.sleep_ms(250)
     
     if motor_dir:
         motor_duty = motor_duty + 50
@@ -58,8 +58,8 @@ while True:
     
     led.value(motor_duty < 0)
     # duty 接口更新占空比 范围 ±10000
-    motor_l.duty(5000)
-    motor_r.duty(5000)
+    motor_l.duty(motor_duty)
+    motor_r.duty(motor_duty)
     
     # 如果拨码开关打开 对应引脚拉低 就退出循环
     # 这么做是为了防止写错代码导致异常 有一个退出的手段
@@ -69,4 +69,6 @@ while True:
     
     # 回收内存
     gc.collect()
+
+
 
