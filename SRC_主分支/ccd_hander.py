@@ -365,34 +365,48 @@ class ElementDetector:
 
 #-----------------------------------我们自己的圆环识别-------------------------------------------------
 # ---------------------------------------------------------------------------------------------------        
-            
+
+    def _c_ring_left_2(self):
+        near_left_lost=self._ccd_near.left<= ccd_near_l[0]
+        gyro_z.update(self.imu_data[5])
+        if near_left_lost :
+            ccd_n.left=ccd_n.right-ccd_near_lenth
+            stage_error.get_tmp()
+
+    def _c_ring_right_2(self):
+        near_right_lost=self._ccd_near.right>= ccd_near_r[1]
+        gyro_z.update(self.imu_data[5])
+        if near_right_lost :
+            ccd_n.right=ccd_n.left+ccd_near_lenth
+            stage_error.get_tmp()        
+
     def _c_ring_left_3(self):
         near_right_lost=self._ccd_near.right>= ccd_near_r[1]
         gyro_z.update(self.imu_data[5])
         if near_right_lost and abs(gyro_z.data) > gyro_z_ring3:
-            ccd_n.error=self.tmperror
+            ccd_n.error=stage_error.tmperror
+            stage_error.reset()
         
     def _c_ring_right_3(self):
         near_left_lost=self._ccd_near.left<= ccd_near_l[0]
         gyro_z.update(self.imu_data[5])
         if near_left_lost and abs(gyro_z.data) > gyro_z_ring3:
-            ccd_n.error=self.tmperror
+            ccd_n.error=stage_error.tmperror
+            stage_error.reset()
         
     def _c_ring_left_4(self):
         gyro_z.update(self.imu_data[5])
         point_diff = abs(self._ccd_far.right - self._ccd_near.right)
         if abs(gyro_z.data)>gyro_z_ring4 and point_diff:
             ccd_n.left=ccd_n.right-ccd_near_lenth
-            self.outflag=1
-            gyro_z.reset()
+            self.outflag= RoadElement.lout
 
     def _c_ring_right_4(self):
         gyro_z.update(self.imu_data[5])
         point_diff = abs(self._ccd_far.left - self._ccd_near.left)
         if abs(gyro_z.data)>gyro_z_ring4 and point_diff:
             ccd_n.right=ccd_n.left+ccd_near_lenth
-            self.outflag=1
-            gyro_z.reset()
+            self.outflag=RoadElement.rout
         
     def _c_ring_out(self):
         near_valid = (ccd_near_r[0] <= self._ccd_near.left <= ccd_near_r[1] and 
@@ -450,4 +464,17 @@ class Gyro_Z_Test:
         self.data = 0
 gyro_z = Gyro_Z_Test()
 
-
+class Error_test:
+    #求误差平均值
+    def __init__(self):
+        self.data=0.0
+    def get_tmp(self):
+        for _ in range(100):
+            ccd_temp_data = ccd.get(0)
+            tmp_mid = ccd_n.get_mid_point(tmpdata = ccd_temp_data, value =31, reasonrange = 30, follow = 0, searchgap = 0)
+            tmp_error=tmp_mid - 64
+            self.data +=tmp_error
+        self.tmperror=self.data/100
+    def reset(self):
+        self.data=0.0
+stage_error=Error_test()

@@ -255,11 +255,9 @@ def clearall():
     key.clear(3)
     key.clear(4)
 while True:
-    if (current_roll >= 75) or (current_roll <= 20):
-        stop_flag = 0
     
-    motor_l.duty(my_limit(gyro_pid_out - dir_in_out, -3000, 3000)*stop_flag)
-    motor_r.duty(my_limit(gyro_pid_out + dir_in_out, -3000, 3000)*stop_flag)
+    motor_l.duty(my_limit(gyro_pid_out - dir_in_out, -3000, 3000))
+    motor_r.duty(my_limit(gyro_pid_out + dir_in_out, -3000, 3000))
     ccd_temp_data = ccd.get(0)
     ccd_mid_point = ccd_n.get_mid_point(tmpdata = ccd_temp_data, value =31, reasonrange = 30, follow = 0, searchgap = 0)
     
@@ -317,7 +315,7 @@ while True:
         encl_data = encoder_l.get()  # 读取左编码器的数据
         encr_data = encoder_r.get()  # 读取右编码器的数据
         speed_pid_out = speed_pid.calculate(
-            aim_speed, (encl_data + encr_data) / 2)
+            aim_speed*stop_flag, (encl_data + encr_data) / 2)
         ticker_flag_speed = False
 
     if (ticker_flag_4ms):
