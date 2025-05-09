@@ -13,7 +13,7 @@ ccd_image_flag = 0
 parameter_flag = 0
 screen_off_flag = 0
 save_para_flag = 0
-
+key_cnt=0
 
 def point_move(hight, low, key_data):
     global main_point_item
@@ -145,33 +145,39 @@ def sec_menu_01(key_data):
     global aim_speed, speed_flag, main_menu_flag, main_point_item, car_go_flag,stop_flag
     lcd.str24(60, 0, "car_go_mode", 0x07E0)
     lcd.str16(16, 30, "stop_flag={} ".format(stop_flag),0xFFFF)
-    lcd.str16(16, 46, "car_mode", 0x07E0)   #寻圆环/不寻圆环
-    lcd.str16(16, 62, "car_speed_1", 0xFFFF)
-    lcd.str16(16, 78, "car_speed_2",0xFFFF)
-    lcd.str16(16, 94, "return ",0xFFFF)
+    lcd.str16(16, 46, "car_mode=", 0x07E0)   #寻圆环/不寻圆环
+    lcd.str16(16, 62, "return ",0xFFFF)
     lcd.str16(16, 126, "aim_speed={}".format(aim_speed),0xFFFF)
     lcd.str12(0, main_point_item, ">", 0xF800)
-
-    point_move(94, 30, key_data)
+    lcd.str16(42,46,"{}".format(MovementType.mode),0xFFFF)
+    point_move(62, 30, key_data)
     
-    if main_point_item == 94 and key_data[2]:
+    if main_point_item == 62 and key_data[2]:
         lcd.clear(0x0000)
         main_menu_flag = 1
         car_go_flag = 0
         key.clear(3)
         main_point_item = 30
-    if key_data[2] and main_point_item == 62:
-        lcd.clear(0x0000)
-        aim_speed=16
-        key.clear(3)
-    if key_data[2] and main_point_item == 78:
-        lcd.clear(0x0000)
-        aim_speed=30
-        key.clear(3)
     if key_data[2] and main_point_item == 30:
         stop_flag = 1
         key.clear(3)
-
+    if key_data[2] and main_point_item == 46:
+        key_cnt+=1
+        if key_cnt==0:
+            MovementType.mode=default
+        if key_cnt==1:
+            MovementType.mode=Mode_1
+        if key_cnt==2:
+            MovementType.mode=Mode_2
+        if key_cnt==3:
+            MovementType.mode=Mode_3
+        if key_cnt==4:
+            MovementType.mode=Mode_4
+        if key_cnt==5:
+            MovementType.mode=Mode_5
+        if key_cnt>=6:
+            key_cnt=0
+        key.clear(3)
     gc.collect()
 
 

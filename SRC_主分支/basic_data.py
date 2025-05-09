@@ -138,3 +138,20 @@ class MovementType:
     Mode_3 = 3
     Mode_4 = 4
     Mode_5 = 5
+    def __init__(self):
+        self.mode=self.Mode_1
+    def _update_(self):
+        if self.mode == self.Mode_1:
+            aim_speed=20
+            
+        if self.mode == self.Mode_2:
+            aim_speed=30
+            
+        if self.mode == self.Mode_3:
+            aim_speed=40
+            
+        if self.mode == self.Mode_4:
+            aim_speed=50
+            
+        if self.mode == self.Mode_5:
+            aim_speed=60
