@@ -404,8 +404,6 @@ class ElementDetector:
         far_ccd_normal=(ccd_far_left[0]<=far_ccd.left<=ccd_far_left[1] and ccd_far_right[0]<=far_ccd.right<=ccd_far_right[1])
         return near_ccd_lost and far_ccd_normal
         
-        
-        
     # def _update_state(self, element, imu_data):
     #     """状态机更新"""
     #     if element == RoadElement.circle_l1:
