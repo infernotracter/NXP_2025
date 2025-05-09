@@ -139,7 +139,6 @@ class MovementType:
     Mode_4 = 4
     Mode_5 = 5
     def __init__(self):
-<<<<<<< HEAD
         self.mode=self.Mode_1
     def _update_(self):
         if self.mode == self.Mode_1:
@@ -156,8 +155,4 @@ class MovementType:
             
         if self.mode == self.Mode_5:
             aim_speed=60
-=======
-        self.mode = MovementType.default
-    def update(self):
-        if 
->>>>>>> b1bbaa329f5162d4d65ae1cf39134fe2d438ada1
+
