@@ -58,8 +58,8 @@ while True:
     
     led.value(motor_duty < 0)
     # duty 接口更新占空比 范围 ±10000
-    motor_l.duty(motor_duty)
-    motor_r.duty(motor_duty)
+    motor_l.duty(5000)
+    motor_r.duty(5000)
     
     # 如果拨码开关打开 对应引脚拉低 就退出循环
     # 这么做是为了防止写错代码导致异常 有一个退出的手段

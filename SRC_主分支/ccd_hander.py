@@ -1,12 +1,5 @@
 from basic_data import *
 
-class MovementType:
-    default = 0
-    1 = 1
-    2 = 2
-    3 = 3
-    4 = 4
-    5 = 5
 
 def check_tuple(data: tuple, count_up: int, count_down: int) -> int:
     threshold = 0.85 * 128

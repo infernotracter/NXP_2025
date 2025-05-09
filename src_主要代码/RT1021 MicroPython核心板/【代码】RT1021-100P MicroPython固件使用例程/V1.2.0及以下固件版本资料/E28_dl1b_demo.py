@@ -13,14 +13,13 @@
 from machine import *
 
 # 从 smartcar 库包含 ticker
-from smartcar import ticker
+from smartcar import *
 
 # 从 seekfree 库包含 DL1B
-from seekfree import DL1B
-
+from seekfree import *
 # 包含 gc 类
 import gc
-
+wireless = WIRELESS_UART(460800)
 # 学习板上 C19 对应二号拨码开关
 
 # 调用 machine 库的 Pin 类实例化一个引脚对象

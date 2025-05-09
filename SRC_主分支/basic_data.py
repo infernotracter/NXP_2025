@@ -130,3 +130,11 @@ aim_speed_r = 0  # 右轮期望速度
 out_l = 0  # 左轮输出值
 out_r = 0  # 右轮输出值
 speed_d = 50  # 速度增量(调试用)
+
+class MovementType:
+    default = 0
+    Mode_1 = 1
+    Mode_2 = 2
+    Mode_3 = 3
+    Mode_4 = 4
+    Mode_5 = 5
