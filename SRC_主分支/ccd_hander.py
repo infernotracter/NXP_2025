@@ -196,34 +196,42 @@ class ElementDetector:
             self.state = RoadElement.l1
         if self._right_1(self._ccd_far, self._ccd_near):
             self.state = RoadElement.r1
-        if self._left_2(self._ccd_far, self._ccd_near) and self.state == RoadElement.l1:
-            self.state = RoadElement.l2
-            self.follow = -ccd_near_lenth
-        if self._right_2(self._ccd_far, self._ccd_near) and self.state == RoadElement.r1:
-            self.state = RoadElement.r2
-            self.follow = ccd_near_lenth
+        if self.state == RoadElement.l1:
+            if self._left_2(self._ccd_far, self._ccd_near):
+                self.state = RoadElement.l2
+                self.follow = -ccd_near_lenth
+        if self.state == RoadElement.r1:
+            if self._right_2(self._ccd_far, self._ccd_near):
+                self.state = RoadElement.r2
+                self.follow = ccd_near_lenth
 
         # 防误判圆环
-        if self._right_3() and self.state == RoadElement.r2:
-            self.state = RoadElement.r3
-            self.follow = -ccd_near_lenth
-        if self._left_3() and self.state == RoadElement.l2:
-            self.state = RoadElement.l3
-            self.follow = ccd_near_lenth
+        if self.state == RoadElement.r2:
+            if self._right_3():
+                self.state = RoadElement.r3
+                self.follow = -ccd_near_lenth
+        if self.state == RoadElement.l2:
+            if self._left_3():
+                self.state = RoadElement.l3
+                self.follow = ccd_near_lenth
 
         # 圆环内部
-        if self._right_in() and self.state == RoadElement.r3:
-            self.state = RoadElement.rin
-            self.follow = ccd_near_lenth
-        if self._left_in() and self.state == RoadElement.l3:
-            self.state = RoadElement.lin
-            self.follow = -ccd_near_lenth
+        if self.state == RoadElement.r3:
+            if self._right_in():
+                self.state = RoadElement.rin
+                self.follow = ccd_near_lenth
+        if self.state == RoadElement.l3:
+            if self._left_in():
+                self.state = RoadElement.lin
+                self.follow = -ccd_near_lenth
 
         # 出圆环
-        if self._right_out and self.state == RoadElement.rin():
-            self.state = RoadElement.rout
-        if self._left_out and self.state == RoadElement.lin():
-            self.state = RoadElement.lout
+        if self.state == RoadElement.rin:
+            if self._right_out():
+                self.state = RoadElement.rout
+        if self.state == RoadElement.lin:
+            if self._left_out():
+                self.state = RoadElement.lout
         
         # self._update_state(element)
         return self.state
