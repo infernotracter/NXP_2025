@@ -41,7 +41,6 @@ switch_4 = Pin('B15', Pin.IN, pull=Pin.PULL_UP_47K, value=True)
 ccd = TSL1401(5)
 # 实例化 KEY_HANDLER 模块
 key = KEY_HANDLER(10)
-tof = DL1B(5)
 
 def my_limit(value, min_val, max_val):
     return max(min_val, min(value, max_val))
@@ -124,14 +123,14 @@ ccd_data1 = [0] * 128  # ccd1原始数组
 ccd_data2 = [0] * 128  # ccd2原始数组
 encl_data = 0  # 左编码器数据
 encr_data = 0  # 右数据编码器
-aim_speed = 0  # 之后要可以使用KEY手动修改
+#aim_speed = 20  # 之后要可以使用KEY手动修改
 aim_speed_l = 0  # 左轮期望速度
 aim_speed_r = 0  # 右轮期望速度
 out_l = 0  # 左轮输出值
 out_r = 0  # 右轮输出值
 speed_d = 50  # 速度增量(调试用)
-
 class MovementType:
+    aim_speed=0
     default = 0
     Mode_1 = 1
     Mode_2 = 2
@@ -139,20 +138,24 @@ class MovementType:
     Mode_4 = 4
     Mode_5 = 5
     def __init__(self):
-        self.mode=self.Mode_1
+        self.mode=self.default
     def _update_(self):
+        global aim_speed
+        if self.mode == self.default:
+            self.aim_speed=0
+            
         if self.mode == self.Mode_1:
-            aim_speed=20
+            self.aim_speed=20
             
         if self.mode == self.Mode_2:
-            aim_speed=30
+            self.aim_speed=30
             
         if self.mode == self.Mode_3:
-            aim_speed=40
+            self.aim_speed=40
             
         if self.mode == self.Mode_4:
-            aim_speed=50
+            self.aim_speed=50
             
         if self.mode == self.Mode_5:
-            aim_speed=60
-
+            self.aim_speed=60
+startmode=MovementType()

@@ -14,7 +14,6 @@ parameter_flag = 0
 screen_off_flag = 0
 save_para_flag = 0
 key_cnt=0
-
 def point_move(hight, low, key_data):
     global main_point_item
     if key_data[1]:
@@ -142,14 +141,13 @@ def main_menu(key_data):  # 一级菜单
 
 
 def sec_menu_01(key_data):
-    global aim_speed, speed_flag, main_menu_flag, main_point_item, car_go_flag,stop_flag
+    global  speed_flag, main_menu_flag, main_point_item, car_go_flag,stop_flag,key_cnt
     lcd.str24(60, 0, "car_go_mode", 0x07E0)
     lcd.str16(16, 30, "stop_flag={} ".format(stop_flag),0xFFFF)
-    lcd.str16(16, 46, "car_mode=", 0x07E0)   #寻圆环/不寻圆环
+    lcd.str16(16, 46, "car_mode={}".format(startmode.mode), 0x07E0)   #寻圆环/不寻圆环
     lcd.str16(16, 62, "return ",0xFFFF)
-    lcd.str16(16, 126, "aim_speed={}".format(aim_speed),0xFFFF)
+    lcd.str16(16, 126, "aim_speed={}".format(startmode.aim_speed),0xFFFF)
     lcd.str12(0, main_point_item, ">", 0xF800)
-    lcd.str16(42,46,"{}".format(MovementType.mode),0xFFFF)
     point_move(62, 30, key_data)
     
     if main_point_item == 62 and key_data[2]:
@@ -159,24 +157,28 @@ def sec_menu_01(key_data):
         key.clear(3)
         main_point_item = 30
     if key_data[2] and main_point_item == 30:
+        lcd.clear(0x0000)
         stop_flag = 1
         key.clear(3)
     if key_data[2] and main_point_item == 46:
+        lcd.clear(0x0000)
         key_cnt+=1
         if key_cnt==0:
-            MovementType.mode=default
+            startmode.mode=MovementType.default
         if key_cnt==1:
-            MovementType.mode=Mode_1
+            startmode.mode=MovementType.Mode_1
         if key_cnt==2:
-            MovementType.mode=Mode_2
+            startmode.mode=MovementType.Mode_2
         if key_cnt==3:
-            MovementType.mode=Mode_3
+            startmode.mode=MovementType.Mode_3
         if key_cnt==4:
-            MovementType.mode=Mode_4
+            startmode.mode=MovementType.Mode_4
         if key_cnt==5:
-            MovementType.mode=Mode_5
+            startmode.mode=MovementType.Mode_5
         if key_cnt>=6:
             key_cnt=0
+            startmode.mode=MovementType.default
+        startmode._update_()
         key.clear(3)
     gc.collect()
 
@@ -507,3 +509,4 @@ def sec_menu_10(key_data):
     lcd.clear(0xF800)  # 清屏
     time.sleep_ms(100)  # 延时
     main_menu_item = 1  # 返回一级菜单
+
