@@ -1,3 +1,4 @@
+import utime
 from machine import *
 from smartcar import *
 from seekfree import *
@@ -160,3 +161,43 @@ class MovementType:
         if self.mode == self.Mode_5:
             self.aim_speed=60
 startmode=MovementType()
+
+
+class Beeper:
+    def __init__(self, beerpin = 'C9'):
+        self.beep_pin = Pin(beerpin , Pin.OUT, pull = Pin.PULL_UP_47K, value = False)
+        self.start_time = 0       # 鸣叫开始时间戳
+        self.duration = 0         # 当前鸣叫持续时间
+        self.is_active = False    # 鸣叫状态标志
+        self.long_duration = 500  # 长鸣时长(ms)
+        self.short_duration = 100 # 短鸣时长(ms)
+        self._last_update = 0     # 上次更新时间戳
+
+    def start(self, duration_type):
+        """触发蜂鸣器鸣叫
+        :param duration_type: 'long' 或 'short'
+        """
+        self.duration = self.long_duration if duration_type == 'long' else self.short_duration
+        self.start_time = utime.ticks_ms()
+        self.beep_pin.high()
+        self.is_active = True
+
+    def update(self):
+        """需在循环中定期调用，建议调用间隔<=10ms"""
+        if not self.is_active:
+            return
+            
+        current = utime.ticks_ms()
+        elapsed = utime.ticks_diff(current, self.start_time)
+        
+        # 持续时间达到后关闭
+        if elapsed >= self.duration:
+            self.beep_pin.low()
+            self.is_active = False
+            self.duration = 0
+
+    def set_durations(self, long=None, short=None):
+        """动态修改鸣叫时长"""
+        if long is not None: self.long_duration = long
+        if short is not None: self.short_duration = short
+beep = Beeper()

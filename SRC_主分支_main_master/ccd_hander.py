@@ -3,7 +3,7 @@ from basic_data import *
 
 def check_tuple(data: tuple, count_up: int, count_down: int) -> int:
     """data: 数据， count_up: 白点， count_down: 黑点"""
-    threshold = 0.85 * 128
+    threshold = 110
     up_count = down_count = 0
     for num in data:
         if num > count_up:
@@ -50,7 +50,7 @@ class CCDHandler:
         # if self.last_mid < 30 or self.last_mid > 100:
         tmpthreshold = self.get_threshold()  # 计算阈值
         if self.data[self.last_mid] < tmpthreshold:
-            self.midpoint_invalid()
+            self.midpoint_invalid(searchgap = searchgap, value = value)
             return self.mid
         # 主代码
         # 搜索边线
@@ -184,13 +184,14 @@ class ElementDetector:
 
         #-----------------------------------------------------------
     def update(self, _ccd_far_left, _ccd_far_right, _ccd_near_left, _ccd_near_right, imu_data, enc_data):
-        """主检测函数"""
+        """主检测函数: _ccd_far_left, _ccd_far_right, _ccd_near_left, _ccd_near_right, imu_data, enc_data """
         self._ccd_far_left = _ccd_far_left
         self._ccd_far_right = _ccd_far_right
         self._ccd_near_left = _ccd_near_left
         self._ccd_near_right = _ccd_near_right
         self.imu_data = imu_data
         self.enc_data = enc_data
+        tempcheck = self.state
         # 判断全黑全白
         if check_tuple(self._ccd_near, 100, 100):
             self.state = RoadElement.stop # 跑出去了,别把车子撞坏了,歇歇吧
@@ -248,6 +249,8 @@ class ElementDetector:
                 self.state = RoadElement.lout
         
         # self._update_state(element)
+        if tempcheck != self.state:
+            beep.start('short')
         return self.state
     
     def _left_1(self):
@@ -276,7 +279,7 @@ class ElementDetector:
                     self.ccd_far_left[0] <= self._ccd_far_left <= self.ccd_far_left[1])
         
         # 特征点一致性检查（比较左边缘）
-        point_diff = abs(self._ccd_far_left -  self._ccd_near_left)
+        point_diff = abs(self._ccd_far_left - self._ccd_near_left)
         
         return near_valid and far_valid and (point_diff <= self.POINT_diff_data)
             
