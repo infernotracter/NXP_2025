@@ -6,8 +6,8 @@ import utime
 import math
 from basic_data import *
 from ccd_hander import *
+from menutext import *
 
-ccd_n = CCDHandler(0)
 # 单位换算用
 ACC_SPL = 4096.0
 GYRO_SPL = 16.4
@@ -241,7 +241,6 @@ profiler_4ms = TickerProfiler("20ms", expected_interval_ms=20)
 profiler_8ms = TickerProfiler("40ms", expected_interval_ms=40)
 
 imuoffsetinit()
-stop_flag = 1
 last_imu_data = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0, 0.0, 0.0]
 data_wave = [0, 0, 0, 0, 0, 0, 0, 0]
 
@@ -256,20 +255,15 @@ def clearall():
     key.clear(3)
     key.clear(4)
 while True:
-    if (current_roll >= 75) or (current_roll <= 20):
-        stop_flag = 0
     
-    motor_l.duty(my_limit(gyro_pid_out - dir_in_out, -3000, 3000)*stop_flag)
-    motor_r.duty(my_limit(gyro_pid_out + dir_in_out, -3000, 3000)*stop_flag)
+    motor_l.duty(my_limit(gyro_pid_out - dir_in_out, -3000, 3000))
+    motor_r.duty(my_limit(gyro_pid_out + dir_in_out, -3000, 3000))
     ccd_temp_data = ccd.get(0)
     ccd_mid_point = ccd_n.get_mid_point(tmpdata = ccd_temp_data, value =31, reasonrange = 30, follow = 0, searchgap = 0)
     
     error1=ccd_mid_point-64
     error2=0
     #print("ccd_mid_point:", ccd_mid_point)
-    if(key_data[0]):
-        aim_speed=35
-        key.clear(1)
     # 拨码开关关中断
     if end_switch.value() == 1:
         break  # 跳出判断
@@ -312,11 +306,8 @@ while True:
         ticker_flag_angle = False
 
     if (ticker_flag_menu):
-        #menu(key_data)
+        menu(key_data)
         key_data = key.get()
-        if (key_data[0] or key_data[1] or key_data[2] or key_data[3]):
-            stop_flag = 1
-            clearall()
         ticker_flag_menu = False
 
     if (ticker_flag_speed):
@@ -324,7 +315,7 @@ while True:
         encl_data = encoder_l.get()  # 读取左编码器的数据
         encr_data = encoder_r.get()  # 读取右编码器的数据
         speed_pid_out = speed_pid.calculate(
-            aim_speed, (encl_data + encr_data) / 2)
+            aim_speed*stop_flag, (encl_data + encr_data) / 2)
         ticker_flag_speed = False
 
     if (ticker_flag_4ms):
@@ -351,9 +342,3 @@ while True:
         # 将数据发送到示波器
         wireless.send_oscilloscope(dir_out.kp,dir_out.ki,dir_out.kd,ccd_mid_point)
         ticker_flag_8ms = False
-
-
-
-
-
-
