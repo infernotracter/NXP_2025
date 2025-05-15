@@ -87,7 +87,7 @@ class PID:
 
 
 # 特殊输出调整函数
-MedAngle=35.8
+MedAngle=-35.8
 
 def gyro_adjustment(output):
     return output + 700 if output >= 0 else output - 700
