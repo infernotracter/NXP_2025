@@ -94,9 +94,6 @@ while True:
         
         ticker_flag = False
         runtime_count = runtime_count + 1
-        if(0 == runtime_count % 100):
-            print("runtime_count = {:>6d}.".format(runtime_count))
-    
     # 如果拨码开关打开 对应引脚拉低 就退出循环
     # 这么做是为了防止写错代码导致异常 有一个退出的手段
     if switch2.value() != state2:
