@@ -306,8 +306,13 @@ while True:
         ticker_flag_angle = False
 
     if (ticker_flag_menu):
-        menu(key_data)
+        #menu(key_data)
         key_data = key.get()
+        if key_data[0]:
+            gyro_pid.integral=0
+            angle_pid.integral=0
+            speed_pid.integral=0
+            key.clear(1)
         ticker_flag_menu = False
 
     if (ticker_flag_speed):
@@ -315,34 +320,30 @@ while True:
         encl_data = encoder_l.get()  # 读取左编码器的数据
         encr_data = encoder_r.get()  # 读取右编码器的数据
         speed_pid_out = speed_pid.calculate(
-            0, (encl_data + encr_data) / 2)
+            startmode.aim_speed, (encl_data + encr_data) / 2)
         ticker_flag_speed = False
 
     if (ticker_flag_4ms):
         # profiler_4ms.update()
-        #dir_in_out = dir_in.calculate(dir_out_out, imu_data[4]-gyrooffsety)
+        dir_in_out = dir_in.calculate(dir_out_out, imu_data[4]-gyrooffsety)
         ticker_flag_4ms = False
 
     if (ticker_flag_8ms):
         # profiler_8ms.update()
         # 定期进行数据解析
         #dir_out_out = dir_out.calculate(0, error1 + error2)
-        data_flag = wireless.data_analysis()
-        for i in range(0, 8):
-            # 判断哪个通道有数据更新
-            if (data_flag[i]):
-                # 数据更新到缓冲
-                data_wave[i] = wireless.get_data(i)
-                # 将更新的通道数据输出到 Thonny 的控制台
-                print("Data[{:<6}] updata : {:<.3f}.\r\n".format(
-                    i, data_wave[i]))
-                gyro_pid.kp=data_wave[0]
-                gyro_pid.ki=data_wave[1]
-                gyro_pid.kd=data_wave[2]
-                angle_pid.kp=data_wave[3]
-                angle_pid.ki=data_wave[4]
-                angle_pid.kd=data_wave[5]
-                
-        # 将数据发送到示波器
-        wireless.send_oscilloscope(gyro_pid.kp,gyro_pid.ki,gyro_pid.kd,angle_pid.kp,angle_pid.ki,angle_pid.kd)
+#         data_flag = wireless.data_analysis()
+#         for i in range(0, 8):
+#             # 判断哪个通道有数据更新
+#             if (data_flag[i]):
+#                 # 数据更新到缓冲
+#                 data_wave[i] = wireless.get_data(i)
+#                 # 将更新的通道数据输出到 Thonny 的控制台
+#                 print("Data[{:<6}] updata : {:<.3f}.\r\n".format(
+#                     i, data_wave[i]))
+#                 dir_in.kp=data_wave[0]
+#                 dir_in.ki=data_wave[1]
+#         # 将数据发送到示波器
+#         wireless.send_oscilloscope(dir_in.kp,dir_in.ki)
         ticker_flag_8ms = False
+

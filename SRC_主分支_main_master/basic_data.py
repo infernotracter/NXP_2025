@@ -87,25 +87,25 @@ class PID:
 
 
 # 特殊输出调整函数
-MedAngle=-35.8
+MedAngle=-37.5
 
 def gyro_adjustment(output):
     return output + 700 if output >= 0 else output - 700
 
 
 # PID实例化
-speed_pid = PID(kp=-0.06960005, ki=-0.008999997, integral_limits=(-2000, 2000))
+speed_pid = PID(kp=-0.0079998, ki=0, integral_limits=(-2000, 2000))
                 #output_limits=(-500, 500)
 
 #
 
-angle_pid = PID(kp=87.1,ki=0.0, kd=0.0, integral_limits=(-2000, 2000))
+angle_pid = PID(kp=89.59,ki=0.0, kd=10, integral_limits=(-2000, 2000))
 
-gyro_pid = PID(kp=1.22, ki=0.236,kd=1.63,integral_limits=(-2000, 2000),
+gyro_pid = PID(kp=1.03, ki=0.2,kd=2.99,integral_limits=(-2000, 2000),
                # output_limits=(-500, 500),
                output_adjustment=gyro_adjustment)
 
-dir_in = PID(kp=1.4, ki=0)
+dir_in = PID(kp=1.4, ki=0.53)
 #  integral_limits=(-2000, 2000))
 
 dir_out = PID(kp=200, kd=0.0)
@@ -201,3 +201,4 @@ class Beeper:
         if long is not None: self.long_duration = long
         if short is not None: self.short_duration = short
 beep = Beeper()
+
