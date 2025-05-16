@@ -257,10 +257,10 @@ while True:
     
     motor_l.duty(my_limit(gyro_pid_out - dir_in_out, -3000, 3000))
     motor_r.duty(my_limit(gyro_pid_out + dir_in_out, -3000, 3000))
-    ccd_temp_data = ccd.get(0)
-    ccd_mid_point = ccd_near.get_mid_point(tmpdata = ccd_temp_data, value =31, reasonrange = 30, follow = 0, searchgap = 0)
+    #ccd_temp_data = ccd.get(0)
+    #ccd_mid_point = ccd_near.get_mid_point(tmpdata = ccd_temp_data, value =31, reasonrange = 30, follow = 0, searchgap = 0)
     
-    error1=ccd_mid_point-64
+    error1=64
     error2=0
     #print("ccd_mid_point:", ccd_mid_point)
     # 拨码开关关中断
@@ -313,12 +313,12 @@ while True:
         encl_data = encoder_l.get()  # 读取左编码器的数据
         encr_data = encoder_r.get()  # 读取右编码器的数据
         speed_pid_out = speed_pid.calculate(
-            aim_speed*stop_flag, (encl_data + encr_data) / 2)
+            0, (encl_data + encr_data) / 2)
         ticker_flag_speed = False
 
     if (ticker_flag_4ms):
         # profiler_4ms.update()
-        dir_in_out = dir_in.calculate(dir_out_out, imu_data[4]-gyrooffsety)
+        #dir_in_out = dir_in.calculate(dir_out_out, imu_data[4]-gyrooffsety)
         ticker_flag_4ms = False
 
     if (ticker_flag_8ms):
@@ -326,7 +326,7 @@ while True:
         gyro_z.update(tmpdata = imu_data[5], delta_t = 0.4)
         distance.update(tmpdata = (encl_data + encr_data) / 2, delta_t = 0.4)
         # 定期进行数据解析
-        dir_out_out = dir_out.calculate(0, error1 + error2)
+        #dir_out_out = dir_out.calculate(0, error1 + error2)
         data_flag = wireless.data_analysis()
         for i in range(0, 8):
             # 判断哪个通道有数据更新
@@ -336,9 +336,13 @@ while True:
                 # 将更新的通道数据输出到 Thonny 的控制台
                 print("Data[{:<6}] updata : {:<.3f}.\r\n".format(
                     i, data_wave[i]))
-                dir_out.kp=data_wave[0]
-                dir_out.ki=data_wave[1]
-                dir_out.kd=data_wave[2]
+                gyro_pid.kp=data_wave[0]
+                gyro_pid.ki=data_wave[1]
+                gyro_pid.kd=data_wave[2]
+                angle_pid.kp=data_wave[3]
+                angle_pid.ki=data_wave[4]
+                angle_pid.kd=data_wave[5]
+                
         # 将数据发送到示波器
-        wireless.send_oscilloscope(dir_out.kp,dir_out.ki,dir_out.kd,ccd_mid_point)
+        wireless.send_oscilloscope(gyro_pid.kp,gyro_pid.ki,gyro_pid.kd,angle_pid.kp,angle_pid.ki,angle_pid.kd)
         ticker_flag_8ms = False
