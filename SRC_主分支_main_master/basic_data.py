@@ -132,7 +132,6 @@ out_r = 0  # 右轮输出值
 speed_d = 50  # 速度增量(调试用)
 class MovementType:
     mode = 0
-    aim_speed=0
     default = 0
     Mode_1 = 1
     Mode_2 = 2
@@ -141,8 +140,8 @@ class MovementType:
     Mode_5 = 5
     def __init__(self):
         self.mode=self.default
+        self.aim_speed=0
     def _update_(self):
-        global aim_speed
         if self.mode == self.default:
             self.aim_speed=0
             
