@@ -261,7 +261,7 @@ while True:
     mid_point_far=ccd_far.get_mid_point(tmpdata = ccd_temp_data, value =31, reasonrange = 30, follow = 0, searchgap = 0)
     error1=mid_point_near-64
     error2=mid_point_far-64
-    movementtype.aim_speed -= (error1 + error2) * speed_err_k
+    movementtype.aim_speed -= int((error1 + error2) * speed_err_k)
     #print("ccd_mid_point:", ccd_mid_point)
     # 拨码开关关中断
     if end_switch.value() == 1:
