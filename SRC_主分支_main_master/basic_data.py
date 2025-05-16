@@ -132,7 +132,7 @@ out_r = 0  # 右轮输出值
 speed_d = 50  # 速度增量(调试用)
 class MovementType:
     mode = 0
-    aim_speed=0
+    aim_speed=0.0
     default = 0
     Mode_1 = 1
     Mode_2 = 2
@@ -160,7 +160,7 @@ class MovementType:
             
         if self.mode == self.Mode_5:
             self.aim_speed=60
-startmode=MovementType()
+movementtype=MovementType()
 
 
 class Beeper:

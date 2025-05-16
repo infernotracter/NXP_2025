@@ -144,9 +144,9 @@ def sec_menu_01(key_data):
     global  speed_flag, main_menu_flag, main_point_item, car_go_flag,stop_flag,key_cnt
     lcd.str24(60, 0, "car_go_mode", 0x07E0)
     lcd.str16(16, 30, "stop_flag={} ".format(stop_flag),0xFFFF)
-    lcd.str16(16, 46, "car_mode={}".format(startmode.mode), 0x07E0)   #寻圆环/不寻圆环
+    lcd.str16(16, 46, "car_mode={}".format(movementtype.mode), 0x07E0)   #寻圆环/不寻圆环
     lcd.str16(16, 62, "return ",0xFFFF)
-    lcd.str16(16, 126, "aim_speed={}".format(startmode.aim_speed),0xFFFF)
+    lcd.str16(16, 126, "aim_speed={}".format(movementtype.aim_speed),0xFFFF)
     lcd.str12(0, main_point_item, ">", 0xF800)
     point_move(62, 30, key_data)
     
@@ -164,21 +164,21 @@ def sec_menu_01(key_data):
         lcd.clear(0x0000)
         key_cnt+=1
         if key_cnt==0:
-            startmode.mode=MovementType.default
+            movementtype.mode=MovementType.default
         if key_cnt==1:
-            startmode.mode=MovementType.Mode_1
+            movementtype.mode=MovementType.Mode_1
         if key_cnt==2:
-            startmode.mode=MovementType.Mode_2
+            movementtype.mode=MovementType.Mode_2
         if key_cnt==3:
-            startmode.mode=MovementType.Mode_3
+            movementtype.mode=MovementType.Mode_3
         if key_cnt==4:
-            startmode.mode=MovementType.Mode_4
+            movementtype.mode=MovementType.Mode_4
         if key_cnt==5:
-            startmode.mode=MovementType.Mode_5
+            movementtype.mode=MovementType.Mode_5
         if key_cnt>=6:
             key_cnt=0
-            startmode.mode=MovementType.default
-        startmode._update_()
+            movementtype.mode=MovementType.default
+        movementtype._update_()
         key.clear(3)
     gc.collect()
 

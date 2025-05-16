@@ -246,7 +246,7 @@ data_wave = [0, 0, 0, 0, 0, 0, 0, 0]
 key_data = key.get()
 imu_data = imu.get()
 imu_data_filtered = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0, 0.0, 0.0]
-
+speed_err_k = 1
 def clearall():
     key.clear(1)
     key.clear(2)
@@ -257,10 +257,11 @@ while True:
     motor_l.duty(my_limit(gyro_pid_out - dir_in_out, -3000, 3000))
     motor_r.duty(my_limit(gyro_pid_out + dir_in_out, -3000, 3000))
     ccd_temp_data = ccd.get(0)
-    ccd_mid_point = ccd_near.get_mid_point(tmpdata = ccd_temp_data, value =31, reasonrange = 30, follow = 0, searchgap = 0)
-    ccd_mid_point_far=ccd_far.get_mid_point(tmpdata = ccd_temp_data, value =31, reasonrange = 30, follow = 0, searchgap = 0)
-    error1=ccd_mid_point-64
-    error2=ccd_mid_point_far-64
+    mid_point_near = ccd_near.get_mid_point(tmpdata = ccd_temp_data, value =31, reasonrange = 30, follow = 0, searchgap = 0)
+    mid_point_far=ccd_far.get_mid_point(tmpdata = ccd_temp_data, value =31, reasonrange = 30, follow = 0, searchgap = 0)
+    error1=mid_point_near-64
+    error2=mid_point_far-64
+    movementtype.aim_speed -= (error1 + error2) * speed_err_k
     #print("ccd_mid_point:", ccd_mid_point)
     # 拨码开关关中断
     if end_switch.value() == 1:
@@ -317,7 +318,7 @@ while True:
         encl_data = encoder_l.get()  # 读取左编码器的数据
         encr_data = encoder_r.get()  # 读取右编码器的数据
         speed_pid_out = speed_pid.calculate(
-            startmode.aim_speed, (encl_data + encr_data) / 2)
+            movementtype.aim_speed, (encl_data + encr_data) / 2)
         ticker_flag_speed = False
 
     if (ticker_flag_4ms):
@@ -333,23 +334,20 @@ while True:
         #dir_out_out = dir_out.calculate(0, error1 + error2)
         data_flag = wireless.data_analysis()
         for i in range(0, 8):
-#             # 判断哪个通道有数据更新
+            # 判断哪个通道有数据更新
             if (data_flag[i]):
-#                 # 数据更新到缓冲
+                #  数据更新到缓冲
                 data_wave[i] = wireless.get_data(i)
                 # 将更新的通道数据输出到 Thonny 的控制台
                 print("Data[{:<6}] updata : {:<.3f}.\r\n".format(
                     i, data_wave[i]))
-                gyro_pid.kp=data_wave[0]
-                gyro_pid.ki=data_wave[1]
-                gyro_pid.kd=data_wave[2]
-                angle_pid.kp=data_wave[3]
-                angle_pid.ki=data_wave[4]
-                angle_pid.kd=data_wave[5]
-                speed_pid.kp=data_wave[6]
-                speed_pid.kd=data_wave[7]
+                dir_out.kp = data_wave[0]
+                dir_out.ki = data_wave[1]
+                dir_out.kd = data_wave[2]
+                movementtype.aim_speed = data_wave[3]
+                speed_err_k = data_wave[4]
 #         # 将数据发送到示波器
-        wireless.send_oscilloscope(gyro_pid.kp,gyro_pid.ki,gyro_pid.kd,angle_pid.kp,angle_pid.ki,angle_pid.kd,speed_pid.kp,speed_pid.kd)
+        wireless.send_oscilloscope(dir_out.kp, dir_out.ki, dir_out.kd, movementtype.aim_speed, speed_err_k, mid_point_near, mid_point_far)
         ticker_flag_8ms = False
 
 
