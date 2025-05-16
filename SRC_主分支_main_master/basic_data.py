@@ -94,21 +94,21 @@ def gyro_adjustment(output):
 
 
 # PID实例化
-speed_pid = PID(kp=-0.0079998, ki=0, integral_limits=(-2000, 2000))
+speed_pid = PID(kp=-0.0039999, ki=0,kd=0, integral_limits=(-2000, 2000))
                 #output_limits=(-500, 500)
 
 #
 
-angle_pid = PID(kp=89.59,ki=0.0, kd=10, integral_limits=(-2000, 2000))
+angle_pid = PID(kp=85.54,ki=0.0, kd=0, integral_limits=(-2000, 2000))
 
-gyro_pid = PID(kp=1.03, ki=0.2,kd=2.99,integral_limits=(-2000, 2000),
+gyro_pid = PID(kp=1.29, ki=0.17,kd=2.08,integral_limits=(-2000, 2000),
                # output_limits=(-500, 500),
                output_adjustment=gyro_adjustment)
 
 dir_in = PID(kp=1.4, ki=0.53)
 #  integral_limits=(-2000, 2000))
 
-dir_out = PID(kp=200, kd=0.0)
+dir_out = PID(kp=0, kd=0.0)
 
 # 串级PID相关变量
 speed_pid_out = 0
@@ -124,7 +124,7 @@ ccd_data1 = [0] * 128  # ccd1原始数组
 ccd_data2 = [0] * 128  # ccd2原始数组
 encl_data = 0  # 左编码器数据
 encr_data = 0  # 右数据编码器
-#aim_speed = 20  # 之后要可以使用KEY手动修改
+#aim_speed = 0  # 之后要可以使用KEY手动修改
 aim_speed_l = 0  # 左轮期望速度
 aim_speed_r = 0  # 右轮期望速度
 out_l = 0  # 左轮输出值
@@ -201,4 +201,5 @@ class Beeper:
         if long is not None: self.long_duration = long
         if short is not None: self.short_duration = short
 beep = Beeper()
+
 
