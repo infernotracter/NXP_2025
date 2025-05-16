@@ -1,7 +1,6 @@
 # 基础库、NXP库、第三方库
-from math import *
+import math
 import gc
-import time
 import utime
 import math
 from basic_data import *
@@ -275,8 +274,7 @@ while True:
         alpha = 0.5
         for i in range(3):
             # 先进行零偏校正和单位转换
-            current_processed = (
-                                        imu_data[i] - [accoffsetx, accoffsety, accoffsetz][i]) / ACC_SPL
+            current_processed = (imu_data[i] - [accoffsetx, accoffsety, accoffsetz][i]) / ACC_SPL
             # 再应用滤波，使用上一次的滤波结果
             imu_data_filtered[i] = alpha * current_processed + \
                                    (1 - alpha) * last_imu_data[i]
@@ -330,6 +328,8 @@ while True:
 
     if (ticker_flag_8ms):
         # profiler_8ms.update()
+        gyro_z.update(tmpdata = imu_data[5], delta_t = 0.4)
+        distance.update(tmpdata = (encl_data + encr_data) / 2, delta_t = 0.4)
         # 定期进行数据解析
         #dir_out_out = dir_out.calculate(0, error1 + error2)
 #         data_flag = wireless.data_analysis()

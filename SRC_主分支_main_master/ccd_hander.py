@@ -492,10 +492,9 @@ class Distance:
         self.data = 0
     def start(self):
         self.start_flag = True
-    def update(self, data):
+    def update(self, tmpdata, delta_t):
         if self.start_flag:
-            self.data += data / 1024 * 30 / 50 * 0.05 * 3.1415926
-        return self.data
+            self.data += tmpdata / 1024 * 30 / 50 * 0.05 * 3.1415926 * delta_t
     def reset(self):
         self.data = 0
         self.start_flag = False
