@@ -348,7 +348,7 @@ while True:
                 dir_out.kd = data_wave[1]
                 movementtype.aim_speed = data_wave[2]
 #         # 将数据发送到示波器
-        #wireless.send_ccd_image(WIRELESS_UART.ALL_CCD_BUFFER_INDEX)
+        wireless.send_ccd_image(WIRELESS_UART.ALL_CCD_BUFFER_INDEX)
         wireless.send_oscilloscope(
             #gyro_z.data, distance.data, elementdetector.state, ccd_near.left, ccd_near.right, ccd_far.left, ccd_far.right
             #gyro_pid.kp,gyro_pid.ki,gyro_pid.kd,angle_pid.kp,angle_pid.ki,angle_pid.kd,speed_pid.kp,speed_pid.ki

@@ -62,7 +62,7 @@ class CCDHandler:
         #     self.left = self.right - ccd_near_lenth
         # if self.right == 127:
         #     self.right = self.left + ccd_near_lenth
-        # self.mid = (self.left + self.right) // 2
+        self.mid = (self.left + self.right) // 2
 
         if follow > 0:
             self.right = self.left + follow
