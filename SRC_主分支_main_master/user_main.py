@@ -247,7 +247,6 @@ key_data = key.get()
 imu_data = imu.get()
 imu_data_filtered = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0, 0.0, 0.0]
 speed_err_k = 1
-movementtype.aim_speed = 0
 def clearall():
     key.clear(1)
     key.clear(2)
@@ -265,7 +264,7 @@ while True:
     mid_point_far=ccd_far.get_mid_point(value =31, reasonrange = 128, follow = 0, searchgap = 0)
     error1=mid_point_near-64
     error2=mid_point_far-64
-    movementtype.aim_speed -= int(scale_value(abs(error1 - error2), 0, 64))
+    #movementtype.aim_speed -= int(scale_value(abs(error1 - error2), 0, 64))
     elementdetector.update()
     # 拨码开关关中断
     if end_switch.value() == 1:
@@ -346,15 +345,14 @@ while True:
                 print("Data[{:<6}] updata : {:<.3f}.\r\n".format(
                     i, data_wave[i]))
                 dir_out.kp = data_wave[0]
-                dir_out.ki = data_wave[1]
-                dir_out.kd = data_wave[2]
-                movementtype.aim_speed = data_wave[3]
-                speed_err_k = data_wave[4]
+                dir_out.kd = data_wave[1]
+                movementtype.aim_speed = data_wave[2]
 #         # 将数据发送到示波器
-        wireless.send_ccd_image(WIRELESS_UART.ALL_CCD_BUFFER_INDEX)
+        #wireless.send_ccd_image(WIRELESS_UART.ALL_CCD_BUFFER_INDEX)
         wireless.send_oscilloscope(
             #gyro_z.data, distance.data, elementdetector.state, ccd_near.left, ccd_near.right, ccd_far.left, ccd_far.right
-            
+            #gyro_pid.kp,gyro_pid.ki,gyro_pid.kd,angle_pid.kp,angle_pid.ki,angle_pid.kd,speed_pid.kp,speed_pid.ki
+            dir_out.kp,dir_out.kd,movementtype.aim_speed,dir_out_out,mid_point_near,mid_point_far
             )
         ticker_flag_8ms = False
 

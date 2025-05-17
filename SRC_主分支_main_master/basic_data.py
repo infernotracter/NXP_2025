@@ -22,9 +22,9 @@ lcd.clear(0x0000)
 Go = Pin('C21', Pin.IN, pull=Pin.PULL_UP_47K, value=0)
 # 实例化 MOTOR_CONTROLLER 电机驱动模块
 motor_l = MOTOR_CONTROLLER(
-    MOTOR_CONTROLLER.PWM_C25_DIR_C27, 2000, duty=0, invert=True)
+    MOTOR_CONTROLLER.PWM_C25_DIR_C27, 130000, duty=0, invert=True)
 motor_r = MOTOR_CONTROLLER(
-    MOTOR_CONTROLLER.PWM_C24_DIR_C26, 2000, duty=0, invert=True)
+    MOTOR_CONTROLLER.PWM_C24_DIR_C26, 130000, duty=0, invert=True)
 # 实例化 encoder 模块
 encoder_l = encoder("D0", "D1", True)
 encoder_r = encoder("D2", "D3")
@@ -87,28 +87,28 @@ class PID:
 
 
 # 特殊输出调整函数
-MedAngle=-37.5
+MedAngle=-34.93699
 
 def gyro_adjustment(output):
     return output + 700 if output >= 0 else output - 700
 
 
 # PID实例化
-speed_pid = PID(kp=-0.0039999, ki=0,kd=0, integral_limits=(-2000, 2000))
+speed_pid = PID(kp=-0.01499995, ki=-0.001999997,kd=0, integral_limits=(-2000, 2000))
                 #output_limits=(-500, 500)
 
 #
 
-angle_pid = PID(kp=85.54,ki=0.0, kd=0, integral_limits=(-2000, 2000))
+angle_pid = PID(kp=114.28,ki=0, kd=0, integral_limits=(-2000, 2000))
 
-gyro_pid = PID(kp=1.29, ki=0.17,kd=2.08,integral_limits=(-2000, 2000),
+gyro_pid = PID(kp=1.2, ki=0.214,kd=2.07,integral_limits=(-2000, 2000),
                # output_limits=(-500, 500),
                output_adjustment=gyro_adjustment)
 
-dir_in = PID(kp=1.4, ki=0.53)
+dir_in = PID(kp=0.46, ki=0.64)
 #  integral_limits=(-2000, 2000))
 
-dir_out = PID(kp=-50, kd=0.0)
+dir_out = PID(kp=0, kd=0.0)
 
 # 串级PID相关变量
 speed_pid_out = 0
