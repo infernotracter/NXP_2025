@@ -228,7 +228,7 @@ def imuoffsetinit():
 
 # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
-
+movementtype.aim_speed=0
 
 # 在主程序初始化阶段创建实例
 profiler_1ms = TickerProfiler("5ms", expected_interval_ms=5)
