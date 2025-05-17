@@ -130,34 +130,33 @@ aim_speed_r = 0  # 右轮期望速度
 out_l = 0  # 左轮输出值
 out_r = 0  # 右轮输出值
 speed_d = 50  # 速度增量(调试用)
-class MovementType:
-    mode = 0
+class MOVEMENTTYPE:
     default = 0
     Mode_1 = 1
     Mode_2 = 2
     Mode_3 = 3
     Mode_4 = 4
-    Mode_5 = 5
+class MovementType:
     def __init__(self):
-        self.mode=self.default
+        self.mode=MOVEMENTTYPE.default
         self.aim_speed=0
     def _update_(self):
-        if self.mode == self.default:
+        if self.mode == MOVEMENTTYPE.default:
             self.aim_speed=0
             
-        if self.mode == self.Mode_1:
+        if self.mode == MOVEMENTTYPE.Mode_1:
             self.aim_speed=20
             
-        if self.mode == self.Mode_2:
+        if self.mode == MOVEMENTTYPE.Mode_2:
             self.aim_speed=30
             
-        if self.mode == self.Mode_3:
+        if self.mode == MOVEMENTTYPE.Mode_3:
             self.aim_speed=40
             
-        if self.mode == self.Mode_4:
+        if self.mode == MOVEMENTTYPE.Mode_4:
             self.aim_speed=50
             
-        if self.mode == self.Mode_5:
+        if self.mode == MOVEMENTTYPE.Mode_5:
             self.aim_speed=60
 movementtype=MovementType()
 

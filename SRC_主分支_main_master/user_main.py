@@ -247,22 +247,26 @@ key_data = key.get()
 imu_data = imu.get()
 imu_data_filtered = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0, 0.0, 0.0]
 speed_err_k = 1
-aim_speed = 0
+movementtype.aim_speed = 0
 def clearall():
     key.clear(1)
     key.clear(2)
     key.clear(3)
     key.clear(4)
+
+distance.start()
+gyro_z.start()
 while True:
     
     motor_l.duty(my_limit(gyro_pid_out - dir_in_out, -3000, 3000))
     motor_r.duty(my_limit(gyro_pid_out + dir_in_out, -3000, 3000))
     ccd_temp_data = ccd.get(0)
-    mid_point_near = ccd_near.get_mid_point(tmpdata = ccd_temp_data, value =31, reasonrange = 30, follow = 0, searchgap = 0)
-    mid_point_far=ccd_far.get_mid_point(tmpdata = ccd_temp_data, value =31, reasonrange = 30, follow = 0, searchgap = 0)
+    mid_point_near = ccd_near.get_mid_point(tmpdata = ccd_temp_data, value =31, reasonrange = 128, follow = 0, searchgap = 0)
+    mid_point_far=ccd_far.get_mid_point(tmpdata = ccd_temp_data, value =31, reasonrange = 128, follow = 0, searchgap = 0)
     error1=mid_point_near-64
     error2=mid_point_far-64
-    aim_speed -= int((error1 + error2) * speed_err_k)
+    movementtype.aim_speed -= int((error1 + error2) * speed_err_k)
+    elementdetector.update()
     #print("ccd_mid_point:", ccd_mid_point)
     # 拨码开关关中断
     if end_switch.value() == 1:
@@ -319,7 +323,7 @@ while True:
         encl_data = encoder_l.get()  # 读取左编码器的数据
         encr_data = encoder_r.get()  # 读取右编码器的数据
         speed_pid_out = speed_pid.calculate(
-            aim_speed, (encl_data + encr_data) / 2)
+            movementtype.aim_speed, (encl_data + encr_data) / 2)
         ticker_flag_speed = False
 
     if (ticker_flag_4ms):
@@ -345,10 +349,14 @@ while True:
                 dir_out.kp = data_wave[0]
                 dir_out.ki = data_wave[1]
                 dir_out.kd = data_wave[2]
-                aim_speed = data_wave[3]
+                movementtype.aim_speed = data_wave[3]
                 speed_err_k = data_wave[4]
 #         # 将数据发送到示波器
-        wireless.send_oscilloscope(dir_out.kp, dir_out.ki, dir_out.kd, aim_speed, speed_err_k, mid_point_near, mid_point_far)
+        wireless.send_ccd_image(WIRELESS_UART.ALL_CCD_BUFFER_INDEX)
+        wireless.send_oscilloscope(
+            #gyro_z.data, distance.data, elementdetector.state, ccd_near.left, ccd_near.right, ccd_far.left, ccd_far.right
+            
+            )
         ticker_flag_8ms = False
 
 

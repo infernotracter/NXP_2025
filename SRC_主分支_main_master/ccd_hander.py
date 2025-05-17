@@ -26,7 +26,7 @@ class CCDHandler:
         self.left = 0
         self.right = 127
         self.channel = channel  # CCD通道
-        self.error=0.0
+        self.error=0
 
     def get_threshold(self):
         value_max = self.data[4]  # 从第5个元素开始考虑最大值
@@ -55,15 +55,15 @@ class CCDHandler:
         # 主代码
         # 搜索边线
         self.search(searchgap, value)
-        if self.left == 0:
-            self.left = self.right - ccd_near_lenth
-        if self.right == 127:
-            self.right = self.left + ccd_near_lenth
-        self.mid = (self.left + self.right) / 2
+        # if self.left == 0:
+        #     self.left = self.right - ccd_near_lenth
+        # if self.right == 127:
+        #     self.right = self.left + ccd_near_lenth
+        # self.mid = (self.left + self.right) // 2
 
-        if follow > 0 and self.right == 127:
+        if follow > 0:
             self.right = self.left + follow
-        if follow < 0 and self.left == 0:
+        if follow < 0:
             self.left = self.right + follow
 
         if abs(self.mid - self.last_mid) > reasonrange:  # 如果中点与上次中点差距过大
@@ -144,8 +144,7 @@ class RoadElement:
 
 class ElementDetector:
     """赛道元素检测器"""
-    def __init__(self, delta_t):
-        self.delta_t = delta_t
+    def __init__(self):
         self.state = RoadElement.normal
         self.ring_progress = 0  # 圆环进度
         self.zebra_count = 0    # 斑马线特征计数
@@ -181,10 +180,8 @@ class ElementDetector:
         self.gyro_z_ring4=1.0  #待测
 
         #-----------------------------------------------------------
-    def update(self, imu_data, enc_data):
+    def update(self):
         """主检测函数: , imu_data, enc_data """
-        self.imu_data = imu_data
-        self.enc_data = enc_data
         tempcheck = self.state
         # 判断全黑全白
         if check_tuple(self._ccd_near.data, 100, 100):
@@ -206,20 +203,20 @@ class ElementDetector:
 
         # 防误判圆环
         if self.state == RoadElement.r2:
-            if MovementType.mode == MovementType.Mode_1:
+            if movementtype.mode == MOVEMENTTYPE.Mode_1:
                 if self._right_3_not():
                     self.state = RoadElement.r3_not
                     self.follow = ccd_near_lenth
-            if MovementType.mode == MovementType.Mode_2:
+            if movementtype.mode == MOVEMENTTYPE.Mode_2:
                 if self._right_3():
                     self.state = RoadElement.r3
                     self.follow = -ccd_near_lenth
         if self.state == RoadElement.l2:
-            if MovementType.mode == MovementType.Mode_1:
+            if movementtype.mode == MOVEMENTTYPE.Mode_1:
                 if self._left_3_not():
                     self.state = RoadElement.l3_not
                     self.follow = ccd_near_lenth
-            if MovementType.mode == MovementType.Mode_2:
+            if movementtype.mode == MOVEMENTTYPE.Mode_2:
                 if self._left_3():
                     self.state = RoadElement.l3
                     self.follow = -ccd_near_lenth
@@ -243,8 +240,8 @@ class ElementDetector:
                 self.state = RoadElement.lout
         
         # self._update_state(element)
-        if tempcheck != self.state:
-            beep.start('short')
+        # if tempcheck != self.state:
+        #     beep.start('short')
         return self.state
     
     def _left_1(self):
@@ -484,7 +481,7 @@ class ElementDetector:
     #             self.state = RoadElement.normal
                 
     #     # 其他状态更新...
-
+elementdetector = ElementDetector()
 class Distance:
     """行驶距离"""
     def __init__(self):
@@ -518,7 +515,7 @@ class Gyro_Z_Test:
         self.start_flag = True
     def update(self, tmpdata, delta_t, channel = 5):
         if self.start_flag:
-            self.data += (tmpdata[channel] - self.offset[channel]) * delta_t
+            self.data += (tmpdata - self.offset[channel]) * delta_t
     def reset(self):
         self.data = 0
         self.start_flag = False
