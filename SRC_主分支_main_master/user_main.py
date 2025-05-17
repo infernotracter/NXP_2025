@@ -261,13 +261,12 @@ while True:
     motor_l.duty(my_limit(gyro_pid_out - dir_in_out, -3000, 3000))
     motor_r.duty(my_limit(gyro_pid_out + dir_in_out, -3000, 3000))
     ccd_temp_data = ccd.get(0)
-    mid_point_near = ccd_near.get_mid_point(tmpdata = ccd_temp_data, value =31, reasonrange = 128, follow = 0, searchgap = 0)
-    mid_point_far=ccd_far.get_mid_point(tmpdata = ccd_temp_data, value =31, reasonrange = 128, follow = 0, searchgap = 0)
+    mid_point_near = ccd_near.get_mid_point(value =31, reasonrange = 128, follow = 0, searchgap = 0)
+    mid_point_far=ccd_far.get_mid_point(value =31, reasonrange = 128, follow = 0, searchgap = 0)
     error1=mid_point_near-64
     error2=mid_point_far-64
-    movementtype.aim_speed -= int((error1 + error2) * speed_err_k)
+    movementtype.aim_speed -= int(scale_value(abs(error1 - error2), 0, 64))
     elementdetector.update()
-    #print("ccd_mid_point:", ccd_mid_point)
     # 拨码开关关中断
     if end_switch.value() == 1:
         break  # 跳出判断

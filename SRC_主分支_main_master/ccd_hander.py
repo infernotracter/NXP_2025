@@ -27,7 +27,10 @@ class CCDHandler:
         self.right = 127
         self.channel = channel  # CCD通道
         self.error=0
-
+    def update(self):
+        """更新ccd的data数据"""
+        self.data = ccd.get(self.channel)
+        return self.data
     def get_threshold(self):
         value_max = self.data[4]  # 从第5个元素开始考虑最大值
         value_min = self.data[4]  # 从第5个元素开始考虑最小值
@@ -41,10 +44,10 @@ class CCDHandler:
         # threshold = min(max(75, threshold), 255)  # 阈值限幅在75-256之间
         return threshold
 
-    def get_mid_point(self, tmpdata,  value, reasonrange, follow = 0, searchgap = 0):
+    def get_mid_point(self, value, reasonrange, follow = 0, searchgap = 0):
         """获取中点, value: 差比和公式的值, reasonrange: 合理范围(两次差值的范围),
         follow: if>0 补右边线，跟左边线, searchgap: 搜索间隔"""
-        self.data = tmpdata
+        self.data = ccd.get(self.channel)
         # 判断中点值是否在赛道内，防止一直扫一边线
         #True: 这里的判断条件是为了防止中点值一直在赛道外
         # if self.last_mid < 30 or self.last_mid > 100:
@@ -165,7 +168,8 @@ class ElementDetector:
 
         self.ccd_far_right = (88, 101)        # 远端CCD右边点范围
         self.ccd_far_left = (30, 42)         # 远端CCD左边点范围
-        self.ccd_far_lost = 7                 # 远端CCD左丢线阈值
+        self.ccd_far_l_lost = 7                 # 远端CCD左丢线阈值
+        self.ccd_far_r_lost = 120               # 远端CCD右丢线阈值
 
         self.POINT_diff_data = 12             # 特征点差异阈值
 
@@ -180,6 +184,21 @@ class ElementDetector:
         self.gyro_z_ring4=1.0  #待测
 
         #-----------------------------------------------------------
+    def debug(self):
+        temp_ccd_near_data_l = 0
+        temp_ccd_near_data_r = 0
+        temp_ccd_far_data_l = 0
+        temp_ccd_far_data_r = 0
+        for _ in range(10):
+            temp_ccd_near_data_l += ccd_near.update()
+            temp_ccd_near_data_r += ccd_near.update()
+            temp_ccd_far_data_l += ccd_far.update()
+            temp_ccd_far_data_r += ccd_far.update()
+        self.ccd_near_l[0] = temp_ccd_near_data_l
+        self.ccd_near_l[1] = temp_ccd_near_data_r
+        self.ccd_far_l[0] = temp_ccd_far_data_l
+        self.ccd_far_l[1] = temp_ccd_far_data_r
+
     def update(self):
         """主检测函数: , imu_data, enc_data """
         tempcheck = self.state
@@ -239,7 +258,6 @@ class ElementDetector:
             if self._left_out():
                 self.state = RoadElement.lout
         
-        # self._update_state(element)
         # if tempcheck != self.state:
         #     beep.start('short')
         return self.state
@@ -251,7 +269,7 @@ class ElementDetector:
                      self.ccd_near_r[0] <=  self._ccd_near.right <= self.ccd_near_r[1])
         
         # 远端CCD特征检查
-        far_valid = (self._ccd_far.left < self.ccd_far_lost and 
+        far_valid = (self._ccd_far.left < self.ccd_far_l_lost and 
                     self.ccd_far_right[0] <= self._ccd_far.right <= self.ccd_far_right[1])
         
         # 特征点一致性检查
@@ -266,7 +284,7 @@ class ElementDetector:
                     self.ccd_near_l[0] <=  self._ccd_near.right <= self.ccd_near_l[1])
         
         # 远端CCD特征检查（左右镜像）
-        far_valid = (self._ccd_far.right > self.ccd_far_lost and 
+        far_valid = (self._ccd_far.right > self.ccd_far_r_lost and 
                     self.ccd_far_left[0] <= self._ccd_far.left <= self.ccd_far_left[1])
         
         # 特征点一致性检查（比较左边缘）
@@ -528,7 +546,7 @@ class Error_test:
     def get_tmp(self):
         for _ in range(100):
             ccd_temp_data = ccd.get(0)
-            tmp_mid = ccd_near.get_mid_point(tmpdata = ccd_temp_data, value =31, reasonrange = 30, follow = 0, searchgap = 0)
+            tmp_mid = ccd_near.get_mid_point(value =31, reasonrange = 30, follow = 0, searchgap = 0)
             tmp_error=tmp_mid - 64
             self.data +=tmp_error
         self.tmperror=self.data/100

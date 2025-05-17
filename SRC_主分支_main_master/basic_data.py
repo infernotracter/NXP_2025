@@ -167,8 +167,8 @@ class Beeper:
         self.start_time = 0       # 鸣叫开始时间戳
         self.duration = 0         # 当前鸣叫持续时间
         self.is_active = False    # 鸣叫状态标志
-        self.long_duration = 500  # 长鸣时长(ms)
-        self.short_duration = 100 # 短鸣时长(ms)
+        self.long_duration = 30  # 长鸣时长(ms)
+        self.short_duration = 10 # 短鸣时长(ms)
         self._last_update = 0     # 上次更新时间戳
 
     def start(self, duration_type):
@@ -199,6 +199,16 @@ class Beeper:
         if long is not None: self.long_duration = long
         if short is not None: self.short_duration = short
 beep = Beeper()
+
+def scale_value(x, x_min, x_max):
+    """
+    将输入x从范围[x_min, x_max]线性映射到[0.6, 1]
+    输入越大输出越小，输入越小输出越大
+    """
+    if x_min == x_max:
+        return 0.8  # 处理所有输入相同的情况
+    normalized = (x - x_min) / (x_max - x_min)
+    return 1.0 - 0.4 * normalized
 
 
 
