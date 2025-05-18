@@ -161,13 +161,14 @@ class ElementDetector:
         self.outflag=0
 
         # 常量定义（根据实际赛道调整）
-        self.ccd_near_l = (30, 42)       # 左圆环阶段1近端CCD左右边点范围
-        self.ccd_near_r = (90, 108)
+        self.ccd_near_l = [30, 42]       # 左圆环阶段1近端CCD左右边点范围
+        self.ccd_near_r = [90, 108]
         self.ccd_near_l_lost = 10
         self.ccd_near_r_lost = 115
 
-        self.ccd_far_right = (88, 101)        # 远端CCD右边点范围
-        self.ccd_far_left = (30, 42)         # 远端CCD左边点范围
+        self.ccd_far_right = [88, 101]        # 远端CCD右边点范围
+        self.ccd_far_left = [30, 42]         # 远端CCD左边点范围
+        self.ccd_far_l = [0, 0]              # 新增：远端CCD左边点调试用范围
         self.ccd_far_l_lost = 7                 # 远端CCD左丢线阈值
         self.ccd_far_r_lost = 120               # 远端CCD右丢线阈值
 
@@ -194,10 +195,10 @@ class ElementDetector:
             temp_ccd_near_data_r += ccd_near.update()
             temp_ccd_far_data_l += ccd_far.update()
             temp_ccd_far_data_r += ccd_far.update()
-        self.ccd_near_l[0] = temp_ccd_near_data_l
-        self.ccd_near_l[1] = temp_ccd_near_data_r
-        self.ccd_far_l[0] = temp_ccd_far_data_l
-        self.ccd_far_l[1] = temp_ccd_far_data_r
+        self.ccd_near_l[0] = temp_ccd_near_data_l // 10
+        self.ccd_near_l[1] = temp_ccd_near_data_r // 10
+        self.ccd_far_l[0] = temp_ccd_far_data_l // 10
+        self.ccd_far_l[1] = temp_ccd_far_data_r // 10
 
     def update(self):
         """主检测函数: , imu_data, enc_data """
