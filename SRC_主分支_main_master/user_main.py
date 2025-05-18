@@ -255,6 +255,11 @@ def clearall():
 
 distance.start() 
 gyro_z.start()
+print("""   ____   _           _   _           /\/|
+  / ___| (_)   __ _  | | | |   ___   |/\/ 
+ | |     | |  / _` | | | | |  / _ \       
+ | |___  | | | (_| | | | | | | (_) |      
+  \____| |_|  \__,_| |_| |_|  \___/       """)
 while True:
     
     motor_l.duty(my_limit(gyro_pid_out - dir_in_out, -3000, 3000))

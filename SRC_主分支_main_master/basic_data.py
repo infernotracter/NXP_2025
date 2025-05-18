@@ -48,14 +48,14 @@ def my_limit(value, min_val, max_val):
 
 
 class PID:
-    def __init__(self, kp=0, ki=0, kd=0,
+    def __init__(self, kp=0.0, ki=0.0, kd=0.0,
                  integral_limits=None, output_limits=None,
                  output_adjustment=None):
         self.kp = kp
         self.ki = ki
         self.kd = kd
-        self.integral = 0
-        self.prev_error = 0
+        self.integral = 0.0
+        self.prev_error = 0.0
         self.integral_limits = integral_limits
         self.output_limits = output_limits
         self.output_adjustment = output_adjustment
@@ -136,6 +136,7 @@ class MOVEMENTTYPE:
     Mode_2 = 2
     Mode_3 = 3
     Mode_4 = 4
+    Mode_5 = 5
 class MovementType:
     def __init__(self):
         self.mode=MOVEMENTTYPE.default
@@ -212,3 +213,4 @@ def scale_value(x, x_min, x_max):
 
 
 
+print("种族骑士王小桃来啦UwU")
