@@ -140,25 +140,25 @@ class MOVEMENTTYPE:
 class MovementType:
     def __init__(self):
         self.mode=MOVEMENTTYPE.default
-        self.aim_speed=0
+        self.aim_speed=0.0
     def _update_(self):
         if self.mode == MOVEMENTTYPE.default:
-            self.aim_speed=0
-            
+            self.aim_speed=0.0
+
         if self.mode == MOVEMENTTYPE.Mode_1:
-            self.aim_speed=20
-            
+            self.aim_speed=20.0
+
         if self.mode == MOVEMENTTYPE.Mode_2:
-            self.aim_speed=30
-            
+            self.aim_speed=30.0
+
         if self.mode == MOVEMENTTYPE.Mode_3:
-            self.aim_speed=40
-            
+            self.aim_speed=40.0
+
         if self.mode == MOVEMENTTYPE.Mode_4:
-            self.aim_speed=50
-            
+            self.aim_speed=50.0
+
         if self.mode == MOVEMENTTYPE.Mode_5:
-            self.aim_speed=60
+            self.aim_speed=60.0
 movementtype=MovementType()
 
 

@@ -269,7 +269,7 @@ while True:
     mid_point_far=ccd_far.get_mid_point(value =31, reasonrange = 128, follow = 0, searchgap = 0)
     error1=mid_point_near-64
     error2=mid_point_far-64
-    movementtype.aim_speed -= int(scale_value(abs(error1 - error2), 0, 64))
+    movementtype.aim_speed *= scale_value(abs(error1 - error2), 0, 8)
     #elementdetector.update()
     # 拨码开关关中断
     if end_switch.value() == 1:
@@ -349,9 +349,18 @@ while True:
                 # 将更新的通道数据输出到 Thonny 的控制台
                 print("Data[{:<6}] updata : {:<.3f}.\r\n".format(
                     i, data_wave[i]))
-                dir_out.kp = data_wave[0]
-                dir_out.kd = data_wave[1]
-                movementtype.aim_speed = data_wave[2]
+                #dir_out.kp = data_wave[0]
+                #dir_out.kd = data_wave[1]
+                gyro_pid.kp = data_wave[0]
+                gyro_pid.ki = data_wave[1]
+                gyro_pid.kd = data_wave[2]
+                angle_pid.kp = data_wave[3]
+                angle_pid.ki = data_wave[4]
+                MedAngle = data_wave[5]
+                speed_pid.kp = data_wave[6]
+                speed_pid.ki = data_wave[7]
+                #movementtype.aim_speed = data_wave[0]
+                #movementtype.aim_speed = data_wave[2]
 #         # 将数据发送到示波器
         wireless.send_ccd_image(WIRELESS_UART.ALL_CCD_BUFFER_INDEX)
         wireless.send_oscilloscope(

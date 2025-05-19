@@ -197,15 +197,16 @@ class ElementDetector:
             temp_ccd_near_data_r += ccd_near.update()
             temp_ccd_far_data_l += ccd_far.update()
             temp_ccd_far_data_r += ccd_far.update()
-        self.ccd_near_l[0] = temp_ccd_near_data_l // 10 - 5
-        self.ccd_near_l[1] = temp_ccd_near_data_l // 10 + 5
-        self.ccd_near_r[0] = temp_ccd_near_data_r // 10 - 5
-        self.ccd_near_r[1] = temp_ccd_near_data_r // 10 + 5
+        delta = 7
+        self.ccd_near_l[0] = temp_ccd_near_data_l // 10 - delta
+        self.ccd_near_l[1] = temp_ccd_near_data_l // 10 + delta
+        self.ccd_near_r[0] = temp_ccd_near_data_r // 10 - delta
+        self.ccd_near_r[1] = temp_ccd_near_data_r // 10 + delta
         self.ccd_near_length = abs(self.ccd_near_l[1] - self.ccd_near_l[0])
-        self.ccd_far_l[0] = temp_ccd_far_data_l // 10 - 5
-        self.ccd_far_l[1] = temp_ccd_far_data_l // 10 + 5
-        self.ccd_far_right[0] = temp_ccd_far_data_r // 10 - 5
-        self.ccd_far_right[1] = temp_ccd_far_data_r // 10 + 5
+        self.ccd_far_l[0] = temp_ccd_far_data_l // 10 - delta
+        self.ccd_far_l[1] = temp_ccd_far_data_l // 10 + delta
+        self.ccd_far_right[0] = temp_ccd_far_data_r // 10 - delta
+        self.ccd_far_right[1] = temp_ccd_far_data_r // 10 + delta
         self.ccd_far_length = abs(self.ccd_far_l[1] - self.ccd_far_l[0])
 
     def update(self):
