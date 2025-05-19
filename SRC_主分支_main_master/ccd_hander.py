@@ -72,7 +72,7 @@ class CCDHandler:
         if abs(self.mid - self.last_mid) > reasonrange:  # 如果中点与上次中点差距过大
             self.mid = self.last_mid # 强制令中点为上次中点
         self.last_mid = self.mid  # 更新上次中点
-        return self.mid  # 返回中点
+        return self.mid,self.left,self.right  # 返回中点  左边点 右边点
     def midpoint_invalid(self, searchgap, value):
         if self.last_mid > 64:
             for i in range(self.last_mid - searchgap, 1, -1):  # 用差比和公式判断是否找到边线
@@ -186,6 +186,13 @@ class ElementDetector:
         self.gyro_z_ring4=1.0  #待测
 
         #-----------------------------------------------------------
+
+        #------------------------避障需要的数据----------------------
+        self.mid,self.left,self.right=ccd_near.get_mid_point(value =31, reasonrange = 128, follow = 0, searchgap = 0)
+        self.last_lenth=40   #待测，估计值
+        self.lenth=self.right-self.left
+        #-----------------------------------------------------------
+
     def debug(self):
         temp_ccd_near_data_l = 0
         temp_ccd_near_data_r = 0
@@ -205,13 +212,12 @@ class ElementDetector:
         """主检测函数: , imu_data, enc_data """
         tempcheck = self.state
 
-        tof_result = self.tof_handler.update()  # 获取 TOF 检测结果
-        if tof_result == 1:
+        if self.find_barrier() :
             self.state = RoadElement.barrier
-            self.follow = -ccd_near_lenth
-        elif tof_result == -1:
-            self.state = RoadElement.ramp
-            self.
+            if self.find_barrier() == 1:
+                self.follow = -ccd_near_lenth
+            elif self.find_barrier() == -1:
+                self.follow = ccd_near_lenth
         # 判断全黑全白
         if check_tuple(self._ccd_near.data, 100, 20)==-1:
             self.state = RoadElement.stop # 跑出去了,别把车子撞坏了,歇歇吧
@@ -514,6 +520,23 @@ class ElementDetector:
                     self.ccd_near_l[0] <=  self._ccd_near.right <= self.ccd_near_l[1])
         if self.outflag and near_valid:
             self.outflag=0
+
+    def find_barrier(self):
+        """障碍物检测"""
+        self.last_lenth=self.lenth
+        self.mid,self.left,self.right=ccd_near.get_mid_point(value =31, reasonrange = 128, follow = 0, searchgap = 0)
+        self.lenth=self.right-self.left
+        widthRate = abs(self.lenth - self.last_lenth) / self.last_lenth if self.last_lenth != 0 else 0
+        threshold = 0.3
+
+        if widthRate > threshold:
+            if self.mid < 64:
+                return 1   #障碍物在右边，小车贴左边线
+            else:
+                return -1  #障碍物在左边，小车贴右边线
+        else:
+            return 0      #没检测到障碍物
+            
 
     # 十字判断
     def _crossroad(self):
