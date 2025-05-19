@@ -4,6 +4,7 @@ from smartcar import *
 from seekfree import *
 from display import *
 
+
 wireless = WIRELESS_UART(460800)
 # 屏幕实例化
 cs = Pin('C5', Pin.OUT, pull=Pin.PULL_UP_47K, value=1)

@@ -6,6 +6,7 @@ import math
 from basic_data import *
 from ccd_hander import *
 from menutext import *
+from tof_hander import *
 
 # 单位换算用
 ACC_SPL = 4096.0
@@ -39,7 +40,7 @@ def time_pit_pid_handler(time):
 
 # 实例化 PIT ticker 模块
 pit0 = ticker(0)
-pit0.capture_list(ccd, key, encoder_l, encoder_r)
+pit0.capture_list(ccd, key, encoder_l, encoder_r,tof)
 pit0.callback(time_pit_pid_handler)
 pit0.start(5)
 
@@ -260,13 +261,14 @@ print("""   ____   _           _   _           /\/|
  | |     | |  / _` | | | | |  / _ \       
  | |___  | | | (_| | | | | | | (_) |      
   \____| |_|  \__,_| |_| |_|  \___/       """)
+
 while True:
     
     motor_l.duty(my_limit(gyro_pid_out - dir_in_out, -3000, 3000))
     motor_r.duty(my_limit(gyro_pid_out + dir_in_out, -3000, 3000))
     ccd_temp_data = ccd.get(0)
-    mid_point_near = ccd_near.get_mid_point(value =31, reasonrange = 128, follow = 0, searchgap = 0)
-    mid_point_far=ccd_far.get_mid_point(value =31, reasonrange = 128, follow = 0, searchgap = 0)
+    mid_point_near,_,_ = ccd_near.get_mid_point(value =31, reasonrange = 128, follow = 0, searchgap = 0)
+    mid_point_far,_,_=ccd_far.get_mid_point(value =31, reasonrange = 128, follow = 0, searchgap = 0)
     error1=mid_point_near-64
     error2=mid_point_far-64
     movementtype.aim_speed *= scale_value(abs(error1 - error2), 0, 8)
