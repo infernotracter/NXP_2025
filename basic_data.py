@@ -95,7 +95,7 @@ def gyro_adjustment(output):
 
 
 # PID实例化
-speed_pid = PID(kp=0.8, ki=0.0,kd=0.0, integral_limits=(-2000, 2000))
+speed_pid = PID(kp=0.4, ki=0.0,kd=0.0, integral_limits=(-2000, 2000))
                 #output_limits=(-500, 500)
 
 #
@@ -106,11 +106,12 @@ gyro_pid = PID(kp=1.33, ki=0.226,kd=2.05,integral_limits=(-2000, 2000),
                # output_limits=(-500, 500),
                output_adjustment=gyro_adjustment)
 
-dir_in = PID(kp=1.46, ki=0.64)
+dir_in = PID(kp=0.9, ki=0.64)
 #  integral_limits=(-2000, 2000))
 
-dir_out = PID(kp=0, kd=0.0)
+dir_out = PID(kp=-26.5, kd=0.0)
 
+speed_control = PID(kp=0.3)
 # 串级PID相关变量
 speed_pid_out = 0
 angle_pid_out = 0
@@ -133,33 +134,37 @@ out_r = 0  # 右轮输出值
 speed_d = 50  # 速度增量(调试用)
 class MOVEMENTTYPE:
     default = 0
-    Mode_1 = 1
-    Mode_2 = 2
-    Mode_3 = 3
-    Mode_4 = 4
-    Mode_5 = 5
+    Mode_1 = 10
+    Mode_2 = 20
+    Mode_3 = 30
+    Mode_4 = 40
+    Mode_5 = 50
 class MovementType:
     def __init__(self):
         self.mode=MOVEMENTTYPE.default
-        self.aim_speed=10
-    def _update_(self):
-        if self.mode == MOVEMENTTYPE.default:
-            self.aim_speed=10
-            
-        if self.mode == MOVEMENTTYPE.Mode_1:
-            self.aim_speed=20
-            
-        if self.mode == MOVEMENTTYPE.Mode_2:
-            self.aim_speed=30
-            
-        if self.mode == MOVEMENTTYPE.Mode_3:
-            self.aim_speed=40
-            
-        if self.mode == MOVEMENTTYPE.Mode_4:
-            self.aim_speed=50
-            
-        if self.mode == MOVEMENTTYPE.Mode_5:
-            self.aim_speed=60
+        self.aim_speed=-100
+        self.speed=-100
+    def update(self):
+        # 防止速度调参时变化过快直接倒地的pid
+        self.speed = speed_control.calculate(self.aim_speed, self.speed)
+#             
+#         if self.mode == MOVEMENTTYPE.default:
+#             self.aim_speed=-20
+#             
+#         elif self.mode == MOVEMENTTYPE.Mode_1:
+#             self.aim_speed=-20
+#             
+#         elif self.mode == MOVEMENTTYPE.Mode_2:
+#             self.aim_speed=-30
+# 
+#         elif self.mode == MOVEMENTTYPE.Mode_3:
+#             self.aim_speed=-40
+# 
+#         elif self.mode == MOVEMENTTYPE.Mode_4:
+#             self.aim_speed=-50
+# 
+#         elif self.mode == MOVEMENTTYPE.Mode_5:
+#             self.aim_speed=-60
 movementtype=MovementType()
 
 
@@ -212,6 +217,23 @@ def scale_value(x, x_min, x_max):
     normalized = (x - x_min) / (x_max - x_min)
     return 1.0 - 0.4 * normalized
 
+
+def create_roll_checker():
+    history = []
+    def check(current_roll):
+        # 将新数据添加到历史记录中
+        history.append(current_roll)
+        # 保持最多保留最近20个数据点
+        if len(history) > 10:
+            history[:] = history[-10:]
+        # 如果数据不足20个，返回False
+        if len(history) < 10:
+            return False
+        # 统计不满足条件的数据个数
+        count = sum(1 for num in history if not (-60.0 < num < 0.0))
+        return count >= 8
+    return check
+checker = create_roll_checker()
 
 
 print("种族骑士王小桃来啦UwU")

@@ -253,7 +253,7 @@ def clearall():
     key.clear(2)
     key.clear(3)
     key.clear(4)
-
+stop_flag = 1
 #distance.start() 
 #gyro_z.start()
 
@@ -264,12 +264,14 @@ print("""   ____   _           _   _           /\/|
   \____| |_|  \__,_| |_| |_|  \___/       """)
 while True:
     
-    motor_l.duty(my_limit(gyro_pid_out - dir_in_out, -6000, 6000))
-    motor_r.duty(my_limit(gyro_pid_out + dir_in_out, -6000, 6000))
-#     mid_point_near = ccd_near.get_mid_point(value =31, reasonrange = 128, follow = 0, searchgap = 0)
-#     mid_point_far=ccd_far.get_mid_point(value =31, reasonrange = 128, follow = 0, searchgap = 0)
-#     error1=mid_point_near[0]-64
-#     error2=mid_point_far[0]-64
+    motor_l.duty(my_limit(gyro_pid_out - dir_in_out, -8000, 8000) * stop_flag)
+    motor_r.duty(my_limit(gyro_pid_out + dir_in_out, -8000, 8000) * stop_flag)
+
+    mid_point_near = ccd_near.get_mid_point(value =31, reasonrange = 128, follow = 0, searchgap = 0)
+    mid_point_far=ccd_far.get_mid_point(value =31, reasonrange = 128, follow = 0, searchgap = 0)
+    error1=mid_point_near[0]-64
+    error2=mid_point_far[0]-64
+    #print(encl_data)
     #movementtype.aim_speed *= int(scale_value(abs(error1 - error2), 0, 10))
     #elementdetector.update()
     # 拨码开关关中断
@@ -299,7 +301,7 @@ while True:
         ax, ay, az = imu_data_filtered[0], imu_data_filtered[1], imu_data_filtered[2]
         gx, gy, gz = imu_data_filtered[3], imu_data_filtered[4], imu_data_filtered[5]
         quaternion_update(ax, ay, az, gx, gy, gz)
-        # print(f"{motor_l.duty()}, {motor_r.duty()}, {current_pitch}, {current_roll}, {current_yaw}")
+        #print(f"{motor_l.duty()}, {motor_r.duty()}, {current_pitch}, {current_roll}, {current_yaw}")
 
     if (ticker_flag_gyro):
         # profiler_gyro.update()
@@ -315,11 +317,14 @@ while True:
     if (ticker_flag_menu):
         #menu(key_data)
         key_data = key.get()
-        if key_data[0]:
+        if checker(current_roll):
+            stop_flag = 0
+        if (key_data[0] or key_data[1] or key_data[2] or key_data[3]):
+            stop_flag = 1
             gyro_pid.integral=0
             angle_pid.integral=0
             speed_pid.integral=0
-            key.clear(1)
+            clearall()
         ticker_flag_menu = False
 
     if (ticker_flag_speed):
@@ -327,7 +332,7 @@ while True:
         encl_data = encoder_l.get()  # 读取左编码器的数据
         encr_data = encoder_r.get()  # 读取右编码器的数据
         speed_pid_out = speed_pid.calculate(
-            movementtype.aim_speed, (encl_data + encr_data) / 2)
+            movementtype.speed, (encl_data + encr_data) / 2)
         ticker_flag_speed = False
 
     if (ticker_flag_4ms):
@@ -340,36 +345,59 @@ while True:
 #         gyro_z.update(tmpdata = imu_data[5], delta_t = 0.4)
 #         distance.update(tmpdata = (encl_data + encr_data) / 2, delta_t = 0.4)
         # 定期进行数据解析
-        #dir_out_out = dir_out.calculate(0, error1)
+        dir_out_out = dir_out.calculate(0, error1)
+        movementtype.update()
         data_flag = wireless.data_analysis()
         for i in range(0, 8):
             # 判断哪个通道有数据更新
             if (data_flag[i]):
-                #  数据更新到缓冲
+                # 数据更新到缓冲
                 data_wave[i] = wireless.get_data(i)
                 # 将更新的通道数据输出到 Thonny 的控制台
-                print("Data[{:<6}] updata : {:<.3f}.\r\n".format(
-                    i, data_wave[i]))
-#                 gyro_pid.kp = data_wave[0]
-#                 gyro_pid.ki = data_wave[1]
-#                 gyro_pid.kd = data_wave[2]
-#                 angle_pid.kp = data_wave[3]
-#                 angle_pid.ki = data_wave[4]
-#                 angle_pid.kd = data_wave[5]
-#                 speed_pid.kp = data_wave[6]
-#                 MedAngle = data_wave[7]
-                dir_in.kp = data_wave[0]
-                speed_pid.kp = data_wave[1]
-                dir_out.kp = data_wave[2]
-                movementtype.aim_speed = data_wave[3]
-                #imu_kp = data_wave[0]
-                #imu_ki = data_wave[1]
-#         # 将数据发送到示波器
+                print("Data[{:<6}] updata : {:<.3f}.\r\n".format(i, data_wave[i]))
+                
+                # 根据通道号单独更新对应参数
+                if i == 0:
+                    dir_in.kp = data_wave[i]
+                elif i == 1:
+                    dir_out.kp = data_wave[i]
+                elif i == 2:
+                    speed_pid.kp = data_wave[i]
+                elif i == 3:
+                    movementtype.aim_speed = data_wave[i]
+                elif i == 4:
+                    speed_control.kp = data_wave[i]
+                # elif i == 5:
+                #     movementtype.aim_speed = data_wave[i]
+                # elif i == 6:
+                #     movementtype.aim_speed = data_wave[i]
+                # elif i == 7:
+                #     movementtype.aim_speed = data_wave[i]
+
+                # if i == 0:
+                #     gyro_pid.kp = data_wave[i]  
+                # elif i == 1:
+                #     gyro_pid.ki = data_wave[i]    
+                # elif i == 2:
+                #     gyro_pid.kd = data_wave[i]    
+                # elif i == 3:
+                #     angle_pid.kp = data_wave[i]   
+                # elif i == 4:
+                #     angle_pid.ki = data_wave[i]   
+                # elif i == 5:
+                #     angle_pid.kd = data_wave[i]    
+                # elif i == 6:
+                #     speed_pid.kp = data_wave[i]   
+                # elif i == 7:
+                #     MedAngle = data_wave[i]        
+        # 将数据发送到示波器
         wireless.send_ccd_image(WIRELESS_UART.ALL_CCD_BUFFER_INDEX)
         wireless.send_oscilloscope(
             #gyro_z.data, distance.data, elementdetector.state, ccd_near.left, ccd_near.right, ccd_far.left, ccd_far.right
             #gyro_pid.kp,gyro_pid.ki,gyro_pid.kd,angle_pid.kp,angle_pid.ki,angle_pid.kd,speed_pid.kp
-            dir_in.kp, speed_pid.kp, dir_out.kp,movementtype.aim_speed
+            dir_in.kp, dir_out.kp, speed_pid.kp,movementtype.speed,speed_control.kp
+            ,
+            mid_point_near[0], current_roll,stop_flag
             #imu_kp,imu_ki,current_roll
             )
         #print(dir_out.kp,dir_out.kd,movementtype.aim_speed,dir_out_out,mid_point_near[0],mid_point_far[0])
