@@ -2,134 +2,106 @@ from basic_data import *
 
 
 def check_tuple(data, count_up, count_down):
-    """data: 数据， count_up: 白点， count_down: 黑点"""
-    threshold = 110
-    up_count = down_count = 0
-    for num in data:
-        if num > count_up:
-            up_count += 1
-        elif num < count_down:
-            down_count += 1
+    """统计超过count_up和低于count_down的元素数量，根据阈值返回状态"""
+    OVER_THRESHOLD = 110
+    over_count = sum(num > count_up for num in data)
+    under_count = sum(num < count_down for num in data)
     
-    if up_count >= threshold:
-        return 1  # 超过上限状态
-    elif down_count >= threshold:
-        return -1  # 低于下限状态
-    return 0  # 正常状态
+    if over_count >= OVER_THRESHOLD:
+        return 1
+    if under_count >= OVER_THRESHOLD:
+        return -1
+    return 0
 
 class CCDHandler:
     def __init__(self, channel):
-        """CCD数据处理类, channel: CCD通道"""
         self.data = [0] * 128
         self.last_mid = 64
         self.mid = 64
         self.left = 0
         self.right = 127
-        self.channel = channel  # CCD通道
-        self.error=0
+        self.channel = channel
+        self.error = 0
+
     def update(self):
-        """更新ccd的data数据"""
+        """更新CCD传感器数据"""
         self.data = ccd.get(self.channel)
         return self.data
+
     def get_threshold(self):
-        value_max = self.data[4]  # 从第5个元素开始考虑最大值
-        value_min = self.data[4]  # 从第5个元素开始考虑最小值
+        """计算动态阈值"""
+        relevant_data = self.data[4:123]  # 包含索引4到122
+        return (max(relevant_data) + min(relevant_data)) // 2
 
-        # 遍历5-122
-        for i in range(5, 123):
-            value_max = max(value_max, self.data[i])  # 限幅在最大传入数据和第5个元素值上
-            value_min = min(value_min, self.data[i])  # 限幅在最小传入数据和第5个元素值上
-
-        threshold = (value_max + value_min) // 2  # 计算阈值
-        # threshold = min(max(75, threshold), 255)  # 阈值限幅在75-256之间
-        return threshold
-
-    def get_mid_point(self, value, reasonrange, follow = 0, searchgap = 0):
-        """获取中点, value: 差比和公式的值, reasonrange: 合理范围(两次差值的范围),
-        follow: if>0 补右边线，跟左边线, searchgap: 搜索间隔"""
-        self.data = ccd.get(self.channel)
-        # 判断中点值是否在赛道内，防止一直扫一边线
-        #True: 这里的判断条件是为了防止中点值一直在赛道外
-        # if self.last_mid < 30 or self.last_mid > 100:
-        tmpthreshold = self.get_threshold()  # 计算阈值
-        if self.data[self.last_mid] < tmpthreshold:
-            self.midpoint_invalid(searchgap = searchgap, value = value)
-            if self.mid < 5:
-                self.mid = 5
-            if self.mid > 122:
-                self.mid = 122
-            return self.mid, self.left, self.right
-        # 主代码
-        # 搜索边线
-        self.search(searchgap, value)
-        # if self.left == 0:
-        #     self.left = self.right - ccd_near_lenth
-        # if self.right == 127:
-        #     self.right = self.left + ccd_near_lenth
+    def get_mid_point(self, value, reasonrange, follow=0, searchgap=0):
+        """获取赛道中线坐标及边界"""
+        self.data = ccd.get(self.channel)  # 获取最新数据
+        
+        # 当上次中点无效时进行边界搜索
+        if self.data[self.last_mid] < self.get_threshold():
+            self._handle_invalid_midpoint(searchgap, value)
+        
+        # 常规边界搜索
+        self._search_boundaries(searchgap, value)
+        
+        # 计算中线并应用跟随偏移
         self.mid = (self.left + self.right) // 2
+        self._apply_follow_offset(follow)
+        
+        # 限制中线变化幅度
+        self._limit_mid_change(reasonrange)
+        
+        # 确保中线在有效范围内
+        self.mid = min(max(self.mid, 5), 122)
+        return self.mid, self.left, self.right
 
+    def _handle_invalid_midpoint(self, search_gap, edge_ratio):
+        """处理无效中线时的边界搜索"""
+        if self.last_mid > 64:
+            self.right = self._search_edge(self.last_mid - search_gap, 0, -1, 4, edge_ratio, 0)
+            self.left = self._search_edge(self.right - search_gap, 0, -1, 4, edge_ratio, 0)
+        else:
+            self.left = self._search_edge(self.last_mid + search_gap, 126, 1, -4, edge_ratio, 127)
+            self.right = self._search_edge(self.left + search_gap, 126, 1, -4, edge_ratio, 127)
+
+    def _search_boundaries(self, search_gap, edge_ratio):
+        """常规边界搜索逻辑"""
+        self.left = self._search_edge(
+            self.last_mid - 4 - search_gap, 0, -1, 4, edge_ratio, 0,
+        )
+        self.right = self._search_edge(
+            self.last_mid + 4 + search_gap, 126, 1, -4, edge_ratio, 127,
+        )
+
+    def _search_edge(self, start, end, step, offset, ratio_thresh, default):
+        """通用边界搜索函数, offset正负需要判断"""
+        for i in range(start, end, step):
+            # 边界检查
+            if not (0 <= i + offset <= 127):
+                continue
+                
+            # 计算差比和
+            diff = abs(self.data[i + offset] - self.data[i])
+            sum_ = self.data[i + offset] + self.data[i] + 1
+            if sum_ == 0:
+                continue
+                
+            if (diff * 100 / sum_) > ratio_thresh:
+                return i
+        return default
+
+    def _apply_follow_offset(self, follow):
+        """应用跟随偏移调整边界"""
         if follow > 0:
             self.right = self.left + follow
-        if follow < 0:
+        elif follow < 0:
             self.left = self.right + follow
 
-        if abs(self.mid - self.last_mid) > reasonrange:  # 如果中点与上次中点差距过大
-            self.mid = self.last_mid # 强制令中点为上次中点
-        self.last_mid = self.mid  # 更新上次中点
-        if self.mid < 5:
-            self.mid = 5
-        if self.mid > 122:
-            self.mid = 122
-        return self.mid,self.left,self.right  # 返回中点  左边点 右边点
-    def midpoint_invalid(self, searchgap, value):
-        if self.last_mid > 64:
-            for i in range(self.last_mid - searchgap, 1, -1):  # 用差比和公式判断是否找到边线
-                if (abs(self.data[i+4]-self.data[i])*100/(self.data[i + 4]+self.data[i]+2)) > value:
-                    self.right = i
-                    break
-                elif i == 1:  # 如果找到1都没找到
-                    self.right = 0
-                    break
-            for i in range(self.right - searchgap, 1, -1):  # 用差比和公式判断是否找到边线
-                if (abs(self.data[i+4]-self.data[i])*100/(self.data[i + 4]+self.data[i]+2)) > value:
-                    self.left = i  # 左边点找到
-                    break
-                elif i == 1:  # 如果找到1都没找到
-                    self.left = 0  # 强制令左边点为0
-                    break
-        elif self.last_mid < 64:
-            for i in range(self.last_mid + searchgap, 126):
-                if (abs(self.data[i-4]-self.data[i])*100/(self.data[i-4]+self.data[i]+1)) > value:
-                    self.left = i  # 左边点找到
-                    break
-                elif i == 126:  # 如果找到126都没找到
-                    self.left = 127  # 强制左边点为127
-                    break
-            for i in range(self.left + searchgap, 126):
-                if (abs(self.data[i-4]-self.data[i])*100/(self.data[i-4]+self.data[i]+1)) > value:
-                    self.right = i
-                    break
-                elif i == 126:  # 如果找到126都没找到
-                    self.right = 127  # 强制右边点为127
-                    break
-
-    def search(self, searchgap, value):
-        for i in range(self.last_mid - 4 - searchgap, 1, -1):  # 用差比和公式判断是否找到边线
-            if (abs(self.data[i+4]-self.data[i])*100/(self.data[i + 4]+self.data[i]+2)) > value:
-                self.left = i  # 左边点找到
-                break
-            elif i == 1:  # 如果找到1都没找到
-                self.left = 0  # 强制令左边点为0
-                break
-
-        # 搜索右边点，以上次中点作为这次的起搜点
-        for i in range(self.last_mid + 4 + searchgap, 126):  # 注意这里应该是128，因为索引是从0开始的
-            if (abs(self.data[i-4]-self.data[i])*100/(self.data[i-4]+self.data[i]+1)) > value:  # 判断是否与右边点一致
-                self.right = i  # 右边点找到
-                break
-            elif i == 126:  # 如果找到126都没找到
-                self.right = 127  # 强制右左边点为127
-                break
+    def _limit_mid_change(self, max_change):
+        """限制中线位置突变"""
+        if abs(self.mid - self.last_mid) > max_change:
+            self.mid = self.last_mid
+        self.last_mid = self.mid
         
 ccd_near = CCDHandler(0)
 ccd_far=CCDHandler(1)
