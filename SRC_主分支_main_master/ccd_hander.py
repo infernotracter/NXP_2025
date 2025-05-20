@@ -40,6 +40,8 @@ class CCDHandler:
         # 当上次中点无效时进行边界搜索
         if self.data[self.last_mid] < self.get_threshold():
             self._handle_invalid_midpoint(searchgap, value)
+            self.mid = min(max(self.mid, 5), 122)
+            return self.mid, self.left, self.right
         
         # 常规边界搜索
         self._search_boundaries(searchgap, value)
