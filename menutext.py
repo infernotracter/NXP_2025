@@ -144,7 +144,7 @@ def sec_menu_01(key_data):
     global  speed_flag, main_menu_flag, main_point_item, car_go_flag,stop_flag,key_cnt
     lcd.str24(60, 0, "car_go_mode", 0x07E0)
     lcd.str16(16, 30, "stop_flag={} ".format(stop_flag),0xFFFF)
-    lcd.str16(16, 46, "car_mode={}".format(movementtype.mode), 0x07E0)   #寻圆环/不寻圆环
+    lcd.str16(16, 46, "car_mode={}".format(movementtype.aim_speed), 0x07E0)   #寻圆环/不寻圆环
     lcd.str16(16, 62, "return ",0xFFFF)
     lcd.str16(16, 126, "aim_speed={}".format(movementtype.aim_speed),0xFFFF)
     lcd.str12(0, main_point_item, ">", 0xF800)
@@ -161,24 +161,37 @@ def sec_menu_01(key_data):
         stop_flag = 1
         key.clear(3)
     if key_data[2] and main_point_item == 46:
-        lcd.clear(0x0000)
         key_cnt+=1
-        if key_cnt==0:
-            movementtype.mode=MovementType.default
-        if key_cnt==1:
-            movementtype.mode=MovementType.Mode_1
-        if key_cnt==2:
-            movementtype.mode=MovementType.Mode_2
-        if key_cnt==3:
-            movementtype.mode=MovementType.Mode_3
-        if key_cnt==4:
-            movementtype.mode=MovementType.Mode_4
-        if key_cnt==5:
-            movementtype.mode=MovementType.Mode_5
-        if key_cnt>=6:
+        if key_cnt == 0:
+            movementtype.aim_speed=0
+        elif key_cnt == 1:
+            movementtype.aim_speed=-100
+        elif key_cnt == 2:
+            movementtype.aim_speed=-200
+        elif key_cnt == 3:
+            movementtype.aim_speed=-300
+        elif key_cnt == 4:
+            movementtype.aim_speed=-400
+
+        elif key_cnt>4:
             key_cnt=0
-            movementtype.mode=MovementType.default
-        movementtype._update_()
+#         if key_cnt==0:
+#             movementtype.mode=MovementType.default
+#         if key_cnt==1:
+#             movementtype.mode=MovementType.Mode_1
+#         if key_cnt==2:
+#             movementtype.mode=MovementType.Mode_2
+#         if key_cnt==3:
+#             movementtype.mode=MovementType.Mode_3
+#         if key_cnt==4:
+#             movementtype.mode=MovementType.Mode_4
+#         if key_cnt==5:
+#             movementtype.mode=MovementType.Mode_5
+#         if key_cnt>=6:
+#             key_cnt=0
+#             movementtype.mode=MovementType.default
+        #movementtype.update()
+        lcd.clear(0x0000)
         key.clear(3)
     gc.collect()
 

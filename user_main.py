@@ -27,13 +27,13 @@ ticker_flag_menu = False
 def time_pit_pid_handler(time):
     global ticker_flag_gyro, ticker_flag_angle, ticker_flag_speed, ticker_flag_menu, pit_cont_pid
     pit_cont_pid += 5
-    if (pit_cont_pid % 5 == 0):
+    if (pit_cont_pid % 10 == 0):
         ticker_flag_gyro = True
     if (pit_cont_pid % 10 == 0):
         ticker_flag_menu = True
-    if (pit_cont_pid % 10 == 0):
+    if (pit_cont_pid % 20 == 0):
         ticker_flag_angle = True
-    if (pit_cont_pid >= 20):
+    if (pit_cont_pid >= 50):
         ticker_flag_speed = True
         pit_cont_pid = 0
 
@@ -264,8 +264,8 @@ print("""   ____   _           _   _           /\/|
   \____| |_|  \__,_| |_| |_|  \___/       """)
 while True:
     
-    motor_l.duty(my_limit(gyro_pid_out - dir_in_out, -8000, 8000) * stop_flag)
-    motor_r.duty(my_limit(gyro_pid_out + dir_in_out, -8000, 8000) * stop_flag)
+    motor_l.duty(my_limit(gyro_pid_out - dir_in_out, -6000, 6000) * stop_flag)
+    motor_r.duty(my_limit(gyro_pid_out + dir_in_out, -6000, 6000) * stop_flag)
 
     mid_point_near = ccd_near.get_mid_point(value =31, reasonrange = 128, follow = 0, searchgap = 0)
     mid_point_far=ccd_far.get_mid_point(value =31, reasonrange = 128, follow = 0, searchgap = 0)
@@ -315,7 +315,7 @@ while True:
         ticker_flag_angle = False
 
     if (ticker_flag_menu):
-        #menu(key_data)
+        menu(key_data)
         key_data = key.get()
         if checker(current_roll):
             stop_flag = 0
@@ -324,6 +324,8 @@ while True:
             gyro_pid.integral=0
             angle_pid.integral=0
             speed_pid.integral=0
+            dir_in.integral=0
+            dir_out.integral=0
             clearall()
         ticker_flag_menu = False
 
@@ -366,38 +368,38 @@ while True:
                 elif i == 3:
                     movementtype.aim_speed = data_wave[i]
                 elif i == 4:
-                    speed_control.kp = data_wave[i]
-                # elif i == 5:
-                #     movementtype.aim_speed = data_wave[i]
-                # elif i == 6:
-                #     movementtype.aim_speed = data_wave[i]
-                # elif i == 7:
-                #     movementtype.aim_speed = data_wave[i]
-
-                # if i == 0:
-                #     gyro_pid.kp = data_wave[i]  
-                # elif i == 1:
-                #     gyro_pid.ki = data_wave[i]    
-                # elif i == 2:
-                #     gyro_pid.kd = data_wave[i]    
-                # elif i == 3:
-                #     angle_pid.kp = data_wave[i]   
-                # elif i == 4:
-                #     angle_pid.ki = data_wave[i]   
-                # elif i == 5:
-                #     angle_pid.kd = data_wave[i]    
-                # elif i == 6:
-                #     speed_pid.kp = data_wave[i]   
-                # elif i == 7:
-                #     MedAngle = data_wave[i]        
+                    movementtype.speed = data_wave[i]
+                elif i == 5:
+                    dir_out.ki = data_wave[i]
+                elif i == 6:
+                    dir_out.kd = data_wave[i]
+#                elif i == 7:
+#                   movementtype.aim_speed = data_wave[i]
+# 
+#                 if i == 0:
+#                     gyro_pid.kp = data_wave[i]  
+#                 elif i == 1:
+#                     gyro_pid.ki = data_wave[i]    
+#                 elif i == 2:
+#                     gyro_pid.kd = data_wave[i]    
+#                 elif i == 3:
+#                     angle_pid.kp = data_wave[i]   
+#                 elif i == 4:
+#                     angle_pid.ki = data_wave[i]   
+#                 elif i == 5:
+#                     angle_pid.kd = data_wave[i]    
+#                 elif i == 6:
+#                     speed_pid.kp = data_wave[i]   
+#                 elif i == 7:
+#                     MedAngle = data_wave[i]        
         # 将数据发送到示波器
         wireless.send_ccd_image(WIRELESS_UART.ALL_CCD_BUFFER_INDEX)
         wireless.send_oscilloscope(
             #gyro_z.data, distance.data, elementdetector.state, ccd_near.left, ccd_near.right, ccd_far.left, ccd_far.right
             #gyro_pid.kp,gyro_pid.ki,gyro_pid.kd,angle_pid.kp,angle_pid.ki,angle_pid.kd,speed_pid.kp
-            dir_in.kp, dir_out.kp, speed_pid.kp,movementtype.speed,speed_control.kp
-            ,
-            mid_point_near[0], current_roll,stop_flag
+            dir_in.kp, dir_out.kp, speed_pid.kp,movementtype.speed,dir_out.ki,dir_out.kd
+            #,
+            #mid_point_near[0], current_roll,stop_flag
             #imu_kp,imu_ki,current_roll
             )
         #print(dir_out.kp,dir_out.kd,movementtype.aim_speed,dir_out_out,mid_point_near[0],mid_point_far[0])

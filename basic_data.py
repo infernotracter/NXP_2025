@@ -88,28 +88,28 @@ class PID:
 
 
 # 特殊输出调整函数
-MedAngle=-26.7
+MedAngle=-30.9
 
 def gyro_adjustment(output):
     return output + 700 if output >= 0 else output - 700
 
 
 # PID实例化
-speed_pid = PID(kp=0.4, ki=0.0,kd=0.0, integral_limits=(-2000, 2000))
+speed_pid = PID(kp=-1, ki=0.0,kd=0.0, integral_limits=(-2000, 2000))
                 #output_limits=(-500, 500)
 
 #
 
-angle_pid = PID(kp=16.14,ki=0.0, kd=0.0, integral_limits=(-2000, 2000))
+angle_pid = PID(kp=19.68,ki=0.0, kd=0.0, integral_limits=(-2000, 2000))
 
-gyro_pid = PID(kp=1.33, ki=0.226,kd=2.05,integral_limits=(-2000, 2000),
+gyro_pid = PID(kp=0.74, ki=0.316,kd=1.78,integral_limits=(-2000, 2000),
                # output_limits=(-500, 500),
                output_adjustment=gyro_adjustment)
 
-dir_in = PID(kp=0.9, ki=0.64)
+dir_in = PID(kp=2, ki=0.0)
 #  integral_limits=(-2000, 2000))
 
-dir_out = PID(kp=-26.5, kd=0.0)
+dir_out = PID(kp=-125, kd=0.0)
 
 speed_control = PID(kp=0.3)
 # 串级PID相关变量
@@ -147,22 +147,22 @@ class MovementType:
     def update(self):
         # 防止速度调参时变化过快直接倒地的pid
         self.speed = speed_control.calculate(self.aim_speed, self.speed)
-#             
+             
 #         if self.mode == MOVEMENTTYPE.default:
 #             self.aim_speed=-20
-#             
+#              
 #         elif self.mode == MOVEMENTTYPE.Mode_1:
 #             self.aim_speed=-20
-#             
+#              
 #         elif self.mode == MOVEMENTTYPE.Mode_2:
 #             self.aim_speed=-30
-# 
+#  
 #         elif self.mode == MOVEMENTTYPE.Mode_3:
 #             self.aim_speed=-40
-# 
+#  
 #         elif self.mode == MOVEMENTTYPE.Mode_4:
 #             self.aim_speed=-50
-# 
+#  
 #         elif self.mode == MOVEMENTTYPE.Mode_5:
 #             self.aim_speed=-60
 movementtype=MovementType()
