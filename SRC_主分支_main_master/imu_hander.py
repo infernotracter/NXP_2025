@@ -29,8 +29,9 @@ class IMUHandler:
 
     def update(self):
         # 获取原始数据并应用偏移
-        raw_data = imu.get()
-        self.data = [raw - offset for raw, offset in zip(raw_data, self.offset_data)] + raw_data[6:]
+        self.data = imu.get()
+        for i in range(6):
+            self.data[i] -= self.offset_data[i]
         self.last_time = time.time()
 
     def get_pitch(self):
