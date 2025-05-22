@@ -324,32 +324,22 @@ class ElementDetector:
         
         return near_right_lost and near_left_valid and (point_diff <= self.POINT_diff_data)
   
-    def _check_zebra(self, _ccd_near):
-        """斑马线检测"""
-        # transition = 0
-        # prev = _ccd_near[0]
+    def _check_zebra(self, ccd_near):
+        """斑马线检测逻辑"""
+        crossings = 0         # 跳变次数统计
+        threshold = 31
+        min_crossings = 10    #最小的斑马线检测点次数，待测
+        for i in range(30, 97):    #在靠近赛道中间的部分检测，待测
+            diff = abs(ccd_near.data[i] - ccd_near.data[i + 3])*100
+            sum = ccd_near.data[i] + ccd_near.data[i + 3] + 1
+            ratio = abs(diff / sum)
+            if ratio > threshold:  # 跳变阈值
+                crossings += 1
+        if crossings > min_crossings:
+            return True
+        return False
+
         
-        # # 动态阈值计算
-        # avg = sum(_ccd_near[50:78]) / 28  # 中间区域平均值
-        # threshold = avg * 0.7
-        
-        # # 统计有效跳变
-        # for i in range(1, 127):
-        #     diff = abs(_ccd_near[i] - prev)
-        #     if diff > threshold:
-        #         transition += 1
-        #     prev = _ccd_near[i]
-            
-        # # 有效跳变特征判断
-        # if transition >= 6:  # 根据实际调整阈值
-        #     self.zebra_count += 1
-        #     if self.zebra_count >= 3:  # 连续检测提高鲁棒性
-        #         return True
-        # else:
-        #     self.zebra_count = 0
-            
-        # return False
-        pass
 
     def _right_3(self):
         gyro_z.start()
