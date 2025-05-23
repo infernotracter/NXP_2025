@@ -437,6 +437,7 @@ class ElementDetector:
         point_diff = abs(self._ccd_far.right -  self._ccd_near.right)
         gyro_z.start()
         if near_left_lost and near_right_valid and (point_diff <= self.POINT_diff_data):
+            gyro_z.reset()
             return True
         
     def _c_ring_right_1(self): # 进入圆环，右边线丢失，左边线正常
@@ -448,53 +449,55 @@ class ElementDetector:
         point_diff = abs(self._ccd_far.left -  self._ccd_near.left)
         gyro_z.start()
         if near_right_lost and near_left_valid and (point_diff <= self.POINT_diff_data):
+            gyro_z.reset()
             return True
         
     def _c_ring_left_2(self):   #进入圆环，左边线丢失，用右边线补左边线，并开始积累误差
         # 近端CCD左丢线检查（left_point_2 <=10）
         near_left_lost= self._ccd_near.left<= self.ccd_near_l[0]
-        gyro_z.update(imu.read()[5], 0.002)
         if near_left_lost :
             ccd_near.left=ccd_near.right-ccd_near_lenth
             stage_error.get_tmp()
 
     def _c_ring_right_2(self):
         near_right_lost= self._ccd_near.right>= self.ccd_near_r[1]
-        gyro_z.update(imu.read()[5], 0.002)
         if near_right_lost :
             ccd_near.right=ccd_near.left+ccd_near_lenth
             stage_error.get_tmp()        
 
     def _c_ring_left_3(self):  #出环时右丢线，采用环内的平均error值完成转向，直到变为直路状态。
         near_right_lost= self._ccd_near.right>= self.ccd_near_r[1]
-        gyro_z.update(imu.read()[5], 0.002)
+        gyro_z.start()
         if near_right_lost and abs(gyro_z.data) > self.gyro_z_ring3:
             ccd_near.error=stage_error.tmperror
+            gyro_z.reset()
             stage_error.reset()
         
     def _c_ring_right_3(self):
         near_left_lost= self._ccd_near.left<= self.ccd_near_l[0]
-        gyro_z.update(imu.read()[5], 0.002)
+        gyro_z.start()
         if near_left_lost and abs(gyro_z.data) > self.gyro_z_ring3:
             ccd_near.error=stage_error.tmperror
+            gyro_z.reset()
             stage_error.reset()
         
     def _c_ring_left_4(self):    #出环变为正常状态，右边线补左边线
-        gyro_z.update(imu.read()[5], 0.002)
+        gyro_z.start()
         point_diff = abs(self._ccd_far.right -  self._ccd_near.right)
         if abs(gyro_z.data)>self.gyro_z_ring4 and point_diff:
             ccd_near.left=ccd_near.right-ccd_near_lenth
+            gyro_z.reset()
             self.outflag= RoadElement.lout
 
     def _c_ring_right_4(self):
-        gyro_z.update(imu.read()[5], 0.002)
+        gyro_z.start()
         point_diff = abs(self._ccd_far.left -  self._ccd_near.left)
         if abs(gyro_z.data)>self.gyro_z_ring4 and point_diff:
             ccd_near.right=ccd_near.left+ccd_near_lenth
+            gyro_z.reset()
             self.outflag=RoadElement.rout
         
     def _c_ring_out(self):
-        gyro_z.reset()
         near_valid = (self.ccd_near_r[0] <=  self._ccd_near.left <= self.ccd_near_r[1] and 
                     self.ccd_near_l[0] <=  self._ccd_near.right <= self.ccd_near_l[1])
         if self.outflag and near_valid:

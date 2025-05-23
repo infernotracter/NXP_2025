@@ -102,7 +102,7 @@ speed_pid = PID(kp=-1, ki=0.0,kd=0.0, integral_limits=(-2000, 2000))
 
 angle_pid = PID(kp=19.68,ki=0.0, kd=0.0, integral_limits=(-2000, 2000))
 
-gyro_pid = PID(kp=0.74, ki=0.316,kd=1.78,integral_limits=(-2000, 2000),
+gyro_pid = PID(kp=0.74, ki=0.0,kd=1.78,integral_limits=(-2000, 2000),
                # output_limits=(-500, 500),
                output_adjustment=gyro_adjustment)
 
