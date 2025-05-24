@@ -1,16 +1,6 @@
-from machine import *
-from smartcar import ticker, encoder
-import gc
+
 import math
 
-# 硬件初始化
-led = Pin('C4', Pin.OUT, pull=Pin.PULL_UP_47K, value=True)
-switch2 = Pin('C19', Pin.IN, pull=Pin.PULL_UP_47K, value=True)
-state2 = switch2.value()
-
-# 编码器初始化
-encoder_l = encoder("D0", "D1", True)
-encoder_r = encoder("D2", "D3")
 
 # ========== 滤波算法实现 ==========
 class EncoderFilter:
@@ -51,46 +41,46 @@ class EncoderFilter:
 filter_l = EncoderFilter(filter_type='lowpass', alpha=0.3)  # 右轮使用低通滤波
 filter_r = EncoderFilter(filter_type='moving_average', window_size=5)  # 左轮使用移动平均
 
-# ========== 主程序 ==========
-ticker_flag = False
-ticker_count = 0
-
-def time_pit_handler(time):
-    global ticker_flag, ticker_count
-    ticker_flag = True
-    ticker_count = (ticker_count + 1) if (ticker_count < 100) else 1
-
-pit1 = ticker(1)
-pit1.capture_list(encoder_l, encoder_r)
-pit1.callback(time_pit_handler)
-pit1.start(10)  # 10ms采样周期
-
-# 原始值和滤波值记录
-raw_data = [0, 0]
-filtered_data = [0, 0]
-
-while True:
-    if ticker_flag and ticker_count % 20 == 0:  # 每200ms处理一次
-        led.toggle()
-        
-        # 获取原始数据
-        raw_data[0] = encoder_l.get()
-        raw_data[1] = encoder_r.get()
-        
-        # 应用滤波
-        filtered_data[0] = filter_l.update(raw_data[0])
-        filtered_data[1] = filter_r.update(raw_data[1])
-        
-        # 打印结果 (原始值 vs 滤波值)
-        print("L: raw={:>6d} filtered={:>6.1f} | R: raw={:>6d} filtered={:>6.1f}".format(
-            raw_data[0], filtered_data[0], 
-            raw_data[1], filtered_data[1]))
-        
-        ticker_flag = False
-    
-    if switch2.value() != state2:
-        pit1.stop()
-        print("Test program stopped by user.")
-        break
-    
-    gc.collect()
+# # ========== 主程序 ==========
+# ticker_flag = False
+# ticker_count = 0
+# 
+# def time_pit_handler(time):
+#     global ticker_flag, ticker_count
+#     ticker_flag = True
+#     ticker_count = (ticker_count + 1) if (ticker_count < 100) else 1
+# 
+# pit1 = ticker(1)
+# pit1.capture_list(encoder_l, encoder_r)
+# pit1.callback(time_pit_handler)
+# pit1.start(10)  # 10ms采样周期
+# 
+# # 原始值和滤波值记录
+# raw_data = [0, 0]
+# filtered_data = [0, 0]
+# 
+# while True:
+#     if ticker_flag and ticker_count % 20 == 0:  # 每200ms处理一次
+#         led.toggle()
+#         
+#         # 获取原始数据
+#         raw_data[0] = encoder_l.get()
+#         raw_data[1] = encoder_r.get()
+#         
+#         # 应用滤波
+#         filtered_data[0] = filter_l.update(raw_data[0])
+#         filtered_data[1] = filter_r.update(raw_data[1])
+#         
+#         # 打印结果 (原始值 vs 滤波值)
+#         print("L: raw={:>6d} filtered={:>6.1f} | R: raw={:>6d} filtered={:>6.1f}".format(
+#             raw_data[0], filtered_data[0], 
+#             raw_data[1], filtered_data[1]))
+#         
+#         ticker_flag = False
+#     
+#     if switch2.value() != state2:
+#         pit1.stop()
+#         print("Test program stopped by user.")
+#         break
+#     
+#     gc.collect()

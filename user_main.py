@@ -4,6 +4,7 @@ import gc
 import utime
 import math
 from basic_data import *
+from encoder_text import *
 from ccd_hander import *
 from menutext import *
 #from tof_hander import *
@@ -257,6 +258,49 @@ stop_flag = 1
 #distance.start() 
 #gyro_z.start()
 
+
+import time
+
+class IMUHandler:
+    def __init__(self):
+        self.data = [0.0] * 9
+        self.offset_data = [0.0] * 9  # 存储各轴偏移量
+        self.last_data = [0.0] * 9  # 保存上一次的IMU数据
+        self.current_pitch = 0.0
+        self.current_roll = 0.0
+        self.current_yaw = 0.0
+        self.alpha = 0.9
+        self.last_time = time.time()
+        self.calibrate_offsets()
+
+    def calibrate_offsets(self, num_samples = 100):
+        # 初始化上一次数据
+        self.last_data = imu.read()
+        # 累加差值
+        for _ in range(num_samples):
+            current_data = imu.get()
+            for i in range(6):
+                self.offset_data[i] += (current_data[i] - self.last_data[i])
+                self.last_data[i] = current_data[i]
+        # 计算平均值
+        for i in range(6):
+            self.offset_data[i] /= num_samples
+
+    def update(self):
+        # 获取原始数据并应用偏移
+        self.data = [float(x) for x in imu.get()]
+        for i in range(6):
+            self.data[i] -= self.offset_data[i]
+
+    def get_pitch(self, delta_t = 0.5):
+        self.update()
+        pitch_gyro = self.current_pitch + self.data[3] * delta_t
+        self.current_pitch = self.alpha * self.data[1] + (1 - self.alpha) * pitch_gyro
+        return self.current_pitch
+
+imu_hander = IMUHandler()
+gyro_z.start()
+distance.start()
 print("""   ____   _           _   _           /\/|
   / ___| (_)   __ _  | | | |   ___   |/\/ 
  | |     | |  / _` | | | | |  / _ \       
@@ -264,16 +308,15 @@ print("""   ____   _           _   _           /\/|
   \____| |_|  \__,_| |_| |_|  \___/       """)
 while True:
     
-    motor_l.duty(my_limit(gyro_pid_out - dir_in_out, -6000, 6000) * stop_flag)
-    motor_r.duty(my_limit(gyro_pid_out + dir_in_out, -6000, 6000) * stop_flag)
-
+    motor_l.duty(my_limit(gyro_pid.out - dir_in.out, -6000, 6000))
+    motor_r.duty(my_limit(gyro_pid.out + dir_in.out, -6000, 6000))
     mid_point_near = ccd_near.get_mid_point(value =31, reasonrange = 128, follow = 0, searchgap = 0)
     mid_point_far=ccd_far.get_mid_point(value =31, reasonrange = 128, follow = 0, searchgap = 0)
     error1=mid_point_near[0]-64
     error2=mid_point_far[0]-64
     #print(encl_data)
     #movementtype.aim_speed *= int(scale_value(abs(error1 - error2), 0, 10))
-    #elementdetector.update()
+    elementdetector.update()
     # 拨码开关关中断
     if end_switch.value() == 1:
         break  # 跳出判断
@@ -301,54 +344,70 @@ while True:
         ax, ay, az = imu_data_filtered[0], imu_data_filtered[1], imu_data_filtered[2]
         gx, gy, gz = imu_data_filtered[3], imu_data_filtered[4], imu_data_filtered[5]
         quaternion_update(ax, ay, az, gx, gy, gz)
-        #print(f"{motor_l.duty()}, {motor_r.duty()}, {current_pitch}, {current_roll}, {current_yaw}")
+        #tmp_current_roll = imu_hander.get_pitch()
 
-    if (ticker_flag_gyro):
-        # profiler_gyro.update()
-        gyro_pid_out = gyro_pid.calculate(angle_pid_out, imu_data[3])
-        ticker_flag_gyro = False
+    if (ticker_flag_speed):
+        # profiler_speed.update()
+        encl_data = filter_l.update(encoder_l.get())  # 读取左编码器的数据
+        encr_data = filter_r.update(encoder_r.get())  # 读取右编码器的数据
+        speed_pid.calculate(
+            movementtype.speed, (encl_data + encr_data) / 2)
+        ticker_flag_speed = False
 
     if (ticker_flag_angle):
         # profiler_angle.update()
-        angle_pid_out = angle_pid.calculate(
-            speed_pid_out + MedAngle, current_roll)
+        angle_pid.calculate(
+            speed_pid.out + MedAngle, current_roll)
         ticker_flag_angle = False
+        
+    if (ticker_flag_gyro):
+        # profiler_gyro.update()
+        gyro_pid.calculate(angle_pid.out, -imu_data[3])
+        ticker_flag_gyro = False
 
     if (ticker_flag_menu):
-        menu(key_data)
+        #menu(key_data)
         key_data = key.get()
+        lcd.str16(30,16,
+        f"{elementdetector.ccd_near_l[0]}, {elementdetector.ccd_near_l[1]} , {elementdetector.ccd_near_r[0]} , {elementdetector.ccd_near_r[1]} ",0xFFFF)
+        lcd.str16(30,42,
+        f"{elementdetector.ccd_far_l[0]},{elementdetector.ccd_far_l[1]},{elementdetector.ccd_far_r[0]},{elementdetector.ccd_far_r[1]}",0xFFFF)
+        lcd.str16(30,58,
+        f"{movementtype.mode}",0xFFFF)
+        lcd.str16(30,74,
+        f"{elementdetector.state, ccd_near.left, ccd_near.right, ccd_far.left, ccd_far.right,elementdetector.ccd_near_length}",0xFFFF)
+        lcd.str16(30,90,
+        "{:<5} {:<5}".format(gyro_z.data, distance.data),0xFFFF)
         if checker(current_roll):
             stop_flag = 0
         if (key_data[0] or key_data[1] or key_data[2] or key_data[3]):
+            elementdetector.debug()
+            elementdetector.state = 0
             stop_flag = 1
             gyro_pid.integral=0
             angle_pid.integral=0
             speed_pid.integral=0
             dir_in.integral=0
             dir_out.integral=0
+            distance.data = 0
+            gyro_z.data = 0
+            gyro_z._getoffset()
             clearall()
         ticker_flag_menu = False
 
-    if (ticker_flag_speed):
-        # profiler_speed.update()
-        encl_data = encoder_l.get()  # 读取左编码器的数据
-        encr_data = encoder_r.get()  # 读取右编码器的数据
-        speed_pid_out = speed_pid.calculate(
-            movementtype.speed, (encl_data + encr_data) / 2)
-        ticker_flag_speed = False
 
     if (ticker_flag_4ms):
         # profiler_4ms.update()
-        dir_in_out = dir_in.calculate(dir_out_out, imu_data[4]-gyrooffsety)
+        dir_in.calculate(dir_out.out, imu_data[4]-gyrooffsety)
         ticker_flag_4ms = False
 
     if (ticker_flag_8ms):
         # profiler_8ms.update()
-#         gyro_z.update(tmpdata = imu_data[5], delta_t = 0.4)
-#         distance.update(tmpdata = (encl_data + encr_data) / 2, delta_t = 0.4)
+        gyro_z.update(tmpdata = imu_data[5], delta_t = 0.4)
+        distance.update(tmpdata = (encl_data + encr_data) / 2, delta_t = 0.4)
         # 定期进行数据解析
-        dir_out_out = dir_out.calculate(0, error1)
-        movementtype.update()
+        #dir_out.calculate(0, error1)
+        #movementtype.update()
         data_flag = wireless.data_analysis()
         for i in range(0, 8):
             # 判断哪个通道有数据更新
@@ -359,8 +418,45 @@ while True:
                 print("Data[{:<6}] updata : {:<.3f}.\r\n".format(i, data_wave[i]))
                 
                 # 根据通道号单独更新对应参数
+#                 if i == 0:
+#                     dir_in.kp = data_wave[i]
+#                 elif i == 1:
+#                     dir_out.kp = data_wave[i]
+#                 elif i == 2:
+#                     speed_pid.kp = data_wave[i]
+#                 elif i == 3:
+#                     movementtype.aim_speed = data_wave[i]
+#                 elif i == 4:
+#                     movementtype.speed = data_wave[i]
+#                 elif i == 5:
+#                     dir_out.ki = data_wave[i]
+#                 elif i == 6:
+#                     dir_out.kd = data_wave[i]
+#                 elif i == 7:
+#                     MedAngle = data_wave[i]
+# 
+#                 if i == 0:
+#                     gyro_pid.kp = data_wave[i]  
+#                 elif i == 1:
+#                     gyro_pid.ki = data_wave[i]    
+#                 elif i == 2:
+#                     gyro_pid.kd = data_wave[i]    
+#                 elif i == 3:
+#                     angle_pid.kp = data_wave[i]   
+#                 elif i == 4:
+#                     angle_pid.kd = data_wave[i]   
+#                 elif i == 5:
+#                     speed_pid.kd = data_wave[i]    
+#                 elif i == 6:
+#                     speed_pid.kp = data_wave[i]   
+#                 elif i == 7:
+#                     MedAngle = data_wave[i]
+                if i==0:
+                    elementdetector.state = data_wave[i]
+                elif i==1:
+                    movementtype.mode = data_wave[i]
                 if i == 0:
-                    dir_in.kp = data_wave[i]
+                    ccd_near_length = data_wave[i]
                 elif i == 1:
                     dir_out.kp = data_wave[i]
                 elif i == 2:
@@ -373,36 +469,27 @@ while True:
                     dir_out.ki = data_wave[i]
                 elif i == 6:
                     dir_out.kd = data_wave[i]
-#                elif i == 7:
-#                   movementtype.aim_speed = data_wave[i]
-# 
-#                 if i == 0:
-#                     gyro_pid.kp = data_wave[i]  
-#                 elif i == 1:
-#                     gyro_pid.ki = data_wave[i]    
-#                 elif i == 2:
-#                     gyro_pid.kd = data_wave[i]    
-#                 elif i == 3:
-#                     angle_pid.kp = data_wave[i]   
-#                 elif i == 4:
-#                     angle_pid.ki = data_wave[i]   
-#                 elif i == 5:
-#                     angle_pid.kd = data_wave[i]    
-#                 elif i == 6:
-#                     speed_pid.kp = data_wave[i]   
-#                 elif i == 7:
-#                     MedAngle = data_wave[i]        
+                elif i == 7:
+                    MedAngle = data_wave[i]
+                
         # 将数据发送到示波器
         wireless.send_ccd_image(WIRELESS_UART.ALL_CCD_BUFFER_INDEX)
         wireless.send_oscilloscope(
-            #gyro_z.data, distance.data, elementdetector.state, ccd_near.left, ccd_near.right, ccd_far.left, ccd_far.right
-            #gyro_pid.kp,gyro_pid.ki,gyro_pid.kd,angle_pid.kp,angle_pid.ki,angle_pid.kd,speed_pid.kp
-            dir_in.kp, dir_out.kp, speed_pid.kp,movementtype.speed,dir_out.ki,dir_out.kd
+            gyro_z.data, distance.data, elementdetector.state, ccd_near.left, ccd_near.right, ccd_far.left, ccd_far.right,elementdetector.ccd_near_length
+            #gyro_pid.kp,gyro_pid.ki,gyro_pid.kd,angle_pid_out,gyro_pid_out,imu_hander.data[3],current_roll
+            #current_roll, gyro_pid.out,angle_pid.out
+            #imu_data[0], imu_data[1],imu_data[2],imu_data[3],imu_data[4],imu_data[5]#,current_roll,imu_hander.alpha
+            #dir_in.kp, dir_out.kp, speed_pid.kp,movementtype.speed,dir_out.ki,dir_out.kd
             #,
             #mid_point_near[0], current_roll,stop_flag
             #imu_kp,imu_ki,current_roll
+            #current_roll,current_yaw,current_pitch
+            
             )
         #print(dir_out.kp,dir_out.kd,movementtype.aim_speed,dir_out_out,mid_point_near[0],mid_point_far[0])
         ticker_flag_8ms = False
+
+
+
 
 

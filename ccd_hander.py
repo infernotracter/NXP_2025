@@ -107,7 +107,6 @@ class CCDHandler:
         
 ccd_near = CCDHandler(0)
 ccd_far=CCDHandler(1)
-ccd_near_lenth=50 #待测
 
 # 赛道元素状态枚举
 class RoadElement:
@@ -157,10 +156,12 @@ class ElementDetector:
 
         self.POINT_diff_data = 12             # 特征点差异阈值
 
-        self.GYRO_Z_ring3_data = 0.8
-        self.DISTANCE_ring3_data = 0.1
+        self.GYRO_Z_ring3_data = 10000
+        self.DISTANCE_ring3_data = 0.04
         self.GYRO_Z_ring_in_data = 40
         self.DISTANCE_ring_out_data = 0.15
+        self.ccd_near_length = 40
+        self.ccd_far_length = 40
 
         self.DISTANCE_ring3_not_data = 10
         #-------------------我们的gyro圆环识别数据-------------------
@@ -181,11 +182,13 @@ class ElementDetector:
         temp_ccd_far_data_l = 0
         temp_ccd_far_data_r = 0
         for _ in range(10):
-            temp_ccd_near_data_l += ccd_near.update()
-            temp_ccd_near_data_r += ccd_near.update()
-            temp_ccd_far_data_l += ccd_far.update()
-            temp_ccd_far_data_r += ccd_far.update()
-        delta = 7
+            ccd_near.update()
+            ccd_far.update()
+            temp_ccd_near_data_l += ccd_near.left
+            temp_ccd_near_data_r += ccd_near.right
+            temp_ccd_far_data_l += ccd_far.left
+            temp_ccd_far_data_r += ccd_far.right
+        delta = 8
         self.ccd_near_l[0] = temp_ccd_near_data_l // 10 - delta
         self.ccd_near_l[1] = temp_ccd_near_data_l // 10 + delta
         self.ccd_near_r[0] = temp_ccd_near_data_r // 10 - delta
@@ -196,17 +199,18 @@ class ElementDetector:
         self.ccd_far_r[0] = temp_ccd_far_data_r // 10 - delta
         self.ccd_far_r[1] = temp_ccd_far_data_r // 10 + delta
         self.ccd_far_length = abs(self.ccd_far_l[1] - self.ccd_far_l[0])
+        self.POINT_diff_data = temp_ccd_near_data_l // 10 + delta
 
     def update(self):
         """主检测函数: , imu_data, enc_data """
         tempcheck = self.state
 
-        if self.find_barrier() :
-            self.state = RoadElement.barrier
-            if self.find_barrier() == 1:
-                self.follow = -ccd_near_lenth
-            elif self.find_barrier() == -1:
-                self.follow = ccd_near_lenth
+#         if self.find_barrier() :
+#             self.state = RoadElement.barrier
+#             if self.find_barrier() == 1:
+#                 self.follow = -self.ccd_near_length
+#             elif self.find_barrier() == -1:
+#                 self.follow = self.ccd_near_length
         # 判断全黑全白
         if check_tuple(self._ccd_near.data, 100, 20)==-1:
             self.state = RoadElement.stop # 跑出去了,别把车子撞坏了,歇歇吧
@@ -214,46 +218,48 @@ class ElementDetector:
         #     element = RoadElement.zebra
         if self._left_1( ):
             self.state = RoadElement.l1
+            self.follow = -self.ccd_near_length
         if self._right_1( ):
             self.state = RoadElement.r1
+            self.follow = self.ccd_near_length
         if self.state == RoadElement.l1:
             if self._left_2( ):
                 self.state = RoadElement.l2
-                self.follow = -ccd_near_lenth
+                self.follow = -self.ccd_near_length
         if self.state == RoadElement.r1:
             if self._right_2( ):
                 self.state = RoadElement.r2
-                self.follow = ccd_near_lenth
+                self.follow = self.ccd_near_length
 
         # 防误判圆环
         if self.state == RoadElement.r2:
             if movementtype.mode == MOVEMENTTYPE.Mode_1:
                 if self._right_3_not():
                     self.state = RoadElement.r3_not
-                    self.follow = ccd_near_lenth
+                    self.follow = self.ccd_near_length
             if movementtype.mode == MOVEMENTTYPE.Mode_2:
                 if self._right_3():
                     self.state = RoadElement.r3
-                    self.follow = -ccd_near_lenth
+                    self.follow = -self.ccd_near_length
         if self.state == RoadElement.l2:
             if movementtype.mode == MOVEMENTTYPE.Mode_1:
                 if self._left_3_not():
                     self.state = RoadElement.l3_not
-                    self.follow = ccd_near_lenth
+                    self.follow = self.ccd_near_length
             if movementtype.mode == MOVEMENTTYPE.Mode_2:
                 if self._left_3():
                     self.state = RoadElement.l3
-                    self.follow = -ccd_near_lenth
+                    self.follow = -self.ccd_near_length
 
         # 圆环内部
         if self.state == RoadElement.r3:
             if self._right_in():
                 self.state = RoadElement.rin
-                self.follow = ccd_near_lenth
+                self.follow = self.ccd_near_length
         if self.state == RoadElement.l3:
             if self._left_in():
                 self.state = RoadElement.lin
-                self.follow = -ccd_near_lenth
+                self.follow = -self.ccd_near_length
 
         # 出圆环
         if self.state == RoadElement.rin:
@@ -324,38 +330,28 @@ class ElementDetector:
         
         return near_right_lost and near_left_valid and (point_diff <= self.POINT_diff_data)
   
-    def _check_zebra(self, _ccd_near):
-        """斑马线检测"""
-        # transition = 0
-        # prev = _ccd_near[0]
+    def _check_zebra(self, ccd_near):
+        """斑马线检测逻辑"""
+        crossings = 0         # 跳变次数统计
+        threshold = 31
+        min_crossings = 10    #最小的斑马线检测点次数，待测
+        for i in range(30, 97):    #在靠近赛道中间的部分检测，待测
+            diff = abs(ccd_near.data[i] - ccd_near.data[i + 3])*100
+            sum = ccd_near.data[i] + ccd_near.data[i + 3] + 1
+            ratio = abs(diff / sum)
+            if ratio > threshold:  # 跳变阈值
+                crossings += 1
+        if crossings > min_crossings:
+            return True
+        return False
+
         
-        # # 动态阈值计算
-        # avg = sum(_ccd_near[50:78]) / 28  # 中间区域平均值
-        # threshold = avg * 0.7
-        
-        # # 统计有效跳变
-        # for i in range(1, 127):
-        #     diff = abs(_ccd_near[i] - prev)
-        #     if diff > threshold:
-        #         transition += 1
-        #     prev = _ccd_near[i]
-            
-        # # 有效跳变特征判断
-        # if transition >= 6:  # 根据实际调整阈值
-        #     self.zebra_count += 1
-        #     if self.zebra_count >= 3:  # 连续检测提高鲁棒性
-        #         return True
-        # else:
-        #     self.zebra_count = 0
-            
-        # return False
-        pass
 
     def _right_3(self):
         gyro_z.start()
         distance.start()
-        if -self.GYRO_Z_ring3_data < gyro_z.data < self.GYRO_Z_ring3_data:
-            if distance.data > self.DISTANCE_ring3_data:
+        if distance.data > self.DISTANCE_ring3_data:
+            if -self.GYRO_Z_ring3_data < gyro_z.data < self.GYRO_Z_ring3_data:
                 gyro_z.reset()
                 distance.reset()
                 return True
@@ -394,8 +390,8 @@ class ElementDetector:
     def _left_3(self):
         gyro_z.start()
         distance.start()
-        if -self.GYRO_Z_ring3_data < gyro_z.data < self.GYRO_Z_ring3_data:
-            if distance.data < -self.DISTANCE_ring3_data:  # 距离方向取反
+        if distance.data < -self.DISTANCE_ring3_data:  # 距离方向取反
+            if -self.GYRO_Z_ring3_data < gyro_z.data < self.GYRO_Z_ring3_data:
                 gyro_z.reset()
                 distance.reset()
                 return True
@@ -447,6 +443,7 @@ class ElementDetector:
         point_diff = abs(self._ccd_far.right -  self._ccd_near.right)
         gyro_z.start()
         if near_left_lost and near_right_valid and (point_diff <= self.POINT_diff_data):
+            gyro_z.reset()
             return True
         
     def _c_ring_right_1(self): # 进入圆环，右边线丢失，左边线正常
@@ -458,73 +455,75 @@ class ElementDetector:
         point_diff = abs(self._ccd_far.left -  self._ccd_near.left)
         gyro_z.start()
         if near_right_lost and near_left_valid and (point_diff <= self.POINT_diff_data):
+            gyro_z.reset()
             return True
         
     def _c_ring_left_2(self):   #进入圆环，左边线丢失，用右边线补左边线，并开始积累误差
         # 近端CCD左丢线检查（left_point_2 <=10）
         near_left_lost= self._ccd_near.left<= self.ccd_near_l[0]
-        gyro_z.update(imu.read()[5], 0.002)
         if near_left_lost :
-            ccd_near.left=ccd_near.right-ccd_near_lenth
+            ccd_near.left=ccd_near.right-self.ccd_near_length
             stage_error.get_tmp()
 
     def _c_ring_right_2(self):
         near_right_lost= self._ccd_near.right>= self.ccd_near_r[1]
-        gyro_z.update(imu.read()[5], 0.002)
         if near_right_lost :
-            ccd_near.right=ccd_near.left+ccd_near_lenth
+            ccd_near.right=ccd_near.left+self.ccd_near_length
             stage_error.get_tmp()        
 
     def _c_ring_left_3(self):  #出环时右丢线，采用环内的平均error值完成转向，直到变为直路状态。
         near_right_lost= self._ccd_near.right>= self.ccd_near_r[1]
-        gyro_z.update(imu.read()[5], 0.002)
+        gyro_z.start()
         if near_right_lost and abs(gyro_z.data) > self.gyro_z_ring3:
             ccd_near.error=stage_error.tmperror
+            gyro_z.reset()
             stage_error.reset()
         
     def _c_ring_right_3(self):
         near_left_lost= self._ccd_near.left<= self.ccd_near_l[0]
-        gyro_z.update(imu.read()[5], 0.002)
+        gyro_z.start()
         if near_left_lost and abs(gyro_z.data) > self.gyro_z_ring3:
             ccd_near.error=stage_error.tmperror
+            gyro_z.reset()
             stage_error.reset()
         
     def _c_ring_left_4(self):    #出环变为正常状态，右边线补左边线
-        gyro_z.update(imu.read()[5], 0.002)
+        gyro_z.start()
         point_diff = abs(self._ccd_far.right -  self._ccd_near.right)
         if abs(gyro_z.data)>self.gyro_z_ring4 and point_diff:
-            ccd_near.left=ccd_near.right-ccd_near_lenth
+            ccd_near.left=ccd_near.right-self.ccd_near_length
+            gyro_z.reset()
             self.outflag= RoadElement.lout
 
     def _c_ring_right_4(self):
-        gyro_z.update(imu.read()[5], 0.002)
+        gyro_z.start()
         point_diff = abs(self._ccd_far.left -  self._ccd_near.left)
         if abs(gyro_z.data)>self.gyro_z_ring4 and point_diff:
-            ccd_near.right=ccd_near.left+ccd_near_lenth
+            ccd_near.right=ccd_near.left+self.ccd_near_length
+            gyro_z.reset()
             self.outflag=RoadElement.rout
         
     def _c_ring_out(self):
-        gyro_z.reset()
         near_valid = (self.ccd_near_r[0] <=  self._ccd_near.left <= self.ccd_near_r[1] and 
                     self.ccd_near_l[0] <=  self._ccd_near.right <= self.ccd_near_l[1])
         if self.outflag and near_valid:
             self.outflag=0
 
-    def find_barrier(self):
-        """障碍物检测"""
-        self.last_lenth=self.lenth
-        self.mid,self.left,self.right=ccd_near.get_mid_point(value =31, reasonrange = 128, follow = 0, searchgap = 0)
-        self.lenth=self.right-self.left
-        widthRate = abs(self.lenth - self.last_lenth) / self.last_lenth if self.last_lenth != 0 else 0
-        threshold = 0.3
-
-        if widthRate > threshold:
-            if self.mid < 64:
-                return 1   #障碍物在右边，小车贴左边线
-            else:
-                return -1  #障碍物在左边，小车贴右边线
-        else:
-            return 0      #没检测到障碍物
+#     def find_barrier(self):
+#         """障碍物检测"""
+#         self.last_lenth=self.lenth
+#         self.mid,self.left,self.right=ccd_near.get_mid_point(value =31, reasonrange = 128, follow = 0, searchgap = 0)
+#         self.lenth=self.right-self.left
+#         widthRate = abs(self.lenth - self.last_lenth) / self.last_lenth if self.last_lenth != 0 else 0
+#         threshold = 0.3
+# 
+#         if widthRate > threshold:
+#             if self.mid < 64:
+#                 return 1   #障碍物在右边，小车贴左边线
+#             else:
+#                 return -1  #障碍物在左边，小车贴右边线
+#         else:
+#             return 0      #没检测到障碍物
             
 
     # 十字判断

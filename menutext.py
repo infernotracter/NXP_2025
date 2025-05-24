@@ -31,6 +31,7 @@ def point_move(hight, low, key_data):
     gc.collect()
 
 
+
 def menu(key_data):
     global main_menu_flag, car_go_flag, speed_flag, element_flag, angle_pd_flag, speed_pi_flag, gyro_pi_flag, ccd_image_flag, screen_off_flag, save_para_flag
     if (main_menu_flag == 1):
