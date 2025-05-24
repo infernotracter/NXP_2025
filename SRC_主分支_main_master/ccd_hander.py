@@ -108,6 +108,7 @@ class CCDHandler:
 ccd_near = CCDHandler(0)
 ccd_far=CCDHandler(1)
 
+
 # 赛道元素状态枚举
 class RoadElement:
     stop = -1
@@ -182,13 +183,11 @@ class ElementDetector:
         temp_ccd_far_data_l = 0
         temp_ccd_far_data_r = 0
         for _ in range(10):
-            ccd_near.update()
-            ccd_far.update()
-            temp_ccd_near_data_l += ccd_near.left
-            temp_ccd_near_data_r += ccd_near.right
-            temp_ccd_far_data_l += ccd_far.left
-            temp_ccd_far_data_r += ccd_far.right
-        delta = 8
+            temp_ccd_near_data_l += ccd_near.update()
+            temp_ccd_near_data_r += ccd_near.update()
+            temp_ccd_far_data_l += ccd_far.update()
+            temp_ccd_far_data_r += ccd_far.update()
+        delta = 7
         self.ccd_near_l[0] = temp_ccd_near_data_l // 10 - delta
         self.ccd_near_l[1] = temp_ccd_near_data_l // 10 + delta
         self.ccd_near_r[0] = temp_ccd_near_data_r // 10 - delta
@@ -205,12 +204,12 @@ class ElementDetector:
         """主检测函数: , imu_data, enc_data """
         tempcheck = self.state
 
-#         if self.find_barrier() :
-#             self.state = RoadElement.barrier
-#             if self.find_barrier() == 1:
-#                 self.follow = -self.ccd_near_length
-#             elif self.find_barrier() == -1:
-#                 self.follow = self.ccd_near_length
+        if self.find_barrier() :
+            self.state = RoadElement.barrier
+            if self.find_barrier() == 1:
+                self.follow = -ccd_near_lenth
+            elif self.find_barrier() == -1:
+                self.follow = ccd_near_lenth
         # 判断全黑全白
         if check_tuple(self._ccd_near.data, 100, 20)==-1:
             self.state = RoadElement.stop # 跑出去了,别把车子撞坏了,歇歇吧
