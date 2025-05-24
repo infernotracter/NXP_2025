@@ -161,6 +161,7 @@ class ElementDetector:
         self.GYRO_Z_ring_in_data = 40
         self.DISTANCE_ring_out_data = 0.15
         self.ccd_near_length = 40
+        self.ccd_far_length = 40
 
         self.DISTANCE_ring3_not_data = 10
         #-------------------我们的gyro圆环识别数据-------------------
