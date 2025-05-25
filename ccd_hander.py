@@ -212,7 +212,7 @@ class ElementDetector:
 #             elif self.find_barrier() == -1:
 #                 self.follow = self.ccd_near_length
         # 判断全黑全白
-        if check_tuple(self._ccd_near.data, 100, 20)==-1:
+        if check_tuple(self._ccd_near.data, 90, 30)==-1:
             self.state = RoadElement.stop # 跑出去了,别把车子撞坏了,歇歇吧
         if self._check_zebra(self._ccd_near):
             self.state = RoadElement.zebra
