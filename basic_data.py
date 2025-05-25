@@ -23,9 +23,9 @@ lcd.clear(0x0000)
 Go = Pin('C21', Pin.IN, pull=Pin.PULL_UP_47K, value=0)
 # 实例化 MOTOR_CONTROLLER 电机驱动模块
 motor_l = MOTOR_CONTROLLER(
-    MOTOR_CONTROLLER.PWM_C25_DIR_C27, 10000, duty=0, invert=True)
+    MOTOR_CONTROLLER.PWM_C25_DIR_C27, 13000, duty=0, invert=True)
 motor_r = MOTOR_CONTROLLER(
-    MOTOR_CONTROLLER.PWM_C24_DIR_C26, 10000, duty=0, invert=True)
+    MOTOR_CONTROLLER.PWM_C24_DIR_C26, 13000, duty=0, invert=True)
 # 实例化 encoder 模块
 encoder_l = encoder("D0", "D1", True)
 encoder_r = encoder("D2", "D3")
@@ -60,6 +60,7 @@ class PID:
         self.integral_limits = integral_limits
         self.output_limits = output_limits
         self.output_adjustment = output_adjustment
+        self.out=0.0
 
     def calculate(self, target, current):
         error = target - current
@@ -84,51 +85,44 @@ class PID:
             output = self.output_adjustment(output)
 
         self.prev_error = error
-        return output
+        self.out=output
 
 
 # 特殊输出调整函数
-MedAngle=-30.9
+MedAngle=-30.967
 
 def gyro_adjustment(output):
-    return output + 700 if output >= 0 else output - 700
+    return output + 600 if output >= 0 else output - 600
 
 
 # PID实例化
-speed_pid = PID(kp=-1, ki=0.0,kd=0.0, integral_limits=(-2000, 2000))
+speed_pid = PID(kp=-0.2029995, ki=0.0,kd=-0.37)
                 #output_limits=(-500, 500)
 
 #
 
-angle_pid = PID(kp=19.68,ki=0.0, kd=0.0, integral_limits=(-2000, 2000))
+angle_pid = PID(kp=-33.63899,ki=0.0, kd=0.0,)
 
-gyro_pid = PID(kp=0.74, ki=0.0,kd=1.78,integral_limits=(-2000, 2000),
-               # output_limits=(-500, 500),
+gyro_pid = PID(kp=-0.8700002, ki=-0.264,kd=-0.59,
+               integral_limits=(-2000,2000),
+                #output_limits=(-5000, 5000)
                output_adjustment=gyro_adjustment)
 
-dir_in = PID(kp=2, ki=0.0)
+dir_in = PID(kp=1.24, ki=0.0)
 #  integral_limits=(-2000, 2000))
 
-dir_out = PID(kp=-125, kd=0.0)
+dir_out = PID(kp=0.0, kd=0.0)
 
 speed_control = PID(kp=0.3)
 # 串级PID相关变量
-speed_pid_out = 0
-angle_pid_out = 0
-gyro_pid_out = 0
-dir_in_out = 0
-dir_out_out = 0
+
 
 
 
 key_data =[0]*4
-ccd_data1 = [0] * 128  # ccd1原始数组
-ccd_data2 = [0] * 128  # ccd2原始数组
 encl_data = 0  # 左编码器数据
 encr_data = 0  # 右数据编码器
 #aim_speed = 0  # 之后要可以使用KEY手动修改
-aim_speed_l = 0  # 左轮期望速度
-aim_speed_r = 0  # 右轮期望速度
 out_l = 0  # 左轮输出值
 out_r = 0  # 右轮输出值
 speed_d = 50  # 速度增量(调试用)
@@ -143,7 +137,7 @@ class MovementType:
     def __init__(self):
         self.mode=MOVEMENTTYPE.default
         self.aim_speed=-100
-        self.speed=-100
+        self.speed=0
     def update(self):
         # 防止速度调参时变化过快直接倒地的pid
         self.speed = speed_control.calculate(self.aim_speed, self.speed)
