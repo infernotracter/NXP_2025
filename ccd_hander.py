@@ -356,10 +356,10 @@ class ElementDetector:
                 gyro_z.reset()
                 distance.reset()
                 return True
-        if gyro_z.data > self.GYRO_Z_ring3_data or gyro_z.data < -self.GYRO_Z_ring3_data:
-            self.state = RoadElement.normal
-            gyro_z.reset()
-            distance.reset()        
+            else:
+                self.state = RoadElement.normal
+                gyro_z.reset()
+                distance.reset()        
     
     def _right_3_not(self):
         distance.start()
@@ -396,10 +396,10 @@ class ElementDetector:
                 gyro_z.reset()
                 distance.reset()
                 return True
-        if gyro_z.data > self.GYRO_Z_ring3_data or gyro_z.data < -self.GYRO_Z_ring3_data:
-            self.state = RoadElement.normal
-            gyro_z.reset()
-            distance.reset()
+            else:
+                self.state = RoadElement.normal
+                gyro_z.reset()
+                distance.reset()
 
     def _left_3_not(self):
         distance.start()
