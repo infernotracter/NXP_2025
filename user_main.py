@@ -113,7 +113,7 @@ q1 = q2 = q3 = 0.0
 I_ex = I_ey = I_ez = 0.0
 imu_kp = 254.95  # 比例增益（调整滤波响应速度）
 imu_ki = 0  # 积分增益（调整积分速度）
-delta_T = 0.005  # 采样周期（与1ms中断对应）
+delta_T = 0.005  # 采样周期（与5ms中断对应）
 current_pitch = 0  # 当前俯仰角
 current_roll = 0  # 当前横滚角
 current_yaw = 0  # 当前偏航角
@@ -207,7 +207,7 @@ last_gz = 0
 def imuoffsetinit():
     global accoffsetx, accoffsety, accoffsetz, gyrooffsetx, gyrooffsety, gyrooffsetz, last_ax, last_ay, last_az, last_gx, last_gy, last_gz
     for _ in range(OFFSETNUM):
-        imu_data = imu.get()
+        imu_data = imu.read()
         accoffsetx += (imu_data[0] - last_ax)
         accoffsety += (imu_data[1] - last_ay)
         accoffsetz += (imu_data[2] - last_az)
@@ -258,7 +258,6 @@ stop_flag = 1
 #distance.start() 
 #gyro_z.start()
 
-
 import time
 
 class IMUHandler:
@@ -297,8 +296,9 @@ class IMUHandler:
         pitch_gyro = self.current_pitch + self.data[3] * delta_t
         self.current_pitch = self.alpha * self.data[1] + (1 - self.alpha) * pitch_gyro
         return self.current_pitch
-
+tmpelement=0
 imu_hander = IMUHandler()
+movementtype.mode=MOVEMENTTYPE.Mode_2
 gyro_z.start()
 distance.start()
 print("""   ____   _           _   _           /\/|
@@ -315,10 +315,13 @@ while True:
     error1=mid_point_near-64
     error2=mid_point_far-64
     if checker(current_roll):
-        stop_falg = 0
+        stop_flag = 0
     #print(encl_data)
     #movementtype.speed = int(scale_value(abs(error1 - error2), 0, 64) * movementtype.speed)
-    #elementdetector.update()
+    elementdetector.update()
+    if elementdetector.state!=tmpelement:
+        lcd.clear(0x0000)
+        tmpelement=elementdetector.state
     # 拨码开关关中断
     if end_switch.value() == 1:
         break  # 跳出判断
@@ -372,14 +375,14 @@ while True:
         key_data = key.get()
         if checker(current_roll):
             stop_flag = 0
-        if (key_data[0] or key_data[1] or key_data[2] or key_data[3]):
-            stop_flag = 1
-            gyro_pid.integral=0
-            angle_pid.integral=0
-            speed_pid.integral=0
-            dir_in.integral=0
-            dir_out.integral=0
-            clearall()
+#         if (key_data[0] or key_data[1] or key_data[2] or key_data[3]):
+#             stop_flag = 1
+#             gyro_pid.integral=0
+#             angle_pid.integral=0
+#             speed_pid.integral=0
+#             dir_in.integral=0
+#             dir_out.integral=0
+#             clearall()
         ticker_flag_menu = False
 
 
@@ -466,17 +469,12 @@ while True:
             #gyro_pid.kp,gyro_pid.ki,gyro_pid.kd,angle_pid_out,gyro_pid_out,imu_hander.data[3],current_roll
             #current_roll, gyro_pid.out,angle_pid.out
             #imu_data[0], imu_data[1],imu_data[2],imu_data[3],imu_data[4],imu_data[5]#,current_roll,imu_hander.alpha
-            dir_in.kp, dir_out.kp, speed_pid.kp,movementtype.speed,mid_point_near, mid_point_far
+            #dir_in.kp, dir_out.kp, speed_pid.kp,movementtype.speed,mid_point_near, mid_point_far
             #,
             #mid_point_near[0], current_roll,stop_flag
             #imu_kp,imu_ki,current_roll
             #current_roll,current_yaw,current_pitch
-            
+            elementdetector.state
             )
         #print(dir_out.kp,dir_out.kd,movementtype.aim_speed,dir_out_out,mid_point_near[0],mid_point_far[0])
         ticker_flag_8ms = False
-
-
-
-
-

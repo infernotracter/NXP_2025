@@ -8,6 +8,14 @@ car_go_flag = 0
 element_flag = 0
 key_cnt=0
 
+
+def check_speedmode(speed):
+    if speed==0:
+        return 'default'
+    elif speed==1:
+        return 'mode_1'
+    elif speed==2:
+        return 'mode_2'
 def check_element(mod):
     if mod==-1:
         return 'stop'
@@ -100,9 +108,9 @@ def sec_menu_01(key_data):
     global main_menu_flag, point, car_go_flag,stop_flag,key_cnt
     lcd.str24(60, 0, "car_go_mode", 0x07E0)
     lcd.str16(16, 30, "stop_flag={} ".format(stop_flag),0xFFFF)
-    lcd.str16(16, 46, "car_mode={}".format(movementtype.aim_speed), 0x07E0)   #寻圆环/不寻圆环
+    lcd.str16(16, 46, "car_mode={}".format(check_speedmode(movementtype.speed)), 0x07E0)   #寻圆环/不寻圆环
     lcd.str16(16, 62, "return ",0xFFFF)
-    lcd.str16(16, 126, "aim_speed={}".format(movementtype.aim_speed),0xFFFF)
+    lcd.str16(16, 126, "aim_speed={}".format(movementtype.speed),0xFFFF)
     lcd.str12(0, point, ">", 0xF800)
     point_move(62, 30, key_data)
     
@@ -119,18 +127,15 @@ def sec_menu_01(key_data):
     if key_data[2] and point == 46:
         key_cnt+=1
         if key_cnt == 0:
-            movementtype.aim_speed=0
+            movementtype.speed=0
         elif key_cnt == 1:
-            movementtype.aim_speed=-100
+            movementtype.speed=40
         elif key_cnt == 2:
-            movementtype.aim_speed=-200
-        elif key_cnt == 3:
-            movementtype.aim_speed=-300
-        elif key_cnt == 4:
-            movementtype.aim_speed=-400
-
-        elif key_cnt>4:
+            movementtype.speed=80
+        elif key_cnt >=3:
             key_cnt=0
+            movementtype.speed=0
+            
 #         if key_cnt==0:
 #             movementtype.mode=MovementType.default
 #         if key_cnt==1:
@@ -155,33 +160,42 @@ def sec_menu_01(key_data):
 def sec_menu_02(key_data):  #元素debug
     global main_menu_flag, point, element_flag
     lcd.str24(60, 0, "debug", 0x07E0)  # 二级菜单标题
-    lcd.str12(16, 30,"ccd_near_l[0]:{}   ,ccd_near_l[1]:{}".format(elementdetector.ccd_near_l[0],elementdetector.ccd_near_l[1]),0xFFFF)
-    lcd.str12(16, 46,"ccd_near_r[0]:{}   ,ccd_near_r[1]:{}".format(elementdetector.ccd_near_r[0],elementdetector.ccd_near_r[1]),0xFFFF)
-    lcd.str12(16, 62,"ccd_far_l[0]:{}   ,ccd_far_l[1]:{}".format(elementdetector.ccd_far_l[0],elementdetector.ccd_far_l[1]),0xFFFF)
-    lcd.str12(16, 78,"ccd_far_r[0]:{}   ,ccd_far_r[1]:{}".format(elementdetector.ccd_far_r[0],elementdetector.ccd_far_r[1]),0xFFFF)
-    lcd.str12(16, 94,"stage:{}".format(check_element(elementdetector.state)),0xFFFF)
-    lcd.str12(16, 110,"ccd_near.left:{} , ccd_near.right:{}".format(ccd_near.left, ccd_near.right),0xFFFF)
-    lcd.str12(16, 126,"ccd_far.left:{} , ccd_far.right:{}".format(ccd_far.left,ccd_far.right),0xFFFF)
-    lcd.str12(16, 142,"ccd_near_length:{}".format(elementdetector.ccd_near_length),0xFFFF)
-    lcd.str12(16, 158,"gyro:{:.1f}  dis:{:.3f}".format(gyro_z.data, distance.data),0xFFFF)
-    lcd.str12(16, 174,"data_update",0xFFFF)
-    lcd.str12(16, 190,"gyro&dis_clear",0xFFFF)
-    lcd.str12(16, 206,"return",0xFFFF)
-    lcd.str12(0, point, ">", 0xF800)
+    lcd.str16(16, 30,"cnl[0]:{} cnl[1]:{}".format(elementdetector.ccd_near_l[0],elementdetector.ccd_near_l[1]),0xFFFF)
+    lcd.str16(16, 46,"cnr[0]:{} cnr[1]:{}".format(elementdetector.ccd_near_r[0],elementdetector.ccd_near_r[1]),0xFFFF)
+    lcd.str16(16, 62,"cfl[0]:{}  cfl[1]:{}".format(elementdetector.ccd_far_l[0],elementdetector.ccd_far_l[1]),0xFFFF)
+    lcd.str16(16, 78,"cfr[0]:{}  cfr[1]:{}".format(elementdetector.ccd_far_r[0],elementdetector.ccd_far_r[1]),0xFFFF)
+    lcd.str16(16, 94,"stage:{}".format(check_element(elementdetector.state)),0xFFFF)
+    lcd.str16(16, 110,"nl:{:<3}   nr:{:<3}".format(ccd_near.left, ccd_near.right),0xFFFF)
+    lcd.str16(16, 126,"fl:{:<3}   fr:{:<3}".format(ccd_far.left,ccd_far.right),0xFFFF)
+    lcd.str16(16, 142,"near length:{}".format(elementdetector.ccd_near_length),0xFFFF)
+    lcd.str16(16, 158,"g:{:.1f} d:{:.3f}".format(gyro_z.data, distance.data),0xFFFF)
+    lcd.str16(16, 174,"data_update",0xFFFF)
+    lcd.str16(16, 190,"state_reset",0xFFFF)
+    lcd.str16(16, 206,"gyro&dis_clear",0xFFFF)
+    lcd.str16(16, 222,"return",0xFFFF)
+    lcd.str16(0, point, ">", 0xF800)
 
-    point_move(206, 174, key_data)
+    point_move(222, 174, key_data)
     if point == 174 and key_data[2]:
         lcd.clear(0x0000)
+        elementdetector.debug()
         elementdetector.update()
         elementdetector.state = 0
         key.clear(3)
+    
     if point == 190 and key_data[2]:
+        lcd.clear(0x0000)
+        elementdetector.state = 0
+        key.clear(3)
+        
+    if point == 206 and key_data[2]:
         lcd.clear(0x0000)
         distance.data = 0
         gyro_z.data = 0
         gyro_z._getoffset()
         key.clear(3)
-    if point == 206 and key_data[2]:
+        
+    if point == 222 and key_data[2]:
         lcd.clear(0x0000)
         main_menu_flag = 1
         element_flag = 0
@@ -189,5 +203,6 @@ def sec_menu_02(key_data):  #元素debug
         key.clear(3)
 
     gc.collect()
+
 
 

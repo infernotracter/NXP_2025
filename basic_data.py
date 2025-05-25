@@ -108,10 +108,10 @@ gyro_pid = PID(kp=-0.8700002, ki=-0.264,kd=-0.59,
                 #output_limits=(-5000, 5000)
                output_adjustment=gyro_adjustment)
 
-dir_in = PID(kp=1.24, ki=0.0)
+dir_in = PID(kp=2.68, ki=0.0)       
 #  integral_limits=(-2000, 2000))
 
-dir_out = PID(kp=0.0, kd=0.0)
+dir_out = PID(kp=-83.1, kd=0.0)
 
 speed_control = PID(kp=0.3)
 # 串级PID相关变量
@@ -142,23 +142,16 @@ class MovementType:
         # 防止速度调参时变化过快直接倒地的pid
         self.speed = speed_control.calculate(self.aim_speed, self.speed)
              
-#         if self.mode == MOVEMENTTYPE.default:
-#             self.aim_speed=-20
-#              
-#         elif self.mode == MOVEMENTTYPE.Mode_1:
-#             self.aim_speed=-20
-#              
-#         elif self.mode == MOVEMENTTYPE.Mode_2:
-#             self.aim_speed=-30
-#  
-#         elif self.mode == MOVEMENTTYPE.Mode_3:
-#             self.aim_speed=-40
-#  
-#         elif self.mode == MOVEMENTTYPE.Mode_4:
-#             self.aim_speed=-50
-#  
-#         elif self.mode == MOVEMENTTYPE.Mode_5:
-#             self.aim_speed=-60
+        if self.mode == MOVEMENTTYPE.default:
+            self.aim_speed=0
+             
+        elif self.mode == MOVEMENTTYPE.Mode_1:
+            self.aim_speed=50
+            
+        elif self.mode == MOVEMENTTYPE.Mode_2:
+            self.aim_speed=80
+            dir_in = PID()
+        
 movementtype=MovementType()
 
 
