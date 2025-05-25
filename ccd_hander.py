@@ -116,8 +116,8 @@ class RoadElement:
     l2 = 2
     r1 = 3
     r2 = 4
-    l3_not = 12
-    r3_not = 13
+    l3_not = 14
+    r3_not = 15
     l3 = 5
     r3 = 6
     lin = 7

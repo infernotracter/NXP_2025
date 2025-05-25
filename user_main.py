@@ -308,15 +308,17 @@ print("""   ____   _           _   _           /\/|
   \____| |_|  \__,_| |_| |_|  \___/       """)
 while True:
     
-    motor_l.duty(my_limit(gyro_pid.out - dir_in.out, -6000, 6000))
-    motor_r.duty(my_limit(gyro_pid.out + dir_in.out, -6000, 6000))
+    motor_l.duty(my_limit(gyro_pid.out - dir_in.out, -6000, 6000) * stop_flag)
+    motor_r.duty(my_limit(gyro_pid.out + dir_in.out, -6000, 6000) * stop_flag)
     mid_point_near = ccd_near.get_mid_point(value =31, reasonrange = 128, follow = 0, searchgap = 0)
     mid_point_far=ccd_far.get_mid_point(value =31, reasonrange = 128, follow = 0, searchgap = 0)
-    error1=mid_point_near[0]-64
-    error2=mid_point_far[0]-64
+    error1=mid_point_near-64
+    error2=mid_point_far-64
+    if checker(current_roll):
+        stop_falg = 0
     #print(encl_data)
-    #movementtype.aim_speed *= int(scale_value(abs(error1 - error2), 0, 10))
-    elementdetector.update()
+    #movementtype.speed = int(scale_value(abs(error1 - error2), 0, 64) * movementtype.speed)
+    #elementdetector.update()
     # 拨码开关关中断
     if end_switch.value() == 1:
         break  # 跳出判断
@@ -366,9 +368,8 @@ while True:
         ticker_flag_gyro = False
 
     if (ticker_flag_menu):
-        #menu(key_data)
+        menu(key_data)
         key_data = key.get()
-        
         if checker(current_roll):
             stop_flag = 0
         if (key_data[0] or key_data[1] or key_data[2] or key_data[3]):
@@ -392,7 +393,7 @@ while True:
         gyro_z.update(tmpdata = imu_data[5], delta_t = 0.4)
         distance.update(tmpdata = (encl_data + encr_data) / 2, delta_t = 0.4)
         # 定期进行数据解析
-        #dir_out.calculate(0, error1)
+        dir_out.calculate(0, error1)
         #movementtype.update()
         data_flag = wireless.data_analysis()
         for i in range(0, 8):
@@ -404,22 +405,22 @@ while True:
                 print("Data[{:<6}] updata : {:<.3f}.\r\n".format(i, data_wave[i]))
                 
                 # 根据通道号单独更新对应参数
-#                 if i == 0:
-#                     dir_in.kp = data_wave[i]
-#                 elif i == 1:
-#                     dir_out.kp = data_wave[i]
-#                 elif i == 2:
-#                     speed_pid.kp = data_wave[i]
-#                 elif i == 3:
-#                     movementtype.aim_speed = data_wave[i]
-#                 elif i == 4:
-#                     movementtype.speed = data_wave[i]
-#                 elif i == 5:
-#                     dir_out.ki = data_wave[i]
-#                 elif i == 6:
-#                     dir_out.kd = data_wave[i]
-#                 elif i == 7:
-#                     MedAngle = data_wave[i]
+                if i == 0:
+                    dir_in.kp = data_wave[i]
+                elif i == 1:
+                    dir_out.kp = data_wave[i]
+                elif i == 2:
+                    speed_pid.kp = data_wave[i]
+                elif i == 3:
+                    movementtype.aim_speed = data_wave[i]
+                elif i == 4:
+                    movementtype.speed = data_wave[i]
+                elif i == 5:
+                    dir_out.ki = data_wave[i]
+                elif i == 6:
+                    dir_out.kd = data_wave[i]
+                elif i == 7:
+                    MedAngle = data_wave[i]
 # 
 #                 if i == 0:
 #                     gyro_pid.kp = data_wave[i]  
@@ -437,35 +438,35 @@ while True:
 #                     speed_pid.kp = data_wave[i]   
 #                 elif i == 7:
 #                     MedAngle = data_wave[i]
-                if i==0:
-                    elementdetector.state = data_wave[i]
-                elif i==1:
-                    movementtype.mode = data_wave[i]
-                if i == 0:
-                    ccd_near_length = data_wave[i]
-                elif i == 1:
-                    dir_out.kp = data_wave[i]
-                elif i == 2:
-                    speed_pid.kp = data_wave[i]
-                elif i == 3:
-                    movementtype.aim_speed = data_wave[i]
-                elif i == 4:
-                    movementtype.speed = data_wave[i]
-                elif i == 5:
-                    dir_out.ki = data_wave[i]
-                elif i == 6:
-                    dir_out.kd = data_wave[i]
-                elif i == 7:
-                    MedAngle = data_wave[i]
+#                 if i==0:
+#                     elementdetector.state = data_wave[i]
+#                 elif i==1:
+#                     movementtype.mode = data_wave[i]
+#                 if i == 0:
+#                     ccd_near_length = data_wave[i]
+#                 elif i == 1:
+#                     dir_out.kp = data_wave[i]
+#                 elif i == 2:
+#                     speed_pid.kp = data_wave[i]
+#                 elif i == 3:
+#                     movementtype.aim_speed = data_wave[i]
+#                 elif i == 4:
+#                     movementtype.speed = data_wave[i]
+#                 elif i == 5:
+#                     dir_out.ki = data_wave[i]
+#                 elif i == 6:
+#                     dir_out.kd = data_wave[i]
+#                 elif i == 7:
+#                     MedAngle = data_wave[i]
                 
         # 将数据发送到示波器
         wireless.send_ccd_image(WIRELESS_UART.ALL_CCD_BUFFER_INDEX)
         wireless.send_oscilloscope(
-            gyro_z.data, distance.data, elementdetector.state, ccd_near.left, ccd_near.right, ccd_far.left, ccd_far.right,elementdetector.ccd_near_length
+            #gyro_z.data, distance.data, elementdetector.state, ccd_near.left, ccd_near.right, ccd_far.left, ccd_far.right,elementdetector.ccd_near_length
             #gyro_pid.kp,gyro_pid.ki,gyro_pid.kd,angle_pid_out,gyro_pid_out,imu_hander.data[3],current_roll
             #current_roll, gyro_pid.out,angle_pid.out
             #imu_data[0], imu_data[1],imu_data[2],imu_data[3],imu_data[4],imu_data[5]#,current_roll,imu_hander.alpha
-            #dir_in.kp, dir_out.kp, speed_pid.kp,movementtype.speed,dir_out.ki,dir_out.kd
+            dir_in.kp, dir_out.kp, speed_pid.kp,movementtype.speed,mid_point_near, mid_point_far
             #,
             #mid_point_near[0], current_roll,stop_flag
             #imu_kp,imu_ki,current_roll

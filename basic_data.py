@@ -136,8 +136,8 @@ class MOVEMENTTYPE:
 class MovementType:
     def __init__(self):
         self.mode=MOVEMENTTYPE.default
-        self.aim_speed=-100
-        self.speed=0
+        self.aim_speed=0.0
+        self.speed=0.0
     def update(self):
         # 防止速度调参时变化过快直接倒地的pid
         self.speed = speed_control.calculate(self.aim_speed, self.speed)

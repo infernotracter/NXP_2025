@@ -7,6 +7,43 @@ main_menu_flag = 1
 car_go_flag = 0
 element_flag = 0
 key_cnt=0
+
+def check_element(mod):
+    if mod==-1:
+        return 'stop'
+    elif mod==0:                                               
+        return 'normal'
+    elif mod==1:
+        return 'l1'
+    elif mod==2:
+        return 'l2'
+    elif mod==3:
+        return 'r1'
+    elif mod==4:
+        return 'r2'
+    elif mod==5:
+        return 'l3'
+    elif mod==6:
+        return 'r3'
+    elif mod==7:
+        return 'lin'
+    elif mod==8:
+        return 'lout'
+    elif mod==9:
+        return 'rin'
+    elif mod==10:
+        return 'rout'                   
+    elif mod==11:
+        return 'zebra'
+    elif mod==12:
+        return 'ramp'
+    elif mod==13:
+        return 'barrier'
+    elif mod==14:
+        return 'l3not'
+    elif mod==15:
+        return 'r3not'
+
 def point_move(hight, low, key_data):
     global point
     if key_data[1]:
@@ -54,7 +91,7 @@ def main_menu(key_data):  # 一级菜单
         lcd.clear(0x0000)
         element_flag = 1
         main_menu_flag = 0
-        point = 158
+        point = 174
         key.clear(3)
     gc.collect()
 
@@ -116,34 +153,35 @@ def sec_menu_01(key_data):
 
 
 def sec_menu_02(key_data):  #元素debug
-    global main_menu_flag, point,element_flag
+    global main_menu_flag, point, element_flag
     lcd.str24(60, 0, "debug", 0x07E0)  # 二级菜单标题
-    lcd.str16(16, 30,"ccd_near_l[0]:{}   ,ccd_near_l[1]:{}".format(elementdetector.ccd_near_l[0],elementdetector.ccd_near_l[1]),0xFFFF)
-    lcd.str16(16, 46,"ccd_near_r[0]:{}   ,ccd_near_r[1]:{}".format(elementdetector.ccd_near_r[0],elementdetector.ccd_near_r[1]),0xFFFF)
-    lcd.str16(16, 62,"ccd_far_l[0]:{}   ,ccd_far_l[1]:{}".format(elementdetector.ccd_far_l[0],elementdetector.ccd_far_l[1]),0xFFFF)
-    lcd.str16(16, 78,"ccd_far_r[0]:{}   ,ccd_far_r[1]:{}".format(elementdetector.ccd_far_r[0],elementdetector.ccd_far_r[1]),0xFFFF)
-    lcd.str16(16, 94,"movementtype.mode:{}  ,stage:{}".format(movementtype.mode,elementdetector.state),0xFFFF)
-    lcd.str16(16, 110,"ccd_near.left:{} , ccd_near.right:{}".format(ccd_near.left, ccd_near.right),0xFFFF)
-    lcd.str16(16, 126,"ccd_far.left:{} , ccd_far.right:{}".format(ccd_far.left,ccd_far.right),0xFFFF)
-    lcd.str16(16, 142,"ccd_near_length:{} , gyro:{:.1f} , dis:{:.3f}".format(elementdetector.ccd_near_length,gyro_z.data, distance.data),0xFFFF)
-    lcd.str16(16, 158,"data_update",0xFFFF)
-    lcd.str16(16, 174,"gyro&dis_clear",0xFFFF)
-    lcd.str16(16, 190,"return",0xFFFF)
+    lcd.str12(16, 30,"ccd_near_l[0]:{}   ,ccd_near_l[1]:{}".format(elementdetector.ccd_near_l[0],elementdetector.ccd_near_l[1]),0xFFFF)
+    lcd.str12(16, 46,"ccd_near_r[0]:{}   ,ccd_near_r[1]:{}".format(elementdetector.ccd_near_r[0],elementdetector.ccd_near_r[1]),0xFFFF)
+    lcd.str12(16, 62,"ccd_far_l[0]:{}   ,ccd_far_l[1]:{}".format(elementdetector.ccd_far_l[0],elementdetector.ccd_far_l[1]),0xFFFF)
+    lcd.str12(16, 78,"ccd_far_r[0]:{}   ,ccd_far_r[1]:{}".format(elementdetector.ccd_far_r[0],elementdetector.ccd_far_r[1]),0xFFFF)
+    lcd.str12(16, 94,"stage:{}".format(check_element(elementdetector.state)),0xFFFF)
+    lcd.str12(16, 110,"ccd_near.left:{} , ccd_near.right:{}".format(ccd_near.left, ccd_near.right),0xFFFF)
+    lcd.str12(16, 126,"ccd_far.left:{} , ccd_far.right:{}".format(ccd_far.left,ccd_far.right),0xFFFF)
+    lcd.str12(16, 142,"ccd_near_length:{}".format(elementdetector.ccd_near_length),0xFFFF)
+    lcd.str12(16, 158,"gyro:{:.1f}  dis:{:.3f}".format(gyro_z.data, distance.data),0xFFFF)
+    lcd.str12(16, 174,"data_update",0xFFFF)
+    lcd.str12(16, 190,"gyro&dis_clear",0xFFFF)
+    lcd.str12(16, 206,"return",0xFFFF)
     lcd.str12(0, point, ">", 0xF800)
 
-    point_move(190, 158, key_data)
-    if point == 158 and key_data[2]:
+    point_move(206, 174, key_data)
+    if point == 174 and key_data[2]:
         lcd.clear(0x0000)
         elementdetector.update()
         elementdetector.state = 0
         key.clear(3)
-    if point == 174 and key_data[2]:
+    if point == 190 and key_data[2]:
         lcd.clear(0x0000)
         distance.data = 0
         gyro_z.data = 0
         gyro_z._getoffset()
         key.clear(3)
-    if point == 190 and key_data[2]:
+    if point == 206 and key_data[2]:
         lcd.clear(0x0000)
         main_menu_flag = 1
         element_flag = 0
