@@ -120,13 +120,9 @@ speed_control = PID(kp=0.3)
 
 
 key_data =[0]*4
-ccd_data1 = [0] * 128  # ccd1原始数组
-ccd_data2 = [0] * 128  # ccd2原始数组
 encl_data = 0  # 左编码器数据
 encr_data = 0  # 右数据编码器
 #aim_speed = 0  # 之后要可以使用KEY手动修改
-aim_speed_l = 0  # 左轮期望速度
-aim_speed_r = 0  # 右轮期望速度
 out_l = 0  # 左轮输出值
 out_r = 0  # 右轮输出值
 speed_d = 50  # 速度增量(调试用)

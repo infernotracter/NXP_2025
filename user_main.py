@@ -368,30 +368,16 @@ while True:
     if (ticker_flag_menu):
         #menu(key_data)
         key_data = key.get()
-        lcd.str16(30,16,
-        f"{elementdetector.ccd_near_l[0]}, {elementdetector.ccd_near_l[1]} , {elementdetector.ccd_near_r[0]} , {elementdetector.ccd_near_r[1]} ",0xFFFF)
-        lcd.str16(30,42,
-        f"{elementdetector.ccd_far_l[0]},{elementdetector.ccd_far_l[1]},{elementdetector.ccd_far_r[0]},{elementdetector.ccd_far_r[1]}",0xFFFF)
-        lcd.str16(30,58,
-        f"{movementtype.mode}",0xFFFF)
-        lcd.str16(30,74,
-        f"{elementdetector.state, ccd_near.left, ccd_near.right, ccd_far.left, ccd_far.right,elementdetector.ccd_near_length}",0xFFFF)
-        lcd.str16(30,90,
-        "{:<5} {:<5}".format(gyro_z.data, distance.data),0xFFFF)
+        
         if checker(current_roll):
             stop_flag = 0
         if (key_data[0] or key_data[1] or key_data[2] or key_data[3]):
-            elementdetector.debug()
-            elementdetector.state = 0
             stop_flag = 1
             gyro_pid.integral=0
             angle_pid.integral=0
             speed_pid.integral=0
             dir_in.integral=0
             dir_out.integral=0
-            distance.data = 0
-            gyro_z.data = 0
-            gyro_z._getoffset()
             clearall()
         ticker_flag_menu = False
 
