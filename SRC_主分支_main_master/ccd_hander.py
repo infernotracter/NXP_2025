@@ -160,6 +160,7 @@ class ElementDetector:
         self.DISTANCE_ring3_data = 0.1
         self.GYRO_Z_ring_in_data = 40
         self.DISTANCE_ring_out_data = 0.15
+
         self.ccd_near_length = 40
         self.ccd_far_length = 40
 
@@ -182,10 +183,12 @@ class ElementDetector:
         temp_ccd_far_data_l = 0
         temp_ccd_far_data_r = 0
         for _ in range(10):
-            temp_ccd_near_data_l += ccd_near.update()
-            temp_ccd_near_data_r += ccd_near.update()
-            temp_ccd_far_data_l += ccd_far.update()
-            temp_ccd_far_data_r += ccd_far.update()
+            ccd_near.update()
+            ccd_far.update()
+            temp_ccd_near_data_l += ccd_near.left
+            temp_ccd_near_data_r += ccd_near.right
+            temp_ccd_far_data_l += ccd_far.left
+            temp_ccd_far_data_r += ccd_far.right
         delta = 10
         self.ccd_near_l[0] = temp_ccd_near_data_l // 10 - delta
         self.ccd_near_l[1] = temp_ccd_near_data_l // 10 + delta
