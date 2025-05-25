@@ -131,7 +131,7 @@ def sec_menu_02(key_data):  #元素debug
     lcd.str16(16, 190,"return",0xFFFF)
     lcd.str12(0, point, ">", 0xF800)
 
-    point_move(174, 158, key_data)
+    point_move(190, 158, key_data)
     if point == 158 and key_data[2]:
         lcd.clear(0x0000)
         elementdetector.update()
