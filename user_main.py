@@ -314,17 +314,14 @@ while True:
     if checker(current_roll):
         stop_flag = 0
     #print(encl_data)
-<<<<<<< HEAD
-    base_speed = movementtype.speed if movementtype.speed is not None else 0
-    movementtype.speed = int(scale_value(abs(error1 - error2), 0, 64) * base_speed)
+    #base_speed = movementtype.speed if movementtype.speed is not None else 0
+    #movementtype.speed = int(scale_value(abs(error1 - error2), 0, 64) * base_speed)
     #elementdetector.update()
-=======
     #movementtype.speed = int(scale_value(abs(error1 - error2), 0, 64) * movementtype.speed)
     elementdetector.update()
     if elementdetector.state!=tmpelement:
         lcd.clear(0x0000)
         tmpelement=elementdetector.state
->>>>>>> 202fb3218cf56c1f27f73f39ea27b3c188420088
     # 拨码开关关中断
     if end_switch.value() == 1:
         break  # 跳出判断
