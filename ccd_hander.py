@@ -61,7 +61,9 @@ class CCDHandler:
         return self.mid
     
     def read_mid_point(self, value, reasonrange, follow=0, searchgap=0):
-        """获取赛道中线坐标及边界"""  
+        """获取赛道中线坐标及边界, get改成read"""  
+        if self.follow != 0:
+            self.follow = follow
         self.data=ccd.read(self.channel)
         # 当上次中点无效时进行边界搜索
         if self.data[self.last_mid] < self.get_threshold():
@@ -153,6 +155,11 @@ class RoadElement:
     zebra = 11
     ramp = 12
     barrier = 13
+
+class ccd_controller:
+    def __init__(self):
+        self._ccd_far = ccd_far
+        self._ccd_near = ccd_near
 
 class ElementDetector:
     """赛道元素检测器"""
@@ -289,7 +296,7 @@ class ElementDetector:
                 self.state = RoadElement.rout
         if self.state == RoadElement.lin:
             stage_error.get_tmp()
-            if self._left_out():
+            if self._left_outcoming():
                 self.state = RoadElement.lout
         
         # if tempcheck != self.state:
@@ -436,10 +443,14 @@ class ElementDetector:
         if gyro_z.data < -self.GYRO_Z_ring_in_data or gyro_z.data > self.GYRO_Z_ring_in_data:
             return True
 
+    def _left_outcoming(self):
+        # 超过一定距离并且全白
+        if abs(distance.data) > self.DISTANCE_ring_out_data:
+            if check_tuple(self._ccd_near.data, 90, 30)==1 or check_tuple(self._ccd_far.data, 90, 30)==1:
+                self.state = RoadElement.normal
+
     def _left_out(self):
-        # 距离方向取反（原检测正方向，镜像后检测负方向）
-        if distance.data < -self.DISTANCE_ring_out_data or distance.data > self.DISTANCE_ring_out_data:
-            self.state = RoadElement.normal
+
 
 
 #-----------------------------------我们自己的圆环识别-------------------------------------------------
