@@ -2,7 +2,7 @@ from basic_data import imu
 import math
 import time
 
-class IMUHandler:
+class IMUHander:
     def __init__(self):
         self.data = [0.0] * 9
         self.offset_data = [0.0] * 9  # 存储各轴偏移量
@@ -42,3 +42,5 @@ class IMUHandler:
         self.current_pitch = self.alpha * self.data[0] + (1 - self.alpha) * pitch_gyro
         self.last_time = current_time
         return self.current_pitch
+
+imuhander = IMUHander()

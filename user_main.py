@@ -315,9 +315,10 @@ while True:
     error1=mid_point_near-64
     error2=mid_point_far-64
     if checker(current_roll):
-        stop_falg = 0
+        stop_flag = 0
     #print(encl_data)
-    #movementtype.speed = int(scale_value(abs(error1 - error2), 0, 64) * movementtype.speed)
+    base_speed = movementtype.speed if movementtype.speed is not None else 0
+    movementtype.speed = int(scale_value(abs(error1 - error2), 0, 64) * base_speed)
     #elementdetector.update()
     # 拨码开关关中断
     if end_switch.value() == 1:
@@ -395,6 +396,8 @@ while True:
         # 定期进行数据解析
         dir_out.calculate(0, error1)
         #movementtype.update()
+        speed_control.calculate(
+            movementtype.aim_speed, movementtype.speed)
         data_flag = wireless.data_analysis()
         for i in range(0, 8):
             # 判断哪个通道有数据更新
