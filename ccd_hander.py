@@ -294,9 +294,11 @@ class ElementDetector:
 
         # 出圆环
         if self.state == RoadElement.rin:
+            stage_error.get_tmp()
             if self._right_out():
                 self.state = RoadElement.rout
         if self.state == RoadElement.lin:
+            stage_error.get_tmp()
             if self._left_out():
                 self.state = RoadElement.lout
         
@@ -445,6 +447,9 @@ class ElementDetector:
     def _left_in(self):
         # 陀螺仪极性取反（原右转检测正方向，左转检测负方向）
         if gyro_z.data < -self.GYRO_Z_ring_in_data or gyro_z.data > self.GYRO_Z_ring_in_data:
+            gyro_z.data = 0
+            distance.data = 0
+            stage_error.get_tmp()
             return True
 
     def _left_out(self):
@@ -614,11 +619,11 @@ class Error_test:
     def __init__(self):
         self.data=0.0
     def get_tmp(self):
-        for _ in range(100):
+        for _ in range(10):
             tmp_mid = ccd_near.read_mid_point(value =31, reasonrange = 30, follow = 0, searchgap = 0)
             tmp_error=tmp_mid - 64
             self.data +=tmp_error
-        self.tmperror=self.data/100
+        self.tmperror=self.data/10
     def reset(self):
         self.data=0.0
 stage_error=Error_test()
