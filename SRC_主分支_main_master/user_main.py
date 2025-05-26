@@ -267,8 +267,8 @@ while True:
     motor_l.duty(my_limit(gyro_pid_out - dir_in_out, -3000, 3000))
     motor_r.duty(my_limit(gyro_pid_out + dir_in_out, -3000, 3000))
     ccd_temp_data = ccd.get(0)
-    mid_point_near,_,_ = ccd_near.get_mid_point(value =31, reasonrange = 128, follow = 0, searchgap = 0)
-    mid_point_far,_,_=ccd_far.get_mid_point(value =31, reasonrange = 128, follow = 0, searchgap = 0)
+    mid_point_near,_,_ = ccd_near.get_mid_point(value =31, reasonrange = 128, self.follow = 0, searchgap = 0)
+    mid_point_far,_,_=ccd_far.get_mid_point(value =31, reasonrange = 128, self.follow = 0, searchgap = 0)
     error1=mid_point_near-64
     error2=mid_point_far-64
     movementtype.aim_speed -= int(scale_value(abs(error1 - error2), 0, 64))

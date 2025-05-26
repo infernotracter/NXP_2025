@@ -307,8 +307,8 @@ while True:
     
     motor_l.duty(my_limit(gyro_pid.out - dir_in.out, -6000, 6000) * stop_flag)
     motor_r.duty(my_limit(gyro_pid.out + dir_in.out, -6000, 6000) * stop_flag)
-    mid_point_near = ccd_near.get_mid_point(value =31, reasonrange = 128, follow = 0, searchgap = 0)
-    mid_point_far=ccd_far.get_mid_point(value =31, reasonrange = 128, follow = 0, searchgap = 0)
+    mid_point_near = ccd_near.get_mid_point(value =31, reasonrange = 128, self.follow = 0, searchgap = 0)
+    mid_point_far=ccd_far.get_mid_point(value =31, reasonrange = 128, self.follow = 0, searchgap = 0)
     error1=mid_point_near-64
     error2=mid_point_far-64
     if checker(current_roll):

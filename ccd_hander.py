@@ -22,6 +22,7 @@ class CCDHandler:
         self.right = 127
         self.channel = channel
         self.error = 0
+        self.follow = 0
 
     def update(self):
         """更新CCD传感器数据"""
@@ -35,6 +36,8 @@ class CCDHandler:
 
     def get_mid_point(self, value, reasonrange, follow=0, searchgap=0):
         """获取赛道中线坐标及边界"""
+        if self.follow != 0:
+            self.follow = follow
         self.data = ccd.get(self.channel)  # 获取最新数据
         
         # 当上次中点无效时进行边界搜索
@@ -48,7 +51,7 @@ class CCDHandler:
         
         # 计算中线并应用跟随偏移
         self.mid = (self.left + self.right) // 2
-        self._apply_follow_offset(follow)
+        self._apply_follow_offset()
         
         # 限制中线变化幅度
         self._limit_mid_change(reasonrange)
@@ -71,7 +74,7 @@ class CCDHandler:
         
         # 计算中线并应用跟随偏移
         self.mid = (self.left + self.right) // 2
-        self._apply_follow_offset(follow)
+        self._apply_follow_offset()
         
         # 限制中线变化幅度
         self._limit_mid_change(reasonrange)
@@ -115,12 +118,12 @@ class CCDHandler:
                 return i
         return default
 
-    def _apply_follow_offset(self, follow):
+    def _apply_follow_offset(self):
         """应用跟随偏移调整边界"""
-        if follow > 0:
-            self.right = self.left + follow
-        elif follow < 0:
-            self.left = self.right + follow
+        if self.follow > 0:
+            self.right = self.left + self.follow
+        elif self.follow < 0:
+            self.left = self.right + self.follow
 
     def _limit_mid_change(self, max_change):
         """限制中线位置突变"""
@@ -247,47 +250,37 @@ class ElementDetector:
             movementtype.speed=0
         if self._left_1( ):
             self.state = RoadElement.l1
-            self.follow = -self.ccd_near_length
         if self._right_1( ):
             self.state = RoadElement.r1
-            self.follow = self.ccd_near_length
         if self.state == RoadElement.l1:
             if self._left_2( ):
                 self.state = RoadElement.l2
-                self.follow = -self.ccd_near_length
         if self.state == RoadElement.r1:
             if self._right_2( ):
                 self.state = RoadElement.r2
-                self.follow = self.ccd_near_length
         # 防误判圆环
         if self.state == RoadElement.r2:
             if movementtype.mode == MOVEMENTTYPE.Mode_1:
                 if self._right_3_not():
                     self.state = RoadElement.r3_not
-                    self.follow = -self.ccd_near_length
             if movementtype.mode == MOVEMENTTYPE.Mode_2:
                 if self._right_3():
                     self.state = RoadElement.r3
-                    self.follow = self.ccd_near_length
         if self.state == RoadElement.l2:
             if movementtype.mode == MOVEMENTTYPE.Mode_1:
                 if self._left_3_not():
                     self.state = RoadElement.l3_not
-                    self.follow = self.ccd_near_length
             if movementtype.mode == MOVEMENTTYPE.Mode_2:
                 if self._left_3():
                     self.state = RoadElement.l3
-                    self.follow = -self.ccd_near_length
 
         # 进圆环
         if self.state == RoadElement.r3:
             if self._right_in():
                 self.state = RoadElement.rin
-                self.follow = self.ccd_near_length
         if self.state == RoadElement.l3:
             if self._left_in():
                 self.state = RoadElement.lin
-                self.follow = -self.ccd_near_length
 
         # 出圆环
         if self.state == RoadElement.rin:
@@ -441,9 +434,6 @@ class ElementDetector:
     def _left_in(self):
         # 陀螺仪极性取反（原右转检测正方向，左转检测负方向）
         if gyro_z.data < -self.GYRO_Z_ring_in_data or gyro_z.data > self.GYRO_Z_ring_in_data:
-            gyro_z.data = 0
-            distance.data = 0
-            stage_error.get_tmp()
             return True
 
     def _left_out(self):
