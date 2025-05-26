@@ -120,7 +120,7 @@ class CCDHandler:
                 return i
         return default
 
-    def _apply_follow_offset(self):
+    def _apply_follow_offset(self):    #大于零跟左线，小于零跟右线
         """应用跟随偏移调整边界"""
         if self.follow > 0:
             self.right = self.left + self.follow
@@ -276,7 +276,7 @@ class ElementDetector:
         if self.state == RoadElement.l2:
             if movementtype.mode == MOVEMENTTYPE.Mode_1:
                 if self._left_3_not():
-                    self.state = RoadElement.l3_not
+                    self.state = RoadElement.normal
             if movementtype.mode == MOVEMENTTYPE.Mode_2:
                 if self._left_3():
                     self.state = RoadElement.l3
@@ -298,11 +298,40 @@ class ElementDetector:
             stage_error.get_tmp()
             if self._left_outcoming():
                 self.state = RoadElement.lout
-        
+        self._element_operations()  # 执行元素状态相关操作
         # if tempcheck != self.state:
         #     beep.start('short')
         return self.state
     
+    def _element_operations(self):
+        if self.state == RoadElement.normal:
+            gyro_z.off()
+            distance.off()
+        if self.state == RoadElement.l1:    #跟右边线
+            ccd_near.follow=-self.ccd_near_length
+        if self.state == RoadElement.l2:
+            gyro_z.start()
+            distance.start()
+            if movementtype.mode == MOVEMENTTYPE.Mode_1:   #如果是模式1，出圆环，跟右线
+                ccd_near.follow = -self.ccd_near_length
+            if movementtype.mode == MOVEMENTTYPE.Mode_2:   #如果是模式2，进入圆环，跟左线
+                ccd_near.follow= self.ccd_near_length
+        if self.state == RoadElement.l3:
+            gyro_z.clear()
+            distance.clear()
+            ccd_near.follow = self.ccd_near_length
+        
+        
+        if self.state == RoadElement.lin:
+            gyro_z.clear()
+            distance.clear()
+            self.tmperror=stage_error.get_tmp()
+        
+        
+
+        
+        self.prev_state=self.state
+
     def _left_1(self):
         """左圆环检测逻辑"""
         # # 近端CCD特征检查   近端左右边线都正常
@@ -436,7 +465,7 @@ class ElementDetector:
         
         if near_left_lost and near_right_valid and (point_diff <= self.POINT_diff_data) and \
             distance.data > self.DISTANCE_ring3_not_data:
-            self.state = RoadElement.normal
+            return True
 
     def _left_in(self):
         # 陀螺仪极性取反（原右转检测正方向，左转检测负方向）
@@ -576,10 +605,14 @@ class Distance:
         self.data = 0
     def start(self):
         self.start_flag = True
+    
+    def clear(self):
+        self.data=0
+
     def update(self, tmpdata, delta_t):
         if self.start_flag:
             self.data += tmpdata / 1024 * 30 / 50 * 0.05 * 3.1415926 * delta_t
-    def reset(self):
+    def off(self):
         self.data = 0
         self.start_flag = False
 distance = Distance()
@@ -590,20 +623,23 @@ class Gyro_Z_Test:
         self.start_flag = False
         self.offset = [0.0] * 9
         self.data = 0.0
-        self.getoffset()
-    def getoffset(self, num = 50):
+        self._getoffset()
+    def _getoffset(self, num = 100):
         for _ in range(num):
             imu_data = imu.read()
             for i in range(6):
                 self.offset[i] += imu_data[i]
         for i in range(6):
             self.offset[i] /= num
+    def clear(self):
+        self.data=0
+
     def start(self):
         self.start_flag = True
     def update(self, tmpdata, delta_t, channel = 5):
         if self.start_flag:
             self.data += (tmpdata - self.offset[channel]) * delta_t
-    def reset(self):
+    def off(self):
         self.data = 0
         self.start_flag = False
 gyro_z = Gyro_Z_Test()
