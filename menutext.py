@@ -182,7 +182,7 @@ def sec_menu_02(key_data):  #元素debug
     if point == 174 and key_data[2]:
         lcd.clear(0x0000)
         elementdetector.debug()
-        elementdetector.update()
+        #elementdetector.update()
         elementdetector.state = 0
         key.clear(3)
     
@@ -191,8 +191,8 @@ def sec_menu_02(key_data):  #元素debug
         elementdetector.state = 0
         distance.data = 0
         gyro_z.data = 0
-        gyro_z.reset()
-        distance.reset()
+        gyro_z.off()
+        distance.off()
         #gyro_z._getoffset()
         key.clear(3)
         
