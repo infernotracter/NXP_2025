@@ -7,14 +7,14 @@ main_menu_flag = 1
 car_go_flag = 0
 element_flag = 0
 key_cnt=0
-
-
+tmpgyro=0
+tmpdis=0
 def check_speedmode(speed):
     if speed==0:
         return 'default'
-    elif speed==1:
+    elif speed==40:
         return 'mode_1'
-    elif speed==2:
+    elif speed==80:
         return 'mode_2'
 def check_element(mod):
     if mod==-1:
@@ -158,7 +158,7 @@ def sec_menu_01(key_data):
 
 
 def sec_menu_02(key_data):  #元素debug
-    global main_menu_flag, point, element_flag
+    global main_menu_flag, point, element_flag,tmpgyro,tmpdis
     lcd.str24(60, 0, "debug", 0x07E0)  # 二级菜单标题
     lcd.str16(16, 30,"cnl[0]:{} cnl[1]:{}".format(elementdetector.ccd_near_l[0],elementdetector.ccd_near_l[1]),0xFFFF)
     lcd.str16(16, 46,"cnr[0]:{} cnr[1]:{}".format(elementdetector.ccd_near_r[0],elementdetector.ccd_near_r[1]),0xFFFF)
@@ -173,6 +173,9 @@ def sec_menu_02(key_data):  #元素debug
     lcd.str16(16, 190,"state_reset",0xFFFF)
     lcd.str16(16, 206,"gyro&dis_clear",0xFFFF)
     lcd.str16(16, 222,"return",0xFFFF)
+    lcd.str16(16, 238,"{}".format(movementtype.mode),0xFFFF)
+    lcd.str16(16, 254,"{}".format(tmpgyro),0xFFFF)
+    lcd.str16(16, 270,"{:.4f}".format(tmpdis),0xFFFF)
     lcd.str16(0, point, ">", 0xF800)
 
     point_move(222, 174, key_data)
@@ -186,13 +189,20 @@ def sec_menu_02(key_data):  #元素debug
     if point == 190 and key_data[2]:
         lcd.clear(0x0000)
         elementdetector.state = 0
+        distance.data = 0
+        gyro_z.data = 0
+        gyro_z.reset()
+        distance.reset()
+        #gyro_z._getoffset()
         key.clear(3)
         
     if point == 206 and key_data[2]:
         lcd.clear(0x0000)
+        tmpgyro=gyro_z.data
+        tmpdis=distance.data
         distance.data = 0
         gyro_z.data = 0
-        gyro_z._getoffset()
+        #gyro_z._getoffset()
         key.clear(3)
         
     if point == 222 and key_data[2]:
@@ -205,4 +215,5 @@ def sec_menu_02(key_data):  #元素debug
     gc.collect()
 
 
+print("wcnm陀螺仪别报错了")
 

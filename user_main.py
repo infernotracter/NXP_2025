@@ -30,7 +30,7 @@ def time_pit_pid_handler(time):
     pit_cont_pid += 5
     if (pit_cont_pid % 10 == 0):
         ticker_flag_gyro = True
-    if (pit_cont_pid % 10 == 0):
+    if (pit_cont_pid % 15 == 0):
         ticker_flag_menu = True
     if (pit_cont_pid % 20 == 0):
         ticker_flag_angle = True
@@ -297,10 +297,7 @@ class IMUHandler:
         self.current_pitch = self.alpha * self.data[1] + (1 - self.alpha) * pitch_gyro
         return self.current_pitch
 tmpelement=0
-imu_hander = IMUHandler()
 movementtype.mode=MOVEMENTTYPE.Mode_2
-gyro_z.start()
-distance.start()
 print("""   ____   _           _   _           /\/|
   / ___| (_)   __ _  | | | |   ___   |/\/ 
  | |     | |  / _` | | | | |  / _ \       
@@ -478,3 +475,4 @@ while True:
             )
         #print(dir_out.kp,dir_out.kd,movementtype.aim_speed,dir_out_out,mid_point_near[0],mid_point_far[0])
         ticker_flag_8ms = False
+
