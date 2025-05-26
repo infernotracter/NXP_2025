@@ -4,8 +4,6 @@ import gc
 import utime
 import math
 from basic_data import *
-from encoder_text import *
-from ccd_hander import *
 from menutext import *
 #from tof_hander import *
 
@@ -16,26 +14,16 @@ GYRO_SPL = 16.4
 pit_cont_pid = 0
 
 # 定义一个回调函数
-ticker_flag_gyro = False
-ticker_flag_imu = False
+ticker_flag_pid = False
 ticker_flag_4ms = False
 ticker_flag_8ms = False
-ticker_flag_angle = False
-ticker_flag_speed = False
 ticker_flag_menu = False
 
 
 def time_pit_pid_handler(time):
-    global ticker_flag_gyro, ticker_flag_angle, ticker_flag_speed, ticker_flag_menu, pit_cont_pid
+    global ticker_flag_menu, pit_cont_pid
     pit_cont_pid += 5
     if (pit_cont_pid % 10 == 0):
-        ticker_flag_gyro = True
-    if (pit_cont_pid % 10 == 0):
-        ticker_flag_menu = True
-    if (pit_cont_pid % 20 == 0):
-        ticker_flag_angle = True
-    if (pit_cont_pid >= 50):
-        ticker_flag_speed = True
         pit_cont_pid = 0
 
 
@@ -47,8 +35,8 @@ pit0.start(5)
 
 
 def time_pit_imu_handler(time):
-    global ticker_flag_imu
-    ticker_flag_imu = True
+    global ticker_flag_pid
+    ticker_flag_pid = True
 
 
 pit1 = ticker(1)
@@ -73,13 +61,6 @@ pit3 = ticker(3)
 pit3.capture_list()
 pit3.callback(time_pit_turnpid_handler)
 pit3.start(5)
-
-
-# n = 0  # 元素判断用
-# m = 0
-# error_k = 1  # 直接传error2后的比例
-# speed_d = 50  # 速度增量
-# 限幅函数
 
 class TickerProfiler:
     def __init__(self, name, expected_interval_ms):
@@ -114,9 +95,6 @@ movementtype.aim_speed=0
 # 在主程序初始化阶段创建实例
 profiler_1ms = TickerProfiler("5ms", expected_interval_ms=5)
 profiler_5ms = TickerProfiler("5ms", expected_interval_ms=5)
-profiler_gyro = TickerProfiler("Gyro", expected_interval_ms=10)  # 示例值
-profiler_angle = TickerProfiler("Angle", expected_interval_ms=50)
-profiler_speed = TickerProfiler("Speed", expected_interval_ms=100)
 profiler_4ms = TickerProfiler("20ms", expected_interval_ms=20)
 profiler_8ms = TickerProfiler("40ms", expected_interval_ms=40)
 
@@ -165,13 +143,20 @@ def pid_controller(now, target, kp, ki, kd, sum_err, last_err):
     return output, sum_err, error
 
 #增量式
+# def pid_increment(now, target, kp, ki, kd, last_err, prev_err):
+#     error = target - now
+#     increment = kp*(error - last_err) + ki*error + kd*(error - 2*last_err + prev_err)
+#     last_err = error
+#     prev_err = last_err
+#     return increment, last_err, prev_err
 def pid_increment(now, target, kp, ki, kd, last_err, prev_err):
     error = target - now
     increment = kp*(error - last_err) + ki*error + kd*(error - 2*last_err + prev_err)
-    last_err = error
-    prev_err = last_err
-    return increment, last_err, prev_err
-
+    
+    new_prev_err = last_err  # 保存旧的last_err
+    new_last_err = error     # 更新为当前error
+    
+    return increment, new_last_err, new_prev_err
 # ----------------- 全局变量 -----------------
 
 pitch_vel = 0
@@ -226,8 +211,8 @@ def vel_loop_callback(pit1):
     global angle_sum_error, angle_last_error
     global yaw_vel, counter_speed, counter_angle
     global imu, gyro_bias_y, gyro_bias_z
-    global motor_l, motor_r, last_value
-    global protect_flag, imu_data, now_speed
+    global motor_l, motor_r
+    global imu_data, now_speed
 
     imu_data = imu.get()
     acc_x = imu_data[1]
@@ -300,10 +285,10 @@ while True:
     if end_switch.value() == 1:
         break  # 跳出判断
         
-    if (ticker_flag_gyro):
+    if (ticker_flag_pid):
         # profiler_gyro.update()
         vel_loop_callback(pit1)
-        ticker_flag_gyro = False
+        ticker_flag_pid = False
 
     if (ticker_flag_8ms):
         # profiler_8ms.update()
@@ -334,60 +319,11 @@ while True:
                     speed_kp = data_wave[i]
                 elif i == 7:
                     speed_kd = data_wave[i]
-#
-# 
-#                 if i == 0:
-#                     gyro_pid.kp = data_wave[i]  
-#                 elif i == 1:
-#                     gyro_pid.ki = data_wave[i]    
-#                 elif i == 2:
-#                     gyro_pid.kd = data_wave[i]    
-#                 elif i == 3:
-#                     angle_pid.kp = data_wave[i]   
-#                 elif i == 4:
-#                     angle_pid.kd = data_wave[i]   
-#                 elif i == 5:
-#                     speed_pid.kd = data_wave[i]    
-#                 elif i == 6:
-#                     speed_pid.kp = data_wave[i]   
-#                 elif i == 7:
-#                     MedAngle = data_wave[i]
-#                 if i==0:
-#                     elementdetector.state = data_wave[i]
-#                 elif i==1:
-#                     movementtype.mode = data_wave[i]
-#                 if i == 0:
-#                     ccd_near_length = data_wave[i]
-#                 elif i == 1:
-#                     dir_out.kp = data_wave[i]
-#                 elif i == 2:
-#                     speed_pid.kp = data_wave[i]
-#                 elif i == 3:
-#                     movementtype.aim_speed = data_wave[i]
-#                 elif i == 4:
-#                     movementtype.speed = data_wave[i]
-#                 elif i == 5:
-#                     dir_out.ki = data_wave[i]
-#                 elif i == 6:
-#                     dir_out.kd = data_wave[i]
-#                 elif i == 7:
-#                     MedAngle = data_wave[i]
                 
         # 将数据发送到示波器
         wireless.send_oscilloscope(
             vel_kp, vel_ki, vel_kd, angle_kp, angle_ki, angle_kd, speed_kp, current_angle
-            #gyro_z.data, distance.data, elementdetector.state, ccd_near.left, ccd_near.right, ccd_far.left, ccd_far.right,elementdetector.ccd_near_length
-            #gyro_pid.kp,gyro_pid.ki,gyro_pid.kd,angle_pid_out,gyro_pid_out,imu_hander.data[3],current_roll
-            #current_roll, gyro_pid.out,angle_pid.out
-            #imu_data[0], imu_data[1],imu_data[2],imu_data[3],imu_data[4],imu_data[5]#,current_roll,imu_hander.alpha
-            #dir_in.kp, dir_out.kp, speed_pid.kp,movementtype.speed,mid_point_near, mid_point_far
-            #,
-            #mid_point_near[0], current_roll,stop_flag
-            #imu_kp,imu_ki,current_roll
-            #current_roll,current_yaw,current_pitch
-            
             )
-        #print(dir_out.kp,dir_out.kd,movementtype.aim_speed,dir_out_out,mid_point_near[0],mid_point_far[0])
         ticker_flag_8ms = False
 
 
