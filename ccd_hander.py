@@ -41,7 +41,7 @@ class CCDHandler:
         if self.data[self.last_mid] < self.get_threshold():
             self._handle_invalid_midpoint(searchgap, value)
             self.mid = min(max(self.mid, 5), 122)
-            return self.mid, self.left, self.right
+            return self.mid
         
         # 常规边界搜索
         self._search_boundaries(searchgap, value)
@@ -55,7 +55,30 @@ class CCDHandler:
         
         # 确保中线在有效范围内
         self.mid = min(max(self.mid, 5), 122)
-        return self.mid, self.left, self.right
+        return self.mid
+    
+    def read_mid_point(self, value, reasonrange, follow=0, searchgap=0):
+        """获取赛道中线坐标及边界"""  
+        self.data=ccd.read(self.channel)
+        # 当上次中点无效时进行边界搜索
+        if self.data[self.last_mid] < self.get_threshold():
+            self._handle_invalid_midpoint(searchgap, value)
+            self.mid = min(max(self.mid, 5), 122)
+            return self.mid
+        
+        # 常规边界搜索
+        self._search_boundaries(searchgap, value)
+        
+        # 计算中线并应用跟随偏移
+        self.mid = (self.left + self.right) // 2
+        self._apply_follow_offset(follow)
+        
+        # 限制中线变化幅度
+        self._limit_mid_change(reasonrange)
+        
+        # 确保中线在有效范围内
+        self.mid = min(max(self.mid, 5), 122)
+        return self.mid
 
     def _handle_invalid_midpoint(self, search_gap, edge_ratio):
         """处理无效中线时的边界搜索"""
@@ -156,9 +179,9 @@ class ElementDetector:
 
         self.POINT_diff_data = 12             # 特征点差异阈值
 
-        self.GYRO_Z_ring3_data = 10000
-        self.DISTANCE_ring3_data = 0.04
-        self.GYRO_Z_ring_in_data = 40
+        self.GYRO_Z_ring3_data = 3200
+        self.DISTANCE_ring3_data = 0.03
+        self.GYRO_Z_ring_in_data = 5000
         self.DISTANCE_ring_out_data = 0.15
         self.ccd_near_length = 40
         self.ccd_far_length = 40
@@ -171,7 +194,9 @@ class ElementDetector:
         #-----------------------------------------------------------
 
         #------------------------避障需要的数据----------------------
-        self.mid,self.left,self.right=ccd_near.get_mid_point(value =31, reasonrange = 128, follow = 0, searchgap = 0)
+        self.mid=ccd_near.mid
+        self.left=ccd_near.left
+        self.right=ccd_near.right
         self.last_lenth=40   #待测，估计值
         self.lenth=self.right-self.left
         #-----------------------------------------------------------
@@ -214,6 +239,7 @@ class ElementDetector:
         # 判断全黑全白
         if check_tuple(self._ccd_near.data, 90, 30)==-1:
             self.state = RoadElement.stop # 跑出去了,别把车子撞坏了,歇歇吧
+        
         if self._check_zebra(self._ccd_near):
             self.state = RoadElement.zebra
             movementtype.speed=0
@@ -237,11 +263,11 @@ class ElementDetector:
             if movementtype.mode == MOVEMENTTYPE.Mode_1:
                 if self._right_3_not():
                     self.state = RoadElement.r3_not
-                    self.follow = self.ccd_near_length
+                    self.follow = -self.ccd_near_length
             if movementtype.mode == MOVEMENTTYPE.Mode_2:
                 if self._right_3():
                     self.state = RoadElement.r3
-                    self.follow = -self.ccd_near_length
+                    self.follow = self.ccd_near_length
         if self.state == RoadElement.l2:
             if movementtype.mode == MOVEMENTTYPE.Mode_1:
                 if self._left_3_not():
@@ -308,6 +334,8 @@ class ElementDetector:
     def _left_2(self):
         """左圆环状态2检测：近端左丢线+特征点稳定"""
         # 近端CCD左丢线检查（left_point_2 <=10）
+        gyro_z.start()
+        distance.start()
         near_left_lost =  self._ccd_near.left <= self.ccd_near_l_lost
         
         # 近端右边界有效性检查（87 <= right_point_2 <=103）
@@ -353,13 +381,15 @@ class ElementDetector:
         distance.start()
         if distance.data > self.DISTANCE_ring3_data:
             if -self.GYRO_Z_ring3_data < gyro_z.data < self.GYRO_Z_ring3_data:
+                self.state = RoadElement.rin
                 gyro_z.reset()
                 distance.reset()
                 return True
             else:
                 self.state = RoadElement.normal
                 gyro_z.reset()
-                distance.reset()        
+                distance.reset()
+                return False
     
     def _right_3_not(self):
         distance.start()
@@ -389,17 +419,16 @@ class ElementDetector:
             distance.reset()
 
     def _left_3(self):
-        gyro_z.start()
-        distance.start()
-        if distance.data < -self.DISTANCE_ring3_data:  # 距离方向取反
+        if abs(distance.data) > abs(self.DISTANCE_ring3_data):  # 距离方向取反
             if -self.GYRO_Z_ring3_data < gyro_z.data < self.GYRO_Z_ring3_data:
-                gyro_z.reset()
-                distance.reset()
+                gyro_z.data=0
+                distance.data=0
                 return True
             else:
                 self.state = RoadElement.normal
                 gyro_z.reset()
                 distance.reset()
+                return False
 
     def _left_3_not(self):
         distance.start()
@@ -418,7 +447,6 @@ class ElementDetector:
             distance.reset()
 
     def _left_in(self):
-        gyro_z.start()
         # 陀螺仪极性取反（原右转检测正方向，左转检测负方向）
         if gyro_z.data < -self.GYRO_Z_ring_in_data or gyro_z.data > self.GYRO_Z_ring_in_data:
             return True
@@ -572,9 +600,9 @@ class Gyro_Z_Test:
     def _getoffset(self, num = 100):
         for _ in range(num):
             imu_data = imu.read()
-            for i in range(9):
+            for i in range(6):
                 self.offset[i] += imu_data[i]
-        for i in range(9):
+        for i in range(6):
             self.offset[i] /= num
     def start(self):
         self.start_flag = True
@@ -592,11 +620,11 @@ class Error_test:
         self.data=0.0
     def get_tmp(self):
         for _ in range(100):
-            ccd_temp_data = ccd.get(0)
-            tmp_mid = ccd_near.get_mid_point(value =31, reasonrange = 30, follow = 0, searchgap = 0)
+            tmp_mid = ccd_near.read_mid_point(value =31, reasonrange = 30, follow = 0, searchgap = 0)
             tmp_error=tmp_mid - 64
             self.data +=tmp_error
         self.tmperror=self.data/100
     def reset(self):
         self.data=0.0
 stage_error=Error_test()
+print("王小桃快跑，邮箱来了")
