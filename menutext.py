@@ -191,8 +191,8 @@ def sec_menu_02(key_data):  #元素debug
         elementdetector.state = 0
         distance.data = 0
         gyro_z.data = 0
-        gyro_z.reset()
-        distance.reset()
+        gyro_z.clear()
+        distance.clear()
         #gyro_z._getoffset()
         key.clear(3)
         
