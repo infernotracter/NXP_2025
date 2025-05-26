@@ -218,6 +218,8 @@ class ElementDetector:
         self.ccd_far_length = 40
         self.DISTANCE_ring_outcoming_data = 0.08
         self.DISTANCE_ring3_not_data = 10
+
+        self.ERROR_l_out_value = -20
         #-------------------我们的gyro圆环识别数据-------------------
         self.gyro_z_ring3=0.8  #待测
         self.gyro_z_ring4=1.0  #待测
@@ -331,7 +333,19 @@ class ElementDetector:
         return self.state
     
     def _element_operations(self):
-        if self.state == RoadElement.normal:
+        # 如果状态没有变化,直接返回,降低时间复杂度
+        if self.prev_state == self.state:
+            return
+        # 状态变化
+        # 防止上次的循迹状态（error, follow）影响当前状态
+        ccd_controller.fix_error_value = 0
+        ccd_controller.follow = 0
+        gyro_z.clear()
+        distance.clear()
+
+        if self.state == RoadElement.normal: # 正常状态
+            ccd_controller.fix_error_value = 0
+            ccd_controller.follow = 0
             gyro_z.off()
             distance.off()
         if self.state == RoadElement.l1:    #跟右边线
@@ -339,29 +353,22 @@ class ElementDetector:
         if self.state == RoadElement.l2:
             gyro_z.start()
             distance.start()
-            if movementtype.mode == MOVEMENTTYPE.Mode_1:   #如果是模式1，出圆环，跟右线
-                ccd_controller.follow = -self.ccd_near_length
-            if movementtype.mode == MOVEMENTTYPE.Mode_2:   #如果是模式2，进入圆环，跟左线
-                ccd_controller.follow = self.ccd_near_length
+            ccd_controller.follow = -self.ccd_near_length
+
         if self.state == RoadElement.l3:
-            gyro_z.clear()
-            distance.clear()
-            ccd_controller.follow = self.ccd_near_length
+            ccd_controller.follow = -self.ccd_near_length
+        if self.state == RoadElement.l3_not:
+            ccd_controller.follow = -self.ccd_near_length
 
         if self.state == RoadElement.lin:
-            gyro_z.clear()
-            distance.clear()
-            self.tmperror=stage_error.get_tmp()
+            ccd_controller.follow = self.ccd_near_length
+            # self.tmperror=stage_error.get_tmp()
 
         if self.state == RoadElement.loutcoming:
-            gyro_z.clear()
-            distance.clear()
             ccd_controller.follow = 0
 
         if self.state == RoadElement.lout:
-            gyro_z.clear()
-            distance.clear()
-            ccd_controller.follow = 0
+            ccd_controller.fix_error_value = self.ERROR_l_out_value
 
         self.prev_state=self.state
 
@@ -505,19 +512,21 @@ class ElementDetector:
         # 超过一定距离并且全白
         if abs(distance.data) > self.DISTANCE_ring_outcoming_data:
             if check_tuple(self._ccd_near.data, 90, 30)==1 or check_tuple(self._ccd_far.data, 90, 30)==1:
-                self.state = RoadElement.normal
+                return True
 
     def _right_outcoming(self):
         # 超过一定距离并且全白
         if abs(distance.data) > self.DISTANCE_ring_outcoming_data:
             if check_tuple(self._ccd_near.data, 90, 30)==1 or check_tuple(self._ccd_far.data, 90, 30)==1:
-                self.state = RoadElement.normal
+                return True
 
     def _right_out(self):
-        pass
-
+        if abs(distance.data) > self.DISTANCE_ring_out_data:
+            return True
+            
     def _left_out(self):
-        pass
+        if abs(distance.data) > self.DISTANCE_ring_out_data:
+            return True
 
 
 #-----------------------------------我们自己的圆环识别-------------------------------------------------
@@ -695,4 +704,7 @@ class Error_test:
     def reset(self):
         self.data=0.0
 stage_error=Error_test()
+
+
+
 print("王小桃快跑，邮箱来了")

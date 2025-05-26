@@ -184,21 +184,11 @@ class ElementDetector:
         temp_ccd_far_data_l = 0
         temp_ccd_far_data_r = 0
         for _ in range(10):
-<<<<<<< HEAD
-            ccd_near.update()
-            ccd_far.update()
-            temp_ccd_near_data_l += ccd_near.left
-            temp_ccd_near_data_r += ccd_near.right
-            temp_ccd_far_data_l += ccd_far.left
-            temp_ccd_far_data_r += ccd_far.right
-        delta = 10
-=======
             temp_ccd_near_data_l += ccd_near.update()
             temp_ccd_near_data_r += ccd_near.update()
             temp_ccd_far_data_l += ccd_far.update()
             temp_ccd_far_data_r += ccd_far.update()
         delta = 7
->>>>>>> 6ff4a9d087c988ba267b91c4eafb3d791d67effa
         self.ccd_near_l[0] = temp_ccd_near_data_l // 10 - delta
         self.ccd_near_l[1] = temp_ccd_near_data_l // 10 + delta
         self.ccd_near_r[0] = temp_ccd_near_data_r // 10 - delta
