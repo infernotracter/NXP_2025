@@ -303,6 +303,8 @@ print("""   ____   _           _   _           /\/|
  | |     | |  / _` | | | | |  / _ \       
  | |___  | | | (_| | | | | | | (_) |      
   \____| |_|  \__,_| |_| |_|  \___/       """)
+debuggyroz.start()
+debugdistance.start()
 while True:
     
     motor_l.duty(my_limit(gyro_pid.out - dir_in.out, -6000, 6000) * stop_flag)

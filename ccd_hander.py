@@ -663,6 +663,7 @@ class Distance:
         self.data = 0
         self.start_flag = False
 distance = Distance()
+debugdistance = Distance()
 
 class Gyro_Z_Test:
     """陀螺仪Z轴积分"""
@@ -690,6 +691,7 @@ class Gyro_Z_Test:
         self.data = 0
         self.start_flag = False
 gyro_z = Gyro_Z_Test()
+debuggyroz = Gyro_Z_Test()
 
 class Error_test:
     #求误差平均值

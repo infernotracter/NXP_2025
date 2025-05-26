@@ -176,6 +176,7 @@ def sec_menu_02(key_data):  #元素debug
     lcd.str16(16, 238,"{}".format(movementtype.mode),0xFFFF)
     lcd.str16(16, 254,"{}".format(tmpgyro),0xFFFF)
     lcd.str16(16, 270,"{:.4f}".format(tmpdis),0xFFFF)
+    lcd.str16(16, 286, "{:<6}  {:<6}".format(debugdistance.data, debuggyroz.data), 0xFFFF)
     lcd.str16(0, point, ">", 0xF800)
 
     point_move(222, 174, key_data)
