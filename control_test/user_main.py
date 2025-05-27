@@ -173,14 +173,14 @@ last_error2 = 0
 
 
 target_speed = 0
-balance_angle = -2940.0
-vel_kp = 0
-vel_ki = 0
+balance_angle = -2886.64
+vel_kp = 20
+vel_ki = 2.86
 vel_kd = 0
-angle_kp = 0
+angle_kp = 0.008
 angle_ki = 0
 angle_kd = 0
-speed_kp = 0
+speed_kp = -300
 speed_ki = 0
 speed_kd = 0
 
@@ -250,9 +250,6 @@ def vel_loop_callback(pit1):
         )
         angle_disturbance = max(min(angle_disturbance, 450), -450)
 
-    # Ensure vel_disturbance is initialized before use
-    if 'vel_disturbance' not in globals():
-        vel_disturbance = 0
 
     target_angle = balance_angle - angle_disturbance
 
@@ -315,7 +312,7 @@ def turn_loop_callback(pit1):
     
     # turn外环
     counter_turn_out += 5
-    if counter_turn_out >= 20:
+    if counter_turn_out >= 40:
         counter_turn_out = 0
         turn_in_disturbance, turn_out_sum_error, turn_out_last_error = pid_controller(
             error1, 0,
@@ -327,11 +324,11 @@ def turn_loop_callback(pit1):
     
     # turn内环
     counter_turn_in += 5
-    if counter_turn_in >= 40:
+    if counter_turn_in >= 20:
         counter_turn_in = 0
         imu_data = imu.get()
         turn_output, turn_in_sum_error, turn_in_last_error = pid_controller(
-            turn_in_disturbance, imu_data[4] - gyro_bias_y,
+            turn_in_disturbance, imu_data[4],
             turn_in_kp, turn_in_ki, turn_in_kd,
             turn_in_sum_error, turn_in_last_error
         )
@@ -366,8 +363,8 @@ while True:
         turn_loop_callback(pit1) # 转向
         pwm_l_value = max(min(pwm_l_value, 6000), -6000)
         pwm_r_value = max(min(pwm_r_value, 6000), -6000)
-        motor_l.duty(death_pwm(pwm_l_value))
-        motor_r.duty(death_pwm(pwm_r_value))
+        motor_l.duty(death_pwm(pwm_l_value - turn_output))
+        motor_r.duty(death_pwm(pwm_r_value + turn_output))
         ticker_flag_pid = False
 
     if (ticker_flag_8ms):
