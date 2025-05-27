@@ -126,6 +126,7 @@ encr_data = 0  # 右数据编码器
 out_l = 0  # 左轮输出值
 out_r = 0  # 右轮输出值
 speed_d = 50  # 速度增量(调试用)
+start_flag = 0 # 发车标志
 class MOVEMENTTYPE:
     default = 0
     Mode_1 = 10

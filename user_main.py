@@ -358,7 +358,7 @@ while True:
         encl_data = filter_l.update(encoder_l.get())  # 读取左编码器的数据
         encr_data = filter_r.update(encoder_r.get())  # 读取右编码器的数据
         speed_pid.calculate(
-            movementtype.speed, (encl_data + encr_data) / 2)
+            movementtype.speed*start_flag, (encl_data + encr_data) / 2)
         ticker_flag_speed = False
 
     if (ticker_flag_angle):
