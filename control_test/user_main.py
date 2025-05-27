@@ -231,7 +231,7 @@ def vel_loop_callback(pit1):
     pitch_vel = (gyro_y - gyro_bias_y) * 0.07
 
     counter_speed += 1
-    if counter_speed >= 50:
+    if counter_speed >= 5:
         counter_speed = 0
         left = -encoder_l.get()
         right = -encoder_r.get()
@@ -257,7 +257,7 @@ def vel_loop_callback(pit1):
 
     # 外环控制（每5ms执行）
     counter_angle += 1
-    if counter_angle >= 5:
+    if counter_angle >= 2:
         counter_angle = 0
         vel_disturbance, angle_sum_error, angle_last_error = pid_controller(
             current_angle, target_angle,
@@ -282,7 +282,11 @@ def vel_loop_callback(pit1):
 
     pwm_l_value = pwm_output + turn_output
     pwm_r_value = pwm_output - turn_output
-
+def death_pwm(value):
+    if value > 0:
+        return value + 650
+    else:
+        return value - 650
 
 print("""   ____   _           _   _           /\/|
   / ___| (_)   __ _  | | | |   ___   |/\/ 
@@ -290,14 +294,16 @@ print("""   ____   _           _   _           /\/|
  | |___  | | | (_| | | | | | | (_) |      
   \____| |_|  \__,_| |_| |_|  \___/       """)
 while True:
+    
+    
     if end_switch.value() == 1:
         break  # 跳出判断
         
     if (ticker_flag_pid):
         # profiler_gyro.update()
         vel_loop_callback(pit1)
-        motor_l.duty(pwm_l_value)
-        motor_r.duty(pwm_r_value)
+        motor_l.duty(death_pwm(pwm_l_value))
+        motor_r.duty(death_pwm(pwm_r_value))
         ticker_flag_pid = False
 
     if (ticker_flag_8ms):
@@ -335,6 +341,7 @@ while True:
             vel_kp, vel_ki, vel_kd, angle_kp, angle_ki, angle_kd, motor_l.duty(), current_angle
             )
         ticker_flag_8ms = False
+
 
 
 
