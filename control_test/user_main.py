@@ -335,13 +335,14 @@ while True:
                 elif i == 6:
                     speed_kp = data_wave[i]
                 elif i == 7:
-                    speed_kd = data_wave[i]
+                    balance_angle = data_wave[i]
                 
         # 将数据发送到示波器
         wireless.send_oscilloscope(
-            vel_kp, vel_ki, vel_kd, angle_kp, angle_ki, angle_kd, motor_l.duty(), current_angle
+            vel_kp, vel_ki, vel_kd, angle_kp, vel_disturbance, angle_disturbance, motor_l.duty(), current_angle
             )
         ticker_flag_8ms = False
+
 
 
 
