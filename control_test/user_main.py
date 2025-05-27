@@ -295,7 +295,6 @@ print("""   ____   _           _   _           /\/|
   \____| |_|  \__,_| |_| |_|  \___/       """)
 while True:
     
-    
     if end_switch.value() == 1:
         break  # 跳出判断
         
@@ -307,6 +306,8 @@ while True:
         ticker_flag_pid = False
 
     if (ticker_flag_8ms):
+        lcd.str16(16,30,"gyro:{:.2f} ".format( pwm ),0xFFFF)
+        lcd.str16(16,46,"angle:{:.2f}  speed:{:.2f}".format(vel_disturbance, angle_disturbance),0xFFFF)
         # profiler_8ms.update()
         data_flag = wireless.data_analysis()
         for i in range(0, 8):
