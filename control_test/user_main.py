@@ -425,9 +425,9 @@ while True:
             # vel_kp, vel_ki, vel_kd, angle_kp, vel_disturbance, angle_disturbance, motor_l.duty(), current_angle
             # turn_in_kp, turn_in_ki, turn_in_kd,
             # turn_out_kp, turn_out_ki, turn_out_kd,
-            turn_in_kp, turn_out_kp, target_speed,error1
+            turn_in_kp, turn_out_kp, target_speed, error1,
             turn_in_disturbance, turn_output,
-            )
+        )
         ticker_flag_8ms = False
 
 
