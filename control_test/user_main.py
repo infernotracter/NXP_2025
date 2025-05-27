@@ -116,13 +116,16 @@ stop_flag = 1
 
 gyro_bias_y = 0
 gyro_bias_z = 0
+gyro_bias_x = 0
 def get_offset():
     global gyro_bias_y, gyro_bias_z
     for _ in range(100):
         imu_data = imu.read()
         gyro_bias_y += imu_data[3]
+        gyro_bias_x += imu_data[4]
         gyro_bias_z += imu_data[5]
     gyro_bias_y /= 100
+    gyro_bias_x /= 100
     gyro_bias_z /= 100
 get_offset()
 
@@ -328,7 +331,7 @@ def turn_loop_callback(pit1):
         counter_turn_in = 0
         imu_data = imu.get()
         turn_output, turn_in_sum_error, turn_in_last_error = pid_controller(
-            turn_in_disturbance, imu_data[4],
+            turn_in_disturbance, imu_data[4] - gyro_bias_x,
             turn_in_kp, turn_in_ki, turn_in_kd,
             turn_in_sum_error, turn_in_last_error
         )
@@ -418,12 +421,14 @@ while True:
 
 
         # 将数据发送到示波器
+        imu_data = imu.get()
         wireless.send_oscilloscope(
             # vel_kp, vel_ki, vel_kd, angle_kp, vel_disturbance, angle_disturbance, motor_l.duty(), current_angle
             # turn_in_kp, turn_in_ki, turn_in_kd,
             # turn_out_kp, turn_out_ki, turn_out_kd,
             turn_in_kp, turn_out_kp, target_speed, error1,
             turn_in_disturbance, turn_output,
+            # imu_data[3], imu_data[5], gyro_bias_y, gyro_bias_z
         )
         ticker_flag_8ms = False
 
