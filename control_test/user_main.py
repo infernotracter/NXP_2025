@@ -206,7 +206,7 @@ pwm_r_value = 0
 # ----------------- 控制回调函数 -----------------
 def vel_loop_callback(pit1):
     global pwm_l_value, pwm_r_value
-    global pwm, current_angle, turn_output
+    global pwm, current_angle
     global vel_last_error, vel_prev_error
     global turn_sum_error, turn_last_error
     global vel_kp, vel_ki, vel_kd
@@ -280,8 +280,8 @@ def vel_loop_callback(pit1):
     
     pwm_output = pwm  # 极性修改
 
-    pwm_l_value = pwm_output + turn_output
-    pwm_r_value = pwm_output - turn_output
+    pwm_l_value = pwm_output
+    pwm_r_value = pwm_output
 
 
 
