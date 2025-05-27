@@ -172,7 +172,7 @@ last_error2 = 0
 
 
 target_speed = 0
-balance_angle = 0
+balance_angle = -2940.0
 vel_kp = 0
 vel_ki = 0
 vel_kd = 0
@@ -198,8 +198,13 @@ turn_output = 0
 pwm = 0
 current_angle = 0
 
+angle_disturbance = 0
+pwm_l_value = 0
+pwm_r_value = 0
+
 # ----------------- 控制回调函数 -----------------
 def vel_loop_callback(pit1):
+    global pwm_l_value, pwm_r_value
     global pwm, current_angle, turn_output
     global vel_last_error, vel_prev_error
     global turn_sum_error, turn_last_error
@@ -213,6 +218,7 @@ def vel_loop_callback(pit1):
     global imu, gyro_bias_y, gyro_bias_z
     global motor_l, motor_r
     global imu_data, now_speed
+    global vel_disturbance  # Add this line
 
     imu_data = imu.get()
     acc_x = imu_data[1]
@@ -243,6 +249,10 @@ def vel_loop_callback(pit1):
         )
         angle_disturbance = max(min(angle_disturbance, 450), -450)
 
+    # Ensure vel_disturbance is initialized before use
+    if 'vel_disturbance' not in globals():
+        vel_disturbance = 0
+
     target_angle = balance_angle - angle_disturbance
 
     # 外环控制（每5ms执行）
@@ -269,12 +279,10 @@ def vel_loop_callback(pit1):
     
     turn_output = 0
     pwm_output = pwm  # 极性修改
-    
-    pwm_l = pwm_output + turn_output
-    pwm_r = pwm_output - turn_output
 
-    motor_l.duty(pwm_l)
-    motor_r.duty(pwm_r)
+    pwm_l_value = pwm_output + turn_output
+    pwm_r_value = pwm_output - turn_output
+
 
 print("""   ____   _           _   _           /\/|
   / ___| (_)   __ _  | | | |   ___   |/\/ 
@@ -288,6 +296,8 @@ while True:
     if (ticker_flag_pid):
         # profiler_gyro.update()
         vel_loop_callback(pit1)
+        motor_l.duty(pwm_l_value)
+        motor_r.duty(pwm_r_value)
         ticker_flag_pid = False
 
     if (ticker_flag_8ms):
@@ -322,7 +332,7 @@ while True:
                 
         # 将数据发送到示波器
         wireless.send_oscilloscope(
-            vel_kp, vel_ki, vel_kd, angle_kp, angle_ki, angle_kd, speed_kp, current_angle
+            vel_kp, vel_ki, vel_kd, angle_kp, angle_ki, angle_kd, motor_l.duty(), current_angle
             )
         ticker_flag_8ms = False
 
