@@ -5,6 +5,7 @@ import utime
 import math
 from basic_data import *
 from menutext import *
+from ccd_hander import *
 #from tof_hander import *
 
 # 单位换算用
@@ -277,11 +278,67 @@ def vel_loop_callback(pit1):
     pwm += delta_pwm
     pwm = max(min(pwm, 6000), -6000)
     
-    turn_output = 0
     pwm_output = pwm  # 极性修改
 
     pwm_l_value = pwm_output + turn_output
     pwm_r_value = pwm_output - turn_output
+
+# 新增转向控制相关变量
+target_turn_angle = 0.0       # 目标转向角度（由遥控器设置）
+current_turn_angle = 0.0      # 当前转向角度（通过陀螺仪积分）
+target_yaw_vel = 0.0          # 外环输出的目标角速度
+turn_out_sum_error = 0.0      # 外环积分累积
+turn_in_sum_error = 0.0       # 内环积分累积
+counter_turn_out = 0
+counter_turn_in = 0
+turn_out_last_error = 0
+turn_in_last_error = 0
+turn_out_kp = 0
+turn_out_ki = 0
+turn_out_kd = 0
+turn_in_kp = 0
+turn_in_ki = 0
+turn_in_kd = 0
+turn_in_disturbance = 0.0
+# ----------------- 转向控制回调函数 -----------------
+def turn_loop_callback(pit1):
+    global current_turn_angle, target_yaw_vel, turn_output
+    global turn_out_sum_error, turn_out_last_error, turn_in_sum_error, turn_in_last_error
+    global counter_turn_out, yaw_vel
+    global turn_out_kp, turn_out_ki, turn_out_kd
+    global turn_in_kp, turn_in_ki, turn_in_kd
+    global turn_in_disturbance
+    global counter_turn_in
+    
+    # turn外环
+    counter_turn_out += 5
+    if counter_turn_out >= 20:
+        counter_turn_out = 0
+        error = 0
+        turn_in_disturbance, turn_out_sum_error, turn_out_last_error = pid_controller(
+            error, 0,
+            turn_out_kp, turn_out_ki, turn_out_kd,
+            turn_out_sum_error, turn_out_last_error
+        )
+        #turn_in_disturbance = max(min(turn_in_disturbance, 3999), -3999)
+
+    
+    # turn内环
+    counter_turn_in += 5
+    if counter_turn_in >= 40:
+        counter_turn_in = 0
+        turn_output, turn_in_sum_error, turn_in_last_error = pid_controller(
+            turn_in_disturbance, imu_data[4] - gyro_bias_y,
+            turn_in_kp, turn_in_ki, turn_in_kd,
+            turn_in_sum_error, turn_in_last_error
+        )
+        #turn_output = max(min(turn_output, 3999), -3999)
+
+    return turn_output
+
+
+
+
 def death_pwm(value):
     if value > 0:
         return value + 650
@@ -300,7 +357,8 @@ while True:
         
     if (ticker_flag_pid):
         # profiler_gyro.update()
-        vel_loop_callback(pit1)
+        vel_loop_callback(pit1) # 直立
+        turn_loop_callback(pit1) # 转向
         motor_l.duty(death_pwm(pwm_l_value))
         motor_r.duty(death_pwm(pwm_r_value))
         ticker_flag_pid = False
@@ -320,26 +378,47 @@ while True:
                 
                 # 根据通道号单独更新对应参数
 
+                # if i == 0:
+                #     vel_kp = data_wave[i]
+                # elif i == 1:
+                #     vel_ki = data_wave[i]
+                # elif i == 2:
+                #     vel_kd = data_wave[i]
+                # elif i == 3:
+                #     angle_kp = data_wave[i]
+                # elif i == 4:
+                #     angle_ki = data_wave[i]
+                # elif i == 5:
+                #     angle_kd = data_wave[i]
+                # elif i == 6:
+                #     speed_kp = data_wave[i]
+                # elif i == 7:
+                #     balance_angle = data_wave[i]
+
                 if i == 0:
-                    vel_kp = data_wave[i]
+                    turn_in_kp = data_wave[i]
                 elif i == 1:
-                    vel_ki = data_wave[i]
+                    turn_in_ki = data_wave[i]
                 elif i == 2:
-                    vel_kd = data_wave[i]
+                    turn_in_kd = data_wave[i]
                 elif i == 3:
-                    angle_kp = data_wave[i]
+                    turn_out_kp = data_wave[i]
                 elif i == 4:
-                    angle_ki = data_wave[i]
+                    turn_out_ki = data_wave[i]
                 elif i == 5:
-                    angle_kd = data_wave[i]
+                    turn_out_kd = data_wave[i]
                 elif i == 6:
                     speed_kp = data_wave[i]
                 elif i == 7:
                     balance_angle = data_wave[i]
-                
+
+
         # 将数据发送到示波器
         wireless.send_oscilloscope(
-            vel_kp, vel_ki, vel_kd, angle_kp, vel_disturbance, angle_disturbance, motor_l.duty(), current_angle
+            # vel_kp, vel_ki, vel_kd, angle_kp, vel_disturbance, angle_disturbance, motor_l.duty(), current_angle
+            turn_in_kp, turn_in_ki, turn_in_kd,
+            turn_out_kp, turn_out_ki, turn_out_kd,
+            turn_in_disturbance, turn_output,
             )
         ticker_flag_8ms = False
 
