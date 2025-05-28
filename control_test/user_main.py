@@ -119,7 +119,7 @@ gyro_bias_z = 0
 gyro_bias_x = 0
 def get_offset():
     global gyro_bias_y, gyro_bias_z
-    for _ in range(100):
+    for _ in range(20):
         imu_data = imu.read()
         gyro_bias_y += imu_data[3]
         gyro_bias_x += imu_data[4]
