@@ -375,6 +375,8 @@ while True:
 
     if (ticker_flag_8ms):
         # profiler_8ms.update()
+        menu(key_data)
+        key_data = key.get()
         data_flag = wireless.data_analysis()
         for i in range(0, 8):
             # 判断哪个通道有数据更新
