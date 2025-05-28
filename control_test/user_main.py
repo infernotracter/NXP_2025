@@ -29,10 +29,10 @@ ticker_flag_menu = False
 
 
 # 实例化 PIT ticker 模块
-pit0 = ticker(0)
-pit0.capture_list()
-pit0.callback()
-pit0.start(5)
+# pit0 = ticker(0)
+# pit0.capture_list()
+# pit0.callback()
+# pit0.start(5)
 
 
 def time_pit_imu_handler(time):
