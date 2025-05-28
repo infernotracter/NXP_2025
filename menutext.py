@@ -1,7 +1,6 @@
 from basic_data import *
 from ccd_hander import *
 import gc
-stop_flag=0
 point = 30
 main_menu_flag = 1
 car_go_flag = 0
@@ -105,12 +104,13 @@ def main_menu(key_data):  # 一级菜单
 
 
 def sec_menu_01(key_data):
-    global main_menu_flag, point, car_go_flag,stop_flag,key_cnt
+    global main_menu_flag, point, car_go_flag,start_flag,key_cnt
     lcd.str24(60, 0, "car_go_mode", 0x07E0)
-    lcd.str16(16, 30, "stop_flag={} ".format(stop_flag),0xFFFF)
+    lcd.str16(16, 30, "start_flag={} ".format(start_flag),0xFFFF)
     lcd.str16(16, 46, "car_mode={}".format(check_speedmode(movementtype.speed)), 0x07E0)   #寻圆环/不寻圆环
     lcd.str16(16, 62, "return ",0xFFFF)
     lcd.str16(16, 126, "aim_speed={}".format(movementtype.speed),0xFFFF)
+    lcd.str16(16, 78, "real_speed={}".format(movementtype.speed*start_flag),0xFFFF)
     lcd.str12(0, point, ">", 0xF800)
     point_move(62, 30, key_data)
     
@@ -122,7 +122,7 @@ def sec_menu_01(key_data):
         point = 30
     if key_data[2] and point == 30:
         lcd.clear(0x0000)
-        stop_flag = 1
+        start_flag = 1
         key.clear(3)
     if key_data[2] and point == 46:
         key_cnt+=1

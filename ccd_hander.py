@@ -369,6 +369,31 @@ class ElementDetector:
 
         if self.state == RoadElement.lout:
             ccd_controller.fix_error_value = self.ERROR_l_out_value
+        
+
+        if self.state == RoadElement.r1:    # 跟左边线
+            ccd_controller.follow = self.ccd_near_length
+        
+        if self.state == RoadElement.r2:    # 准备入环
+            gyro_z.start()
+            distance.start()
+            ccd_controller.follow = self.ccd_near_length
+        
+        if self.state == RoadElement.r3:    # 入环阶段
+            ccd_controller.follow = self.ccd_near_length
+            
+        if self.state == RoadElement.r3_not: # 防误判状态
+            ccd_controller.follow = self.ccd_near_length
+            
+        if self.state == RoadElement.rin:   # 环内行驶
+            ccd_controller.follow = -self.ccd_near_length
+            # self.tmperror = stage_error.get_tmp()
+            
+        if self.state == RoadElement.routcoming: # 准备出环
+            ccd_controller.follow = 0
+            
+        if self.state == RoadElement.rout:  # 出环修正
+            ccd_controller.fix_error_value = self.ERROR_r_out_value
 
         self.prev_state=self.state
 
