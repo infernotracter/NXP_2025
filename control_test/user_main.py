@@ -222,7 +222,7 @@ def vel_loop_callback(pit1):
     global imu, gyro_bias_y, gyro_bias_z
     global motor_l, motor_r
     global imu_data, now_speed
-    global vel_disturbance  # Add this line
+    global vel_disturbance
 
     imu_data = imu.get()
     acc_x = imu_data[1]
@@ -240,9 +240,9 @@ def vel_loop_callback(pit1):
         left = -encoder_l.get()
         right = -encoder_r.get()
 
-        max_speed = 2500
-        left = max(min(left, max_speed), -max_speed)
-        right = max(min(right, max_speed), -max_speed)
+        # max_speed = 2500
+        # left = max(min(left, max_speed), -max_speed)
+        # right = max(min(right, max_speed), -max_speed)
         
         now_speed = now_speed*0.1 + ((left + right) / 2)*0.9
 
@@ -251,7 +251,7 @@ def vel_loop_callback(pit1):
             speed_kp, speed_ki, speed_kd,
             speed_sum_error, speed_last_error
         )
-        angle_disturbance = max(min(angle_disturbance, 450), -450)
+        # angle_disturbance = max(min(angle_disturbance, 450), -450)
 
 
     target_angle = balance_angle - angle_disturbance
@@ -285,7 +285,7 @@ def vel_loop_callback(pit1):
 
 
 
-error1 = 0
+error = 0
 # 新增转向控制相关变量
 target_turn_angle = 0.0       # 目标转向角度（由遥控器设置）
 current_turn_angle = 0.0      # 当前转向角度（通过陀螺仪积分）
@@ -305,6 +305,7 @@ turn_in_kd = 0
 turn_in_disturbance = 0.0
 # ----------------- 转向控制回调函数 -----------------
 def turn_loop_callback(pit1):
+    """5ms周期"""
     global current_turn_angle, target_yaw_vel, turn_output
     global turn_out_sum_error, turn_out_last_error, turn_in_sum_error, turn_in_last_error
     global counter_turn_out, yaw_vel
@@ -318,7 +319,7 @@ def turn_loop_callback(pit1):
     if counter_turn_out >= 40:
         counter_turn_out = 0
         turn_in_disturbance, turn_out_sum_error, turn_out_last_error = pid_controller(
-            error1, 0,
+            error, 0,
             turn_out_kp, turn_out_ki, turn_out_kd,
             turn_out_sum_error, turn_out_last_error
         )
@@ -348,6 +349,8 @@ def death_pwm(value):
     else:
         return value - 650
 
+stop_flag = 1
+
 print("""   ____   _           _   _           /\/|
   / ___| (_)   __ _  | | | |   ___   |/\/ 
  | |     | |  / _` | | | | |  / _ \       
@@ -355,19 +358,21 @@ print("""   ____   _           _   _           /\/|
   \____| |_|  \__,_| |_| |_|  \___/       """)
 while True:
     
-    mid_point_near = ccd_near.get_mid_point(value =31, reasonrange = 128, follow = 0, searchgap = 0)
-    error1=mid_point_near-64
+    error = ccd_controller.get_error() # 获取 CCD 控制器的误差
+    elementdetector.update()
     if end_switch.value() == 1:
         break  # 跳出判断
         
     if (ticker_flag_pid):
         # profiler_gyro.update()
+        if checker(encoder_r.get()):
+            stop_flag = 0
         vel_loop_callback(pit1) # 直立
         turn_loop_callback(pit1) # 转向
         pwm_l_value = max(min(pwm_l_value, 6000), -6000)
         pwm_r_value = max(min(pwm_r_value, 6000), -6000)
-        motor_l.duty(death_pwm(pwm_l_value - turn_output))
-        motor_r.duty(death_pwm(pwm_r_value + turn_output))
+        motor_l.duty(death_pwm(pwm_l_value - turn_output) * stop_flag)
+        motor_r.duty(death_pwm(pwm_r_value + turn_output) * stop_flag)
         ticker_flag_pid = False
 
     if (ticker_flag_8ms):
@@ -426,7 +431,7 @@ while True:
             # vel_kp, vel_ki, vel_kd, angle_kp, vel_disturbance, angle_disturbance, motor_l.duty(), current_angle
             # turn_in_kp, turn_in_ki, turn_in_kd,
             # turn_out_kp, turn_out_ki, turn_out_kd,
-            turn_in_kp, turn_out_kp, target_speed, error1,
+            turn_in_kp, turn_out_kp, target_speed, error,
             turn_in_disturbance, turn_output,
             # imu_data[3], imu_data[5], gyro_bias_y, gyro_bias_z
         )
