@@ -41,7 +41,7 @@ def time_pit_imu_handler(time):
 
 
 pit1 = ticker(1)
-pit1.capture_list(imu, encoder_l, encoder_r)
+pit1.capture_list(imu)
 pit1.callback(time_pit_imu_handler)
 pit1.start(5)
 
@@ -118,7 +118,7 @@ gyro_bias_y = 0
 gyro_bias_z = 0
 gyro_bias_x = 0
 def get_offset():
-    global gyro_bias_y, gyro_bias_z
+    global gyro_bias_y, gyro_bias_z , gyro_bias_x
     for _ in range(100):
         imu_data = imu.read()
         gyro_bias_y += imu_data[3]
@@ -183,7 +183,7 @@ vel_kd = 0
 angle_kp = 0.008
 angle_ki = 0
 angle_kd = 0
-speed_kp = -300
+speed_kp = 0
 speed_ki = 0
 speed_kd = 0
 
@@ -222,7 +222,7 @@ def vel_loop_callback(pit1):
     global imu, gyro_bias_y, gyro_bias_z
     global motor_l, motor_r
     global imu_data, now_speed
-    global vel_disturbance
+    global vel_disturbance  # Add this line
 
     imu_data = imu.get()
     acc_x = imu_data[1]
@@ -237,21 +237,21 @@ def vel_loop_callback(pit1):
     counter_speed += 1
     if counter_speed >= 5:
         counter_speed = 0
-        left = -encoder_l.get()
-        right = -encoder_r.get()
+        left = encoder_l.get()
+        right = encoder_r.get()
 
-        # max_speed = 2500
-        # left = max(min(left, max_speed), -max_speed)
-        # right = max(min(right, max_speed), -max_speed)
+        #max_speed = 2500
+        #left = max(min(left, max_speed), -max_speed)
+        #right = max(min(right, max_speed), -max_speed)
         
-        now_speed = now_speed*0.1 + ((left + right) / 2)*0.9
+        now_speed = now_speed*0.1 + ((left + right))*0.9
 
         angle_disturbance, speed_sum_error, speed_last_error = pid_controller(
             now_speed, target_speed, 
             speed_kp, speed_ki, speed_kd,
             speed_sum_error, speed_last_error
         )
-        # angle_disturbance = max(min(angle_disturbance, 450), -450)
+        angle_disturbance = max(min(angle_disturbance, 1000), -1000)
 
 
     target_angle = balance_angle - angle_disturbance
@@ -285,7 +285,7 @@ def vel_loop_callback(pit1):
 
 
 
-error = 0
+error1 = 0
 # 新增转向控制相关变量
 target_turn_angle = 0.0       # 目标转向角度（由遥控器设置）
 current_turn_angle = 0.0      # 当前转向角度（通过陀螺仪积分）
@@ -296,16 +296,15 @@ counter_turn_out = 0
 counter_turn_in = 0
 turn_out_last_error = 0
 turn_in_last_error = 0
-turn_out_kp = 0
+turn_out_kp = -80
 turn_out_ki = 0
 turn_out_kd = 0
-turn_in_kp = 0
+turn_in_kp = -1.9
 turn_in_ki = 0
 turn_in_kd = 0
 turn_in_disturbance = 0.0
 # ----------------- 转向控制回调函数 -----------------
 def turn_loop_callback(pit1):
-    """5ms周期"""
     global current_turn_angle, target_yaw_vel, turn_output
     global turn_out_sum_error, turn_out_last_error, turn_in_sum_error, turn_in_last_error
     global counter_turn_out, yaw_vel
@@ -319,7 +318,7 @@ def turn_loop_callback(pit1):
     if counter_turn_out >= 40:
         counter_turn_out = 0
         turn_in_disturbance, turn_out_sum_error, turn_out_last_error = pid_controller(
-            error, 0,
+            error1, 0,
             turn_out_kp, turn_out_ki, turn_out_kd,
             turn_out_sum_error, turn_out_last_error
         )
@@ -348,9 +347,7 @@ def death_pwm(value):
         return value + 650
     else:
         return value - 650
-
-stop_flag = 1
-
+stop_flag=1
 print("""   ____   _           _   _           /\/|
   / ___| (_)   __ _  | | | |   ___   |/\/ 
  | |     | |  / _` | | | | |  / _ \       
@@ -358,26 +355,25 @@ print("""   ____   _           _   _           /\/|
   \____| |_|  \__,_| |_| |_|  \___/       """)
 while True:
     
-    error = ccd_controller.get_error() # 获取 CCD 控制器的误差
-    # elementdetector.update()
+    mid_point_near = ccd_near.get_mid_point(value =31, reasonrange = 128, follow = 0, searchgap = 0)
+    error1=mid_point_near-64
     if end_switch.value() == 1:
         break  # 跳出判断
-        
+    
+    if abs(encoder_r.get())>=250:
+        stop_flag=0
+    
     if (ticker_flag_pid):
         # profiler_gyro.update()
-        if checker(encoder_r.get()):
-            stop_flag = 0
         vel_loop_callback(pit1) # 直立
         turn_loop_callback(pit1) # 转向
         pwm_l_value = max(min(pwm_l_value, 6000), -6000)
         pwm_r_value = max(min(pwm_r_value, 6000), -6000)
-        motor_l.duty(death_pwm(pwm_l_value - turn_output) * stop_flag)
-        motor_r.duty(death_pwm(pwm_r_value + turn_output) * stop_flag)
+        motor_l.duty(death_pwm(pwm_l_value - turn_output)*stop_flag)
+        motor_r.duty(death_pwm(pwm_r_value + turn_output)*stop_flag)
         ticker_flag_pid = False
 
     if (ticker_flag_8ms):
-        lcd.str16(16,30,"gyro:{:.2f} ".format( pwm ),0xFFFF)
-        lcd.str16(16,46,"angle:{:.2f}  speed:{:.2f}".format(vel_disturbance, angle_disturbance),0xFFFF)
         # profiler_8ms.update()
         data_flag = wireless.data_analysis()
         for i in range(0, 8):
@@ -390,22 +386,22 @@ while True:
                 
                 # 根据通道号单独更新对应参数
 
-                # if i == 0:
-                #     vel_kp = data_wave[i]
-                # elif i == 1:
-                #     vel_ki = data_wave[i]
-                # elif i == 2:
-                #     vel_kd = data_wave[i]
-                # elif i == 3:
-                #     angle_kp = data_wave[i]
-                # elif i == 4:
-                #     angle_ki = data_wave[i]
-                # elif i == 5:
-                #     angle_kd = data_wave[i]
-                # elif i == 6:
-                #     speed_kp = data_wave[i]
-                # elif i == 7:
-                #     balance_angle = data_wave[i]
+#                 if i == 0:
+#                     vel_kp = data_wave[i]
+#                 elif i == 1:
+#                     vel_ki = data_wave[i]
+#                 elif i == 2:
+#                     vel_kd = data_wave[i]
+#                 elif i == 3:
+#                     angle_kp = data_wave[i]
+#                 elif i == 4:
+#                     speed_kd = data_wave[i]
+#                 elif i == 5:
+#                     speed_ki =data_wave[i]
+#                 elif i == 6:
+#                     speed_kp = data_wave[i]
+#                 elif i == 7:
+#                     balance_angle = data_wave[i]
 
                 if i == 0:
                     turn_in_kp = data_wave[i]
@@ -428,14 +424,15 @@ while True:
         # 将数据发送到示波器
         imu_data = imu.get()
         wireless.send_oscilloscope(
-            # vel_kp, vel_ki, vel_kd, angle_kp, vel_disturbance, angle_disturbance, motor_l.duty(), current_angle
+#            vel_kp, vel_ki,vel_kd,angle_kp,angle_ki, vel_disturbance,angle_disturbance, encoder_r.get()
             # turn_in_kp, turn_in_ki, turn_in_kd,
             # turn_out_kp, turn_out_ki, turn_out_kd,
-            turn_in_kp, turn_out_kp, target_speed, error,
-            turn_in_disturbance, turn_output,
+            turn_in_kp, turn_out_kp, target_speed, error1,
+            turn_in_disturbance, turn_output,angle_disturbance
             # imu_data[3], imu_data[5], gyro_bias_y, gyro_bias_z
         )
         ticker_flag_8ms = False
+
 
 
 
