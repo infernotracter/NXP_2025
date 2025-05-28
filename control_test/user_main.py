@@ -21,17 +21,17 @@ ticker_flag_8ms = False
 ticker_flag_menu = False
 
 
-def time_pit_pid_handler(time):
-    global ticker_flag_menu, pit_cont_pid
-    pit_cont_pid += 5
-    if (pit_cont_pid % 10 == 0):
-        pit_cont_pid = 0
+# def time_pit_pid_handler(time):
+#     global ticker_flag_menu, pit_cont_pid
+#     pit_cont_pid += 5
+#     if (pit_cont_pid % 10 == 0):
+#         pit_cont_pid = 0
 
 
 # 实例化 PIT ticker 模块
 pit0 = ticker(0)
 pit0.capture_list(ccd, key, encoder_l, encoder_r)
-pit0.callback(time_pit_pid_handler)
+pit0.callback()
 pit0.start(5)
 
 
@@ -41,7 +41,7 @@ def time_pit_imu_handler(time):
 
 
 pit1 = ticker(1)
-pit1.capture_list(imu)
+pit1.capture_list(imu, encoder_l, encoder_r)
 pit1.callback(time_pit_imu_handler)
 pit1.start(5)
 
