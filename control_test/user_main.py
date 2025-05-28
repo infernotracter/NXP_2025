@@ -30,7 +30,7 @@ ticker_flag_menu = False
 
 # 实例化 PIT ticker 模块
 pit0 = ticker(0)
-pit0.capture_list(ccd, key, encoder_l, encoder_r)
+pit0.capture_list()
 pit0.callback()
 pit0.start(5)
 
