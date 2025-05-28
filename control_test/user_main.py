@@ -244,14 +244,15 @@ def vel_loop_callback(pit1):
         #left = max(min(left, max_speed), -max_speed)
         #right = max(min(right, max_speed), -max_speed)
         
-        now_speed = now_speed*0.1 + ((left + right))*0.9
+        #now_speed = now_speed*0.1 + ((left + right))*0.9
+        now_speed = (left + right) / 2.0
 
         angle_disturbance, speed_sum_error, speed_last_error = pid_controller(
             now_speed, target_speed, 
             speed_kp, speed_ki, speed_kd,
             speed_sum_error, speed_last_error
         )
-        angle_disturbance = max(min(angle_disturbance, 1000), -1000)
+        #angle_disturbance = max(min(angle_disturbance, 1000), -1000)
 
 
     target_angle = balance_angle - angle_disturbance
