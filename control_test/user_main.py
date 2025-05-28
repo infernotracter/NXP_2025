@@ -59,7 +59,7 @@ def time_pit_turnpid_handler(time):
 
 
 pit3 = ticker(3)
-pit3.capture_list()
+pit3.capture_list(key)
 pit3.callback(time_pit_turnpid_handler)
 pit3.start(5)
 
