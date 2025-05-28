@@ -359,7 +359,7 @@ print("""   ____   _           _   _           /\/|
 while True:
     
     error = ccd_controller.get_error() # 获取 CCD 控制器的误差
-    elementdetector.update()
+    # elementdetector.update()
     if end_switch.value() == 1:
         break  # 跳出判断
         
