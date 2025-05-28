@@ -360,8 +360,8 @@ while True:
     error1=mid_point_near-64
     if end_switch.value() == 1:
         break  # 跳出判断
-    
-    if abs(encoder_r.get())>=250:
+
+    if abs(encoder_r.get())>=250 or abs(encoder_l.get())>=250:
         stop_flag=0
     
     if (ticker_flag_pid):
