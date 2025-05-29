@@ -369,6 +369,7 @@ while True:
     if (ticker_flag_menu):
         #menu(key_data)
         lcd.str16(16,30,"{}".format(current_angle),0xFFFF)
+        key_data = key.get()
         if key_data[0] or key_data[1] or key_data[2] or key_data[3]:
             stop_flag=1
             clearall()
