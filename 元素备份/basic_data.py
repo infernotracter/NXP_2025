@@ -223,7 +223,7 @@ def create_roll_checker():
         if len(history) < 10:
             return False
         # 统计不满足条件的数据个数
-        count = sum(1 for num in history if not (-600 < num < 600))
+        count = sum(1 for num in history if not (-60.0 < num < 0.0))
         return count >= 8
     return check
 checker = create_roll_checker()
