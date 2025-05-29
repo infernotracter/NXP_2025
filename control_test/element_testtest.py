@@ -35,7 +35,8 @@ class CCDHandler:
         return (max(relevant_data) + min(relevant_data)) // 2
 
     def get_mid_point(self, value, reasonrange, follow=0, searchgap=0):
-        """获取赛道中线坐标及边界"""
+        """获取赛道中线坐标及边界"""     #找到可能的问题所在，元素中已经没有对ccd_near类follow值的直接更改，
+                                       #所以无法满足此条件判断
         if self.follow != 0:
             self.follow = follow
         self.data = ccd.get(self.channel)  # 获取最新数据
