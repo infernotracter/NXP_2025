@@ -317,9 +317,14 @@ class ElementDetector:
             if movementtype.mode == MOVEMENTTYPE.Mode_2:
                 if self._right_in():
                     self.state = RoadElement.rin
+
         if self.state == RoadElement.l3:
-            if self._left_in():
-                self.state = RoadElement.lin
+            if movementtype.mode == MOVEMENTTYPE.Mode_1:
+                if self._left_in_not():
+                    self.state = RoadElement.normal
+            if movementtype.mode == MOVEMENTTYPE.Mode_2:
+                if self._left_in():
+                    self.state = RoadElement.lin
 
         # 出圆环
         if self.state == RoadElement.rin:
@@ -484,7 +489,7 @@ class ElementDetector:
 
     def _left_in(self):
         # 陀螺仪极性取反（原右转检测正方向，左转检测负方向）
-        if gyro_z.data < -self.GYRO_Z_ring_in_data or gyro_z.data > self.GYRO_Z_ring_in_data:
+        if abs(gyro_z.data) > self.GYRO_Z_ring_in_data:
             return True
 
     def _left_outcoming(self):
@@ -650,14 +655,14 @@ class Gyro_Z_Test:
         self.start_flag = False
         self.offset = [0.0] * 9
         self.data = 0.0
-        self._getoffset()
-    def _getoffset(self, num = 50):
-        for _ in range(num):
-            imu_data = imu.read()
-            for i in range(6):
-                self.offset[i] += imu_data[i]
-        for i in range(6):
-            self.offset[i] /= num
+        # self._getoffset()
+    # def _getoffset(self, num = 50):
+    #     for _ in range(num):
+    #         imu_data = imu.read()
+    #         for i in range(6):
+    #             self.offset[i] += imu_data[i]
+    #     for i in range(6):
+    #         self.offset[i] /= num
     def clear(self):
         self.data=0
 
