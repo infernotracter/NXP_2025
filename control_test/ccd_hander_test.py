@@ -214,12 +214,12 @@ class ElementDetector:
         self.DISTANCE_ring_2_data = 140
 
         # l3
-        self.GYRO_Z_ring3_data = 125
-        self.DISTANCE_ring3_data = 700
+        self.GYRO_Z_ring3_data = 700
+        self.DISTANCE_ring3_data = 110
 
         # lin
-        self.GYRO_Z_ring_in_data = 1600
-        self.DISTANCE_ring_in_data = 120
+        self.GYRO_Z_ring_in_data = 1400
+        self.DISTANCE_ring_in_data = 80
 
         self.DISTANCE_ring_out_data = 0.15
         self.DISTANCE_ring_out_out_data = 170
@@ -376,31 +376,31 @@ class ElementDetector:
         element_distance.start()
         if self.state == RoadElement.stop:  # 停止状态
             movementtype.speed = 0          
-        if self.state == RoadElement.zebrain:
+        elif self.state == RoadElement.zebrain:
             ccd_controller.far = True
-        if self.state == RoadElement.normal: # 正常状态
+        elif self.state == RoadElement.normal: # 正常状态
             ccd_controller.fix_error_value = 0
             ccd_controller.follow = 0
             # element_gyro.off()
             # element_distance.off()
-        if self.state == RoadElement.l1:    #跟右边线
+        elif self.state == RoadElement.l1:    #跟右边线
             ccd_controller.follow=-self.ccd_near_length
-        if self.state == RoadElement.l2:
+        elif self.state == RoadElement.l2:
             ccd_controller.follow = -self.ccd_near_length
 
-        if self.state == RoadElement.l3:
+        elif self.state == RoadElement.l3:
             ccd_controller.follow = -self.ccd_near_length
-        if self.state == RoadElement.l3_not:
+        elif self.state == RoadElement.l3_not:
             ccd_controller.follow = -self.ccd_near_length
 
-        if self.state == RoadElement.lin:
+        elif self.state == RoadElement.lin:
             ccd_controller.follow = self.ccd_near_length
             # self.tmperror=stage_error.get_tmp()
 
-        if self.state == RoadElement.loutcoming:
+        elif self.state == RoadElement.loutcoming:
             ccd_controller.follow = 0
 
-        if self.state == RoadElement.lout:
+        elif self.state == RoadElement.lout:
             ccd_controller.fix_error_value = self.ERROR_l_out_value
 
         self.prev_state=self.state
