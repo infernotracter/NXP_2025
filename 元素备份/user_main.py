@@ -5,6 +5,7 @@ import utime
 import math
 from basic_data import *
 from menutext import *
+from ccd_hander import *
 #from tof_hander import *
 
 # 单位换算用
@@ -182,7 +183,7 @@ vel_kd = 0
 angle_kp = 0.103
 angle_ki = 0
 angle_kd = 0
-speed_kp = -1.47
+speed_kp = -2.03
 speed_ki = 0
 speed_kd = 0
 
@@ -220,17 +221,17 @@ def vel_loop_callback(pit1):
     global yaw_vel, counter_speed, counter_angle
     global imu, gyro_bias_y, gyro_bias_z
     global motor_l, motor_r
-    global imu_data, now_speed,encl_data,encr_data
+    global imu_data, now_speed
     global vel_disturbance  # Add this line
 
     imu_data = imu.get()
     acc_x = imu_data[1]
     acc_z = imu_data[2]
     gyro_y = imu_data[3]
-    gyro_z = imu_data[5]
+    tempgyro_z = imu_data[5]
 
     current_angle = update_filter(acc_x, gyro_y)
-    yaw_vel = (gyro_z - gyro_bias_z) * 0.07
+    yaw_vel = (tempgyro_z - gyro_bias_z) * 0.07
     pitch_vel = (gyro_y - gyro_bias_y) * 0.07
 
     counter_speed += 1
@@ -296,13 +297,14 @@ counter_turn_out = 0
 counter_turn_in = 0
 turn_out_last_error = 0
 turn_in_last_error = 0
-turn_out_kp = -109.4
+turn_out_kp = 0
 turn_out_ki = 0
 turn_out_kd = 0
 turn_in_kp = -2
 turn_in_ki = 0
 turn_in_kd = 0
 turn_in_disturbance = 0.0
+error = 0
 # ----------------- 转向控制回调函数 -----------------
 def turn_loop_callback(pit1):
     global current_turn_angle, target_yaw_vel, turn_output
@@ -344,6 +346,8 @@ def death_pwm(value):
         return value + 650
     else:
         return value - 650
+debuggyroz = 0.0
+debugdistance = 0.0
 print("""   ____   _           _   _           /\/|
   / ___| (_)   __ _  | | | |   ___   |/\/ 
  | |     | |  / _` | | | | |  / _ \       
@@ -352,17 +356,19 @@ print("""   ____   _           _   _           /\/|
 while True:
     mid_point_near = ccd_near.get_mid_point(value =31, reasonrange = 128, follow = 0, searchgap = 0)
     error=mid_point_near-64
-
-    
+    elementdetector.update()
+    distance.update((encoder_l.get() - encoder_r.get()) / 2, 0.01)
+    print(distance.data)
+    if checker(encoder_l.get()):
+        stop_flag=0
     if end_switch.value() == 1:
         break  # 跳出判断
         
     if (ticker_flag_pid):
         # profiler_gyro.update()
-        encl_data=encoder_l.get()
-        encr_data=encoder_r.get()
-        if abs(encl_data) >=200 or abs(encr_data)>=200:
-            stop_flag=0
+        imu_data = imu.get()
+        debuggyroz += (imu_data[5] + 142) * 0.01
+        #debug += (encoder_l.get() - encoder_r.get()) * 0.01
         vel_loop_callback(pit1)
         turn_loop_callback(pit1)
         motor_l.duty(death_pwm(pwm_l_value - turn_output)*stop_flag)
@@ -371,9 +377,12 @@ while True:
         
     if (ticker_flag_menu):
         #menu(key_data)
-        key_data=key.get()
+        key_data = key.get()
         lcd.str16(16,30,"{}".format(current_angle),0xFFFF)
+        lcd.str16(16,46,"{:<5}  {:<5}".format(debuggyroz, debugdistance),0xFFFF)
         if key_data[0] or key_data[1] or key_data[2] or key_data[3]:
+            gyro_z.clear()
+            distance.clear()
             stop_flag=1
             clearall()
         ticker_flag_menu=False
@@ -426,9 +435,14 @@ while True:
         # 将数据发送到示波器
         wireless.send_oscilloscope(
             #vel_kp, vel_ki, vel_kd, angle_kp, vel_disturbance, angle_disturbance, motor_l.duty(), current_angle
-            turn_in_disturbance,turn_output, error
+            debuggyroz
+            ,debugdistance
+            #imu_data[3], imu_data[4], imu_data[5]
+            #gyro_z.data(), distance.data()
+            #turn_in_disturbance,turn_output, error
             #gyro_bias_x , gyro_bias_y, gyro_bias_z
             )
+        gc.collect()
         ticker_flag_8ms = False
 
 
