@@ -209,7 +209,7 @@ class ElementDetector:
         self.ccd_far_l_lost = 7                 # 远端CCD左丢线阈值
         self.ccd_far_r_lost = 120               # 远端CCD右丢线阈值
 
-        self.POINT_diff_data = 20             # 特征点差异阈值
+        self.POINT_diff_data = 5             # 特征点差异阈值
 
         self.DISTANCE_ring_2_data = 140
 
