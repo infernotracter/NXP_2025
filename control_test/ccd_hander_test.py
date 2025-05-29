@@ -50,14 +50,18 @@ class CCDHandler:
         self._search_boundaries(searchgap, value)
         
         # 计算中线并应用跟随偏移
-        self.mid = (self.left + self.right) // 2
-        self._apply_follow_offset()
+        if self.follow != 0:
+            self._apply_follow_offset()
+            self.mid = (self.left + self.right) // 2
+            return self.mid
         
         # 限制中线变化幅度
         self._limit_mid_change(reasonrange)
         
         # 确保中线在有效范围内
         self.mid = min(max(self.mid, 5), 122)
+
+        self.mid = (self.left + self.right) // 2
         return self.mid
     
     def read_mid_point(self, value, reasonrange, follow=0, searchgap=0):
