@@ -171,21 +171,23 @@ class CCD_Controller:
         self.follow = 0
     def get_error(self):
         """获取CCD误差"""
+        ccd_far.get_mid_point(value=31, reasonrange=128, follow=self.follow, searchgap=0)
+        ccd_near.get_mid_point(value=31, reasonrange=128, follow=self.follow, searchgap=0)
         if self.fix_error_value != 0:
             return self.fix_error_value   #直接返回
         
         if self.far:
-            ccd_far.get_mid_point(value=31, reasonrange=128, follow=self.follow, searchgap=0)
             self.error = ccd_far.mid - 64
         else:
-            ccd_near.get_mid_point(value=31, reasonrange=128, follow=self.follow, searchgap=0)
             self.error = ccd_near.mid - 64
+            
         return self.error
 ccd_controller = CCD_Controller()
 
 class ElementDetector:
     """赛道元素检测器"""
     def __init__(self):
+        self.prev_state = RoadElement.normal
         self.state = RoadElement.normal
         self.ring_progress = 0  # 圆环进度
         self.zebra_count = 1    # 斑马线有几次是直接过
@@ -207,13 +209,13 @@ class ElementDetector:
         self.ccd_far_l_lost = 7                 # 远端CCD左丢线阈值
         self.ccd_far_r_lost = 120               # 远端CCD右丢线阈值
 
-        self.POINT_diff_data = 12             # 特征点差异阈值
+        self.POINT_diff_data = 20             # 特征点差异阈值
 
         self.DISTANCE_ring_2_data = 140
 
         # l3
-        self.GYRO_Z_ring3_data = 165
-        self.DISTANCE_ring3_data = 2200
+        self.GYRO_Z_ring3_data = 125
+        self.DISTANCE_ring3_data = 700
 
         # lin
         self.GYRO_Z_ring_in_data = 1600
@@ -278,8 +280,8 @@ class ElementDetector:
 #             elif self.find_barrier() == -1:
 #                 self.follow = self.ccd_near_length
         # 判断全黑全白
-        # if check_tuple(ccd_near.data, 90, 30)==-1:
-        #     self.state = RoadElement.stop # 跑出去了,别把车子撞坏了,歇歇吧
+        # #if check_tuple(ccd_near.data, 90, 30)==-1:
+        #     #self.state = RoadElement.stop # 跑出去了,别把车子撞坏了,歇歇吧
         # if self.state == RoadElement.stop:# 返回正常状态
         #     if self._check_normal() and movementtype.mode == MOVEMENTTYPE.default:
         #         self.state = RoadElement.normal
@@ -418,7 +420,7 @@ class ElementDetector:
     def _left_2(self):
         """左圆环状态2检测：近端左丢线+特征点稳定"""
         if element_distance.data < self.DISTANCE_ring_2_data:
-            if ccd_near.left <= self.ccd_near_l_lost:
+            if ccd_near.left <= self.ccd_near_l_lost
                 if abs(ccd_far.left - ccd_near.left) <= self.POINT_diff_data:
                     return ccd_near.left < self.ccd_near_l_lost
         if element_distance.data > self.DISTANCE_ring_2_data:
@@ -668,7 +670,7 @@ class Distance:
     def update(self, tmpdata, k):
         if self.start_flag:
             self.data += tmpdata * k
-        if self.data > 1e300:
+        if self.data > 9999999999:
             self.data = 0.0
     def off(self):
         self.data = 0
@@ -699,7 +701,7 @@ class Gyro_Z_Test:
     def update(self, tmpdata, k):
         if self.start_flag:
             self.data += (tmpdata + 142) * k
-        if self.data > 1e300:
+        if self.data > 999999999999:
             self.data = 0.0
     def off(self):
         self.data = 0
@@ -724,3 +726,4 @@ stage_error=Error_test()
 
 
 print("王小桃快跑，邮箱来了")
+
