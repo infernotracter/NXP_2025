@@ -272,7 +272,7 @@ def debug():
     ccd_far_length = abs(ccd_far_l[1] - ccd_far_l[0])
     POINT_diff_data = temp_ccd_near_data_l // 10 + delta
 
-def update():
+def elementdector():
     """主检测函数: , imu_data, enc_data """
     global state, prev_state, tmperror, outflag, zebra_count, follow
     tempcheck = state
