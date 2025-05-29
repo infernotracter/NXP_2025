@@ -211,15 +211,20 @@ class ElementDetector:
 
         self.POINT_diff_data = 12             # 特征点差异阈值
 
-        self.GYRO_Z_ring3_data = 1400
-        self.DISTANCE_ring3_data = 0.003
+        # l3
+        self.GYRO_Z_ring3_data = 165
+        self.DISTANCE_ring3_data = 2200
+
+        # lin
         self.GYRO_Z_ring_in_data = 1600
+        self.DISTANCE_ring_in_data = 120
+
         self.DISTANCE_ring_out_data = 0.15
-        self.ccd_near_length = 40
+        self.ccd_near_length = 80
         self.ccd_far_length = 40
-        self.DISTANCE_ring_outcoming_data = 0.08
-        self.DISTANCE_ring3_not_data = 10
-        self.DISTANCE_zebra_out_data = 0.02
+        self.DISTANCE_ring_outcoming_data = 300
+        self.DISTANCE_ring3_not_data = 300
+        self.DISTANCE_zebra_out_data = 80 # 斑马线
         self.ERROR_l_out_value = -20
         #-------------------我们的gyro圆环识别数据-------------------
         self.gyro_z_ring3=0.8  #待测
@@ -237,7 +242,6 @@ class ElementDetector:
 
     def debug(self):
         """纠正CCD和陀螺仪数据"""
-        gyro_z._getoffset()
         temp_ccd_near_data_l = 0
         temp_ccd_near_data_r = 0
         temp_ccd_far_data_l = 0
@@ -460,7 +464,7 @@ class ElementDetector:
             self.state = RoadElement.normal
 
     def _right_in(self):
-        if gyro_z.data > self.GYRO_Z_ring_in_data or gyro_z.data < -self.GYRO_Z_ring_in_data:
+        if abs(gyro_z.data) > self.GYRO_Z_ring_in_data:
             return True
 
     def _left_3(self):
@@ -640,9 +644,9 @@ class Distance:
     def clear(self):
         self.data=0
 
-    def update(self, tmpdata, delta_t):
+    def update(self, tmpdata, k):
         if self.start_flag:
-            self.data += tmpdata / 1024 * 30 / 50 * 0.05 * 3.1415926 * delta_t
+            self.data += tmpdata * k
     def off(self):
         self.data = 0
         self.start_flag = False
@@ -668,9 +672,9 @@ class Gyro_Z_Test:
 
     def start(self):
         self.start_flag = True
-    def update(self, tmpdata, delta_t, channel = 5):
+    def update(self, tmpdata, k):
         if self.start_flag:
-            self.data += (tmpdata - self.offset[channel]) * delta_t
+            self.data += (tmpdata + 142) * k
     def off(self):
         self.data = 0
         self.start_flag = False
