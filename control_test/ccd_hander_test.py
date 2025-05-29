@@ -142,11 +142,11 @@ class RoadElement:
     normal = 0
     l1 = 1
     l2 = 2
-    r1 = 3
+    r1 = 5
     r2 = 4
     l3_not = 14
     r3_not = 15
-    l3 = 5
+    l3 = 3
     r3 = 6
     lin = 7
     lout = 8
@@ -189,8 +189,6 @@ class ElementDetector:
         self.state = RoadElement.normal
         self.ring_progress = 0  # 圆环进度
         self.zebra_count = 1    # 斑马线有几次是直接过
-        self._ccd_far = ccd_far
-        self._ccd_near = ccd_near
         self.imu_data = [0] * 9
         self.enc_data = 0
         self.follow = 0
@@ -280,8 +278,8 @@ class ElementDetector:
 #             elif self.find_barrier() == -1:
 #                 self.follow = self.ccd_near_length
         # 判断全黑全白
-        if check_tuple(self._ccd_near.data, 90, 30)==-1:
-            self.state = RoadElement.stop # 跑出去了,别把车子撞坏了,歇歇吧
+        # if check_tuple(ccd_near.data, 90, 30)==-1:
+        #     self.state = RoadElement.stop # 跑出去了,别把车子撞坏了,歇歇吧
         # if self.state == RoadElement.stop:# 返回正常状态
         #     if self._check_normal() and movementtype.mode == MOVEMENTTYPE.default:
         #         self.state = RoadElement.normal
@@ -407,28 +405,28 @@ class ElementDetector:
 
     def _left_1(self):
         """左圆环检测逻辑"""
-        if self._ccd_far.left < self.ccd_far_l_lost:
-            if abs(self._ccd_far.right -  self._ccd_near.right) <= self.POINT_diff_data:
+        if ccd_far.left < self.ccd_far_l_lost:
+            if abs(ccd_far.right -  ccd_near.right) <= self.POINT_diff_data:
                 return True
     
     def _right_1(self):
         """右圆环检测逻辑"""
-        if self._ccd_far.right > self.ccd_far_r_lost:
-            if abs(self._ccd_far.left -  self._ccd_near.left) <= self.POINT_diff_data:
+        if ccd_far.right > self.ccd_far_r_lost:
+            if abs(ccd_far.left -  ccd_near.left) <= self.POINT_diff_data:
                 return True
             
     def _left_2(self):
         """左圆环状态2检测：近端左丢线+特征点稳定"""
         if element_distance.data < self.DISTANCE_ring_2_data:
-            if self._ccd_near.left <= self.ccd_near_l_lost:
-                if abs(self._ccd_far.left - self._ccd_near.left) <= self.POINT_diff_data:
-                    return self._ccd_near.left < self.ccd_near_l_lost
+            if ccd_near.left <= self.ccd_near_l_lost:
+                if abs(ccd_far.left - ccd_near.left) <= self.POINT_diff_data:
+                    return ccd_near.left < self.ccd_near_l_lost
         if element_distance.data > self.DISTANCE_ring_2_data:
             self.state = RoadElement.normal
 
     def _right_2(self):
         """右圆环状态2检测：近端右丢线+特征点稳定"""
-        return self._ccd_near.right >= self.ccd_near_r_lost
+        return ccd_near.right >= self.ccd_near_r_lost
   
     def _check_zebra(self, ccd_near):
         """斑马线检测逻辑"""
@@ -451,7 +449,7 @@ class ElementDetector:
         return False
     
     def _check_normal(self):
-        if self._ccd_near.left > self.ccd_near_l_lost and self._ccd_near.right < self.ccd_near_r_lost:
+        if ccd_near.left > self.ccd_near_l_lost and ccd_near.right < self.ccd_near_r_lost:
             return True
         return False
 
@@ -468,13 +466,13 @@ class ElementDetector:
 
     def _right_in_not(self):
         # 近端CCD右丢线检查（right_point_2 >=115）
-        near_right_lost =  self._ccd_near.right >= self.ccd_near_r_lost
+        near_right_lost =  ccd_near.right >= self.ccd_near_r_lost
         
         # 近端左边界有效性检查（31 <= left_point_2 <=44）
-        near_left_valid = self.ccd_near_l[0] <=  self._ccd_near.left <= self.ccd_near_l[1]
+        near_left_valid = self.ccd_near_l[0] <=  ccd_near.left <= self.ccd_near_l[1]
         
         # 特征点稳定性检查（|left_point_1 - left_point_2| <=12）
-        point_diff = abs(self._ccd_far.left -  self._ccd_near.left)
+        point_diff = abs(ccd_far.left -  ccd_near.left)
         
         if near_right_lost and near_left_valid and (point_diff <= self.POINT_diff_data) and \
             element_distance.data > self.DISTANCE_ring3_not_data:
@@ -496,13 +494,13 @@ class ElementDetector:
 
     def _left_in_not(self):
         # 近端CCD左丢线检查（left_point_2 <= ...）
-        near_left_lost =  self._ccd_near.left <= self.ccd_near_l_lost
+        near_left_lost =  ccd_near.left <= self.ccd_near_l_lost
         
         # 近端右边界有效性检查（右边界范围检查）
-        near_right_valid = self.ccd_near_r[0] <=  self._ccd_near.right <= self.ccd_near_r[1]
+        near_right_valid = self.ccd_near_r[0] <=  ccd_near.right <= self.ccd_near_r[1]
         
         # 特征点稳定性检查（右远和右近的差值）
-        point_diff = abs(self._ccd_far.right -  self._ccd_near.right)
+        point_diff = abs(ccd_far.right -  ccd_near.right)
         
         if near_left_lost and near_right_valid and (point_diff <= self.POINT_diff_data) and \
             element_distance.data > self.DISTANCE_ring3_not_data:
@@ -516,17 +514,17 @@ class ElementDetector:
     def _left_outcoming(self):
         # 超过一定距离并且全白
         if abs(element_distance.data) > self.DISTANCE_ring_outcoming_data:
-            if check_tuple(self._ccd_near.data, 90, 30)==1 or check_tuple(self._ccd_far.data, 90, 30)==1:
+            if check_tuple(ccd_near.data, 90, 30)==1 or check_tuple(ccd_far.data, 90, 30)==1:
                 return True
 
     def _right_outcoming(self):
         # 超过一定距离并且全白
         if abs(element_distance.data) > self.DISTANCE_ring_outcoming_data:
-            if check_tuple(self._ccd_near.data, 90, 30)==1 or check_tuple(self._ccd_far.data, 90, 30)==1:
+            if check_tuple(ccd_near.data, 90, 30)==1 or check_tuple(ccd_far.data, 90, 30)==1:
                 return True
             
     def _left_out_out(self):
-        if abs(element_distance.data) > self.DISTANCE_ring_out_out_data or (self.ccd_near_l_lost < self._ccd_near.left and self._ccd_near.right < self.ccd_near_r_lost):
+        if abs(element_distance.data) > self.DISTANCE_ring_out_out_data or (self.ccd_near_l_lost < ccd_near.left and ccd_near.right < self.ccd_near_r_lost):
             return True
 
 
