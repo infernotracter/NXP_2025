@@ -305,55 +305,55 @@ class ElementDetector:
         if self.state == RoadElement.normal:
             if self._right_1( ):
                 self.state = RoadElement.r1
-        if self.state == RoadElement.l1:
+        elif self.state == RoadElement.l1:
             if self._left_2( ):
                 self.state = RoadElement.l2
-        if self.state == RoadElement.r1:
+        elif self.state == RoadElement.r1:
             if self._right_2( ):
                 self.state = RoadElement.r2
 
         # 防误判圆环 important
-        if self.state == RoadElement.r2:
+        elif self.state == RoadElement.r2:
             if self._right_3():
                 self.state = RoadElement.r3
-        if self.state == RoadElement.l2:
+        elif self.state == RoadElement.l2:
             if self._left_3():
                 self.state = RoadElement.l3
 
         # 进圆环 
         """分为进和不进"""
-        if self.state == RoadElement.r3:
+        elif self.state == RoadElement.r3:
             if movementtype.mode == MOVEMENTTYPE.Mode_1:
                 if self._right_in_not():
                     self.state = RoadElement.normal
-            if movementtype.mode == MOVEMENTTYPE.Mode_2:
+            elif movementtype.mode == MOVEMENTTYPE.Mode_2:
                 if self._right_in():
                     self.state = RoadElement.rin
 
-        if self.state == RoadElement.l3:
+        elif self.state == RoadElement.l3:
             if movementtype.mode == MOVEMENTTYPE.Mode_1:
                 if self._left_in_not():
                     self.state = RoadElement.normal
-            if movementtype.mode == MOVEMENTTYPE.Mode_2:
+            elif movementtype.mode == MOVEMENTTYPE.Mode_2:
                 if self._left_in():
                     self.state = RoadElement.lin
 
         # 出圆环
-        if self.state == RoadElement.rin:
+        elif self.state == RoadElement.rin:
             if self._right_outcoming():
                 self.state = RoadElement.routcoming
-        if self.state == RoadElement.lin:
+        elif self.state == RoadElement.lin:
             if self._left_outcoming():
                 self.state = RoadElement.loutcoming
 
-        if self.state == RoadElement.routcoming:
+        elif self.state == RoadElement.routcoming:
             if self._right_out():
                 self.state = RoadElement.rout
-        if self.state == RoadElement.loutcoming:
+        elif self.state == RoadElement.loutcoming:
             if self._left_out():
                 self.state = RoadElement.lout
 
-        if self.state == RoadElement.lout:
+        elif self.state == RoadElement.lout:
             if self._left_out_out():
                 self.state = RoadElement.normal
         self._element_operations()  # 执行元素状态相关操作
