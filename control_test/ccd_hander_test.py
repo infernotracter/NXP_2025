@@ -321,6 +321,7 @@ class ElementDetector:
                 self.state = RoadElement.l3
 
         # 进圆环 
+
         elif self.state == RoadElement.r3:
             if movementtype.mode == MOVEMENTTYPE.Mode_1:
                 if self._right_in_not():
@@ -382,10 +383,10 @@ class ElementDetector:
             ccd_controller.follow = 0
             # element_gyro.off()
             # element_distance.off()
-        elif self.state == RoadElement.l1:    #跟右边线
-            ccd_controller.follow=-self.ccd_near_length
-        elif self.state == RoadElement.l2:
-            ccd_controller.follow = -self.ccd_near_length
+        # elif self.state == RoadElement.l1:    #跟右边线
+        #     ccd_controller.follow=-self.ccd_near_length
+        # elif self.state == RoadElement.l2:
+        #     ccd_controller.follow = -self.ccd_near_length
 
         elif self.state == RoadElement.l3:
             ccd_controller.follow = -self.ccd_near_length
