@@ -419,12 +419,9 @@ class ElementDetector:
             
     def _left_2(self):
         """左圆环状态2检测：近端左丢线+特征点稳定"""
-        if element_distance.data < self.DISTANCE_ring_2_data:
-            if ccd_near.left <= self.ccd_near_l_lost
-                if abs(ccd_far.left - ccd_near.left) <= self.POINT_diff_data:
-                    return ccd_near.left < self.ccd_near_l_lost
-        if element_distance.data > self.DISTANCE_ring_2_data:
-            self.state = RoadElement.normal
+        if ccd_near.left <= self.ccd_near_l_lost:
+            if abs(ccd_far.left - ccd_near.left) <= self.POINT_diff_data:
+                return ccd_near.left < self.ccd_near_l_lost
 
     def _right_2(self):
         """右圆环状态2检测：近端右丢线+特征点稳定"""
