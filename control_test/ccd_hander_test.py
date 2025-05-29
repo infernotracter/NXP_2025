@@ -224,7 +224,7 @@ class ElementDetector:
         self.DISTANCE_ring_out_data = 0.15
         self.DISTANCE_ring_out_out_data = 170
         self.ccd_near_length = 80
-        self.ccd_far_length = 40
+        self.ccd_far_length = 60
         self.DISTANCE_ring_outcoming_data = 300
         self.DISTANCE_ring3_not_data = 300
         self.DISTANCE_zebra_out_data = 80 # 斑马线
@@ -321,7 +321,6 @@ class ElementDetector:
                 self.state = RoadElement.l3
 
         # 进圆环 
-        """分为进和不进"""
         elif self.state == RoadElement.r3:
             if movementtype.mode == MOVEMENTTYPE.Mode_1:
                 if self._right_in_not():
