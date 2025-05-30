@@ -861,6 +861,7 @@ class ElementDetector:
         near_ccd_lost= (ccd_near.left <= self.ccd_near_l[0] and ccd_near.right >= self.ccd_near_r[1])
         far_ccd_normal=(self.ccd_far_l[0]<=ccd_far.left<=self.ccd_far_l[1] and self.ccd_far_r[0]<=ccd_far.right<=self.ccd_far_r[1])
         return near_ccd_lost and far_ccd_normal
+    
         
     # def _update_state(self, element, imu_data):
     #     """状态机更新"""

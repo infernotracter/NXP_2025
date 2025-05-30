@@ -405,6 +405,8 @@ class RoadElement:
     zebraout = 111
     ramp = 12
     barrier = 13
+    crossroad_coming = 16
+
 
 class CCD_Controller:
     """CCD控制器, 远近端, follow跟随偏移"""
@@ -486,6 +488,8 @@ class ElementDetector:
         self.DISTANCE_ring3_not_data = 300
         self.DISTANCE_zebra_out_data = 80 # 斑马线
         self.ERROR_l_out_value = -20
+        #crossroad
+        self.DISTANCE_crossroad_data = 80  #十字路口
         #-------------------我们的gyro圆环识别数据-------------------
         self.gyro_z_ring3=0.8  #待测
         self.gyro_z_ring4=1.0  #待测
@@ -568,7 +572,6 @@ class ElementDetector:
         elif self.state == RoadElement.r1:
             if self._right_2( ):
                 self.state = RoadElement.r2
-
         # 防误判圆环 important
         elif self.state == RoadElement.r2:
             if self._right_3():
@@ -611,6 +614,12 @@ class ElementDetector:
 
         elif self.state == RoadElement.lout:
             if self._left_out_out():
+                self.state = RoadElement.normal
+        elif self.state == RoadElement.normal:
+            if self._crossroad_coming():
+                self.state = RoadElement.crossroad_coming
+        elif self.state == RoadElement.crossroad_coming:
+            if self._crossroad_out():
                 self.state = RoadElement.normal
         self._element_operations()  # 执行元素状态相关操作
         # if tempcheck != self.state:
@@ -660,6 +669,9 @@ class ElementDetector:
 
         elif self.state == RoadElement.lout:
             ccd_controller.fix_error_value = self.ERROR_l_out_value
+
+        elif self.state == RoadElement.crossroad_coming:
+            ccd_controller.fix_error_value = 0
 
         self.prev_state=self.state
 
@@ -857,10 +869,15 @@ class ElementDetector:
             
 
     # 十字判断
-    def _crossroad(self):
-        near_ccd_lost= (ccd_near.left <= self.ccd_near_l[0] and ccd_near.right >= self.ccd_near_r[1])
-        far_ccd_normal=(self.ccd_far_l[0]<=ccd_far.left<=self.ccd_far_l[1] and self.ccd_far_r[0]<=ccd_far.right<=self.ccd_far_r[1])
-        return near_ccd_lost and far_ccd_normal
+    def _crossroad_coming(self):
+        near_ccd_normal= (ccd_near.left >self.ccd_near_l_lost and ccd_near.right < self.ccd_near_r_lost)
+        far_ccd_lost=check_tuple(ccd_far.data, 90, 30)
+        return near_ccd_normal and (far_ccd_lost==1)
+    
+    def _crossroad_out(self):
+        near_ccd_normal= (ccd_near.left >self.ccd_near_l_lost and ccd_near.right < self.ccd_near_r_lost)
+        if near_ccd_normal and element_distance.data > self.DISTANCE_crossroad_data:
+            return True
         
     # def _update_state(self, element, imu_data):
     #     """状态机更新"""
