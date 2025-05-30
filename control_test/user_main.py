@@ -458,7 +458,8 @@ class ElementDetector:
 
         self.POINT_diff_data = 20            # 特征点差异阈值
 
-        self.DISTANCE_ring_2_data = 140
+        self.DISTANCE_ring_2_data = 20
+        self.GYRO_Z_ring2_data = 500
 
         # l3
         self.GYRO_Z_ring3_data = 700
@@ -659,7 +660,7 @@ class ElementDetector:
         
         # 远端CCD特征检查   远端左丢线，右边正常
         far_valid = (ccd_near.left < self.ccd_far_l_lost and 
-                    self.ccd_far_r[0] <= ccd_near.right <= self.ccd_far_r[1])
+                    self.ccd_far_r[0] <= ccd_far.right <= self.ccd_far_r[1])
         
         # 特征点一致性检查  检测远近端右边线是否为直线，防止误判左弯道
         point_diff = abs(ccd_near.right -  ccd_near.right)
@@ -695,7 +696,10 @@ class ElementDetector:
         # 特征点稳定性检查（|right_point_1 - right_point_2| <=12）
         point_diff = abs(ccd_far.right -  ccd_near.right)
 
+        if element_distance.data > self.DISTANCE_ring_2_data or element_gyro.data > self.GYRO_Z_ring2_data:
+            self.state = RoadElement.normal
         return near_left_lost and near_right_valid and point_diff < self.POINT_diff_data
+
         # return ccd_near.left < self.ccd_near_l_lost
 
     def _right_2(self):
