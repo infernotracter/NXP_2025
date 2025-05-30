@@ -569,12 +569,12 @@ class ElementDetector:
                 self.state = RoadElement.r1
         elif self.state == RoadElement.l1:
             if self._crossroad_coming():
-                self.state = RoadElement.crossroad_coming
+                self.state = RoadElement.normal
             elif self._left_2( ):
                 self.state = RoadElement.l2
         elif self.state == RoadElement.r1:
             if self._crossroad_coming():
-                self.state = RoadElement.crossroad_coming
+                self.state = RoadElement.normal
             elif self._right_2( ):
                 self.state = RoadElement.r2
         # 防误判圆环 important
@@ -1336,6 +1336,7 @@ while True:
              )
         gc.collect()
         ticker_flag_8ms = False
+
 
 
 
