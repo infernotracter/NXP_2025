@@ -134,13 +134,13 @@ beep = Beeper()
 
 def scale_value(x, x_min, x_max):
     """
-    将输入x从范围[x_min, x_max]线性映射到[0.6, 1]
+    将输入x从范围[x_min, x_max]线性映射到[0.4, 1]
     输入越大输出越小，输入越小输出越大
     """
     if x_min == x_max:
         return 0.8  # 处理所有输入相同的情况
     normalized = (x - x_min) / (x_max - x_min)
-    return 1.0 - 0.4 * normalized
+    return 1.0 - 0.6 * normalized
 
 
 def create_roll_checker():
@@ -1261,6 +1261,7 @@ while True:
         #debug += (encoder_l.get() - encoder_r.get()) * 0.01
         vel_loop_callback(pit1)
         turn_loop_callback(pit1)
+        speed_k = scale_value(abs(ccd_near.mid - ccd_far.mid), 0, 7) # 弯道减速
         motor_l.duty(my_limit(death_pwm(pwm_l_value - turn_output),-6000,6000))
         motor_r.duty(my_limit(death_pwm(pwm_r_value + turn_output),-6000,6000))
         ticker_flag_pid = False
