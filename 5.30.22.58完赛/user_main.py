@@ -131,7 +131,7 @@ class Beeper:
         if long is not None: self.long_duration = long
         if short is not None: self.short_duration = short
 beep = Beeper()
-target_speed = -40
+
 def scale_value(x, x_min, x_max):
     """
     将输入x从范围[x_min, x_max]线性映射到[0.4, 1]
@@ -160,237 +160,8 @@ def create_roll_checker():
     return check
 checker = create_roll_checker()
 
-class speed_controller():
-    def __init__(self):
-        self.target_speed = 0.0
-        self.speed = 0.0
-        self.kp = 0.3
-    def update(self):
-        self.speed += self.kp * (self.target_speed - self.speed)
-        
 
 print("种族骑士王小桃来啦UwU")
-
-point = 30
-main_menu_flag = 1
-car_go_flag = 0
-element_flag = 0
-key_cnt=0
-tmpgyro=0
-tmpdis=0
-def check_speedmode(speed):
-    if speed==0:
-        return 'default'
-    elif speed==40:
-        return 'mode_1'
-    elif speed==80:
-        return 'mode_2'
-def check_element(mod):
-    if mod==-1:
-        return 'stop'
-    elif mod==0:                                               
-        return 'normal'
-    elif mod==1:
-        return 'l1'
-    elif mod==2:
-        return 'l2'
-    elif mod==3:
-        return 'r1'
-    elif mod==4:
-        return 'r2'
-    elif mod==5:
-        return 'l3'
-    elif mod==6:
-        return 'r3'
-    elif mod==7:
-        return 'lin'
-    elif mod==8:
-        return 'lout'
-    elif mod==9:
-        return 'rin'
-    elif mod==10:
-        return 'rout'                   
-    elif mod==11:
-        return 'zebra'
-    elif mod==12:
-        return 'ramp'
-    elif mod==13:
-        return 'barrier'
-    elif mod==14:
-        return 'l3not'
-    elif mod==15:
-        return 'r3not'
-
-def point_move(hight, low, key_data):
-    global point
-    if key_data[1]:
-        lcd.clear(0x0000)
-        point += 16
-        key.clear(2)
-        if point == hight + 16:
-            point = low
-    if key_data[0]:
-        lcd.clear(0x0000)
-        point -= 16
-        key.clear(1)
-        if point == low - 16:
-            point = hight
-    gc.collect()
-
-
-
-def menu(key_data):
-    global main_menu_flag, car_go_flag, element_flag
-    if (main_menu_flag == 1):
-        main_menu(key_data)
-    if (car_go_flag == 1):
-        sec_menu_01(key_data)
-    if (element_flag == 1):
-        sec_menu_02(key_data)
-
-    gc.collect()
-
-
-def main_menu(key_data):  # 一级菜单
-    global point, main_menu_flag, car_go_flag,element_flag
-    lcd.str16(16, 30, "car_go", 0xFFFF)
-    lcd.str16(16, 46, "element_debug", 0xFFFF)
-    lcd.str16(0, point, ">", 0xF800)
-    point_move(46, 30, key_data)
-
-    if point == 30 and key_data[2]:
-        key.clear(3)
-        main_menu_flag = 0
-        car_go_flag = 1
-        point = 30
-        lcd.clear(0x0000)
-    if point == 46 and key_data[2]:
-        lcd.clear(0x0000)
-        element_flag = 1
-        main_menu_flag = 0
-        point = 174
-        key.clear(3)
-    gc.collect()
-
-
-def sec_menu_01(key_data):
-    global main_menu_flag, point, car_go_flag,key_cnt
-    lcd.str24(60, 0, "car_go_mode", 0x07E0)
-    lcd.str16(16, 30, " ".format(),0xFFFF)
-    lcd.str16(16, 46, "car_mode={}".format(check_speedmode(movementtype.speed)), 0x07E0)   #寻圆环/不寻圆环
-    lcd.str16(16, 62, "return ",0xFFFF)
-    lcd.str16(16, 126, "aim_speed={}".format(movementtype.speed),0xFFFF)
-    lcd.str16(16, 78, "".format(),0xFFFF)
-    lcd.str12(0, point, ">", 0xF800)
-    point_move(62, 30, key_data)
-    
-    if point == 62 and key_data[2]:
-        lcd.clear(0x0000)
-        main_menu_flag = 1
-        car_go_flag = 0
-        key.clear(3)
-        point = 30
-    if key_data[2] and point == 30:
-        lcd.clear(0x0000)
-        start_flag = 1
-        key.clear(3)
-    if key_data[2] and point == 46:
-        key_cnt+=1
-        if key_cnt == 0:
-            movementtype.speed=0
-        elif key_cnt == 1:
-            movementtype.speed=40
-        elif key_cnt == 2:
-            movementtype.speed=80
-        elif key_cnt >=3:
-            key_cnt=0
-            movementtype.speed=0
-            
-#         if key_cnt==0:
-#             movementtype.mode=MovementType.default
-#         if key_cnt==1:
-#             movementtype.mode=MovementType.Mode_1
-#         if key_cnt==2:
-#             movementtype.mode=MovementType.Mode_2
-#         if key_cnt==3:
-#             movementtype.mode=MovementType.Mode_3
-#         if key_cnt==4:
-#             movementtype.mode=MovementType.Mode_4
-#         if key_cnt==5:
-#             movementtype.mode=MovementType.Mode_5
-#         if key_cnt>=6:
-#             key_cnt=0
-#             movementtype.mode=MovementType.default
-        #movementtype.update()
-        lcd.clear(0x0000)
-        key.clear(3)
-    gc.collect()
-
-
-def sec_menu_02(key_data):  #元素debug
-    global main_menu_flag, point, element_flag,tmpgyro,tmpdis
-    lcd.str24(60, 0, "debug", 0x07E0)  # 二级菜单标题
-    lcd.str16(16, 30,"cnl[0]:{} cnl[1]:{}".format(elementdetector.ccd_near_l[0],elementdetector.ccd_near_l[1]),0xFFFF)
-    lcd.str16(16, 46,"cnr[0]:{} cnr[1]:{}".format(elementdetector.ccd_near_r[0],elementdetector.ccd_near_r[1]),0xFFFF)
-    lcd.str16(16, 62,"cfl[0]:{}  cfl[1]:{}".format(elementdetector.ccd_far_l[0],elementdetector.ccd_far_l[1]),0xFFFF)
-    lcd.str16(16, 78,"cfr[0]:{}  cfr[1]:{}".format(elementdetector.ccd_far_r[0],elementdetector.ccd_far_r[1]),0xFFFF)
-    lcd.str16(16, 94,"stage:{}".format(check_element(elementdetector.state)),0xFFFF)
-    lcd.str16(16, 110,"nl:{:<3}   nr:{:<3}".format(ccd_near.left, ccd_near.right),0xFFFF)
-    lcd.str16(16, 126,"fl:{:<3}   fr:{:<3}".format(ccd_far.left,ccd_far.right),0xFFFF)
-    lcd.str16(16, 142,"near length:{}".format(elementdetector.ccd_near_length),0xFFFF)
-    lcd.str16(16, 158,"g:{:.1f} d:{:.3f}".format(element_gyro.data, element_distance.data),0xFFFF)
-    lcd.str16(16, 174,"data_update",0xFFFF)
-    lcd.str16(16, 190,"state_reset",0xFFFF)
-    lcd.str16(16, 206,"gyro&dis_clear",0xFFFF)
-    lcd.str16(16, 222,"return",0xFFFF)
-    lcd.str16(16, 238,"{}".format(movementtype.mode),0xFFFF)
-    lcd.str16(16, 254,"{}".format(tmpgyro),0xFFFF)
-    lcd.str16(16, 270,"{:.4f}".format(tmpdis),0xFFFF)
-    lcd.str16(16, 286, "{:<6}  {:<6}".format(debugdistance.data, debuggyroz.data), 0xFFFF)
-    lcd.str16(0, point, ">", 0xF800)
-
-    point_move(222, 174, key_data)
-    if point == 174 and key_data[2]:
-        lcd.clear(0x0000)
-        elementdetector.debug()
-        #elementdetector.update()
-        elementdetector.state = 0
-        key.clear(3)
-    
-    if point == 190 and key_data[2]:
-        lcd.clear(0x0000)
-        elementdetector.state = 0
-        element_distance.data = 0
-        element_gyro.data = 0
-        element_gyro.off()
-        element_distance.off()
-        #gyro_z._getoffset()
-        key.clear(3)
-        
-    if point == 206 and key_data[2]:
-        lcd.clear(0x0000)
-        tmpgyro=element_gyro.data
-        tmpdis=element_distance.data
-        element_distance.data = 0
-        element_gyro.data = 0
-        #gyro_z._getoffset()
-        key.clear(3)
-        
-    if point == 222 and key_data[2]:
-        lcd.clear(0x0000)
-        main_menu_flag = 1
-        element_flag = 0
-        point = 30
-        key.clear(3)
-
-    gc.collect()
-
-
-print("wcnm陀螺仪别报错了")
-
-
-
-
 # 单位换算用
 ACC_SPL = 4096.0
 GYRO_SPL = 16.4
@@ -612,6 +383,7 @@ class CCDHandler:
 ccd_near = CCDHandler(1)
 ccd_far=CCDHandler(0)
 
+# 赛道元素状态枚举
 # 赛道元素状态枚举
 class RoadElement:
     stop = -1
@@ -1045,7 +817,7 @@ class ElementDetector:
     def _left_outcoming(self):
         # 超过一定距离并且全白
         if abs(element_distance.data) > self.DISTANCE_ring_outcoming_data:
-            if check_tuple(ccd_near.data, 90, 30)==1 or check_tuple(ccd_far.data, 90, 30)==1:
+            if (ccd_near.left<self.ccd_near_l_lost and ccd_near.right>self.ccd_near_r_lost)or (ccd_far.left <self.ccd_far_l_lost and ccd_far.right >self.ccd_far_r_lost):
                 return True
         if abs(element_distance.data) > self.DISTANCE_ring3_data * 3:
             self.state = RoadElement.normal
@@ -1053,7 +825,7 @@ class ElementDetector:
             
     def _left_out_out(self):
         if abs(element_distance.data) > self.DISTANCE_ring_out_out_data:
-            if ccd_near.right < self.ccd_near_r_lost:
+            if ( ccd_near.right < self.ccd_near_r_lost):
                 return True
         if abs(element_distance.data) > self.DISTANCE_ring3_data * 1.5:
             self.state = RoadElement.normal
@@ -1065,8 +837,8 @@ class ElementDetector:
     def _right_1(self):
         """右圆环检测逻辑（对称于_left_1）"""
         # 近端CCD特征检查（左右镜像）
-        near_valid = (self.ccd_near_r[0] <= ccd_near.left <= self.ccd_near_r[1] and 
-                    self.ccd_near_l[0] <= ccd_near.right <= self.ccd_near_l[1])
+        near_valid = (self.ccd_near_l[0] <= ccd_near.left <= self.ccd_near_l[1] and 
+                    self.ccd_near_r[0] <= ccd_near.right <= self.ccd_near_r[1])
         
         # 远端CCD特征检查（左右镜像）
         far_valid = (ccd_far.right > self.ccd_far_r_lost and 
@@ -1092,7 +864,7 @@ class ElementDetector:
 
     def _right_3(self):
         """右圆环状态3检测（对称于_left_3）"""
-        if element_distance.data > self.DISTANCE_ring3_data:
+        if abs(element_distance.data) > self.DISTANCE_ring3_data:
             if -self.GYRO_Z_ring3_data < element_gyro.data < self.GYRO_Z_ring3_data:
                 if self.ccd_near_r[0] < ccd_near.right < self.ccd_near_r[1]:
                     if abs(ccd_near.left - ccd_far.left) < self.POINT_diff_data:
@@ -1115,29 +887,29 @@ class ElementDetector:
 
     def _right_in(self):
         """进入右圆环（对称于_left_in）"""
-        if abs(element_gyro.data) > self.GYRO_Z_ring_in_data or element_distance.data > self.DISTANCE_ring_in_data:
+        if abs(element_gyro.data) > self.GYRO_Z_ring_in_data or abs(element_distance.data) > self.DISTANCE_ring_in_data:
             return True
 
     def _right_outcoming(self):
         """准备出右圆环（对称于_left_outcoming）"""
-        if element_distance.data > self.DISTANCE_ring_outcoming_data:
-            if check_tuple(ccd_near.data, 90, 30)==1 or check_tuple(ccd_far.data, 90, 30)==1:
+        if abs(element_distance.data) > self.DISTANCE_ring_outcoming_data:
+            if (ccd_near.left<self.ccd_near_l_lost and ccd_near.right>self.ccd_near_r_lost)or (ccd_far.left <self.ccd_far_l_lost and ccd_far.right >self.ccd_far_r_lost):
                 return True
-        if element_distance.data > self.DISTANCE_ring3_data * 3:
+        if abs(element_distance.data) > self.DISTANCE_ring3_data * 3.5:
             self.state = RoadElement.normal
 
     def _right_out(self):
         """出右圆环（对称于_left_out）"""
-        if element_distance.data > self.DISTANCE_ring_out_data:
+        if abs(element_distance.data) > self.DISTANCE_ring_out_data:
             if ccd_near.left > self.ccd_near_l_lost:
                 return True
 
     def _right_out_out(self):
         """完全出右圆环（对称于_left_out_out）"""
-        if element_distance.data > self.DISTANCE_ring_out_out_data:
-            if (ccd_near.left > self.ccd_near_l_lost and ccd_near.right < self.ccd_near_r_lost):
+        if abs(element_distance.data) > self.DISTANCE_ring_out_out_data:
+            if ccd_near.left > self.ccd_near_l_lost :
                 return True
-        if element_distance.data > self.DISTANCE_ring3_data * 1.5:
+        if abs(element_distance.data) > self.DISTANCE_ring3_data * 1.5:
             self.state = RoadElement.normal
 #     def find_barrier(self):
 #         """障碍物检测"""
@@ -1338,7 +1110,7 @@ acc_z = 0
 last_error2 = 0
 
 
-
+target_speed = -37
 balance_angle = -2850
 vel_kp = 3.71
 vel_ki = 2.84
@@ -1465,10 +1237,10 @@ counter_turn_out = 0
 counter_turn_in = 0
 turn_out_last_error = 0
 turn_in_last_error = 0
-turn_out_kp = -109.5
+turn_out_kp = -119.73
 turn_out_ki = 0
 turn_out_kd = 0
-turn_in_kp = -2
+turn_in_kp = -2.8
 turn_in_ki = 0
 turn_in_kd = 0
 turn_in_disturbance = 0.0
@@ -1538,11 +1310,9 @@ while True:
         #debug += (encoder_l.get() - encoder_r.get()) * 0.01
         vel_loop_callback(pit1)
         turn_loop_callback(pit1)
-        speed_k = scale_value(abs(ccd_near.mid - ccd_far.mid), 0, 7) # 弯道减速
-        speed_l = int(my_limit(death_pwm(pwm_l_value - turn_output),-6000,6000) * speed_k)
-        speed_r = int(my_limit(death_pwm(pwm_r_value + turn_output),-6000,6000) * speed_k)
-        motor_l.duty(speed_l)
-        motor_r.duty(speed_r)
+        #speed_k = scale_value(abs(ccd_near.mid - ccd_far.mid), 0, 20) # 弯道减速
+        motor_l.duty(my_limit(death_pwm(pwm_l_value - turn_output),-6000,6000))
+        motor_r.duty(my_limit(death_pwm(pwm_r_value + turn_output),-6000,6000))
         ticker_flag_pid = False
         
     if (ticker_flag_menu):
@@ -1565,7 +1335,8 @@ while True:
                 data_wave[i] = wireless.get_data(i)
                 # 将更新的通道数据输出到 Thonny 的控制台
                 print("Data[{:<6}] updata : {:<.3f}.\r\n".format(i, data_wave[i]))
-                
+                if i==0:
+                    target_speed = data_wave[i]
                 # 根据通道号单独更新对应参数
 
 #                 if i == 0:
@@ -1584,10 +1355,26 @@ while True:
 #                     speed_kp = data_wave[i]
 #                 elif i == 7:
 #                     balance_angle = data_wave[i]
+#                 if i == 0:
+#                     elementdetector.GYRO_Z_ring3_data = data_wave[i]
+#                 elif i == 1:
+#                     elementdetector.DISTANCE_ring3_data = data_wave[i]
+#                 elif i == 2:
+#                     target_speed = data_wave[i]
+#                 elif i == 3:
+#                     ccd_controller.value = data_wave[i]
+#                 elif i == 4:
+#                     turn_out_ki = data_wave[i]
+#                 elif i == 5:
+#                     turn_out_kd = data_wave[i]
+#                 elif i == 6:
+#                     elementdetector.state = data_wave[i]
+#                 elif i == 7:
+#                     balance_angle = data_wave[i]
                 if i == 0:
-                    elementdetector.GYRO_Z_ring3_data = data_wave[i]
+                    turn_in_kp = data_wave[i]
                 elif i == 1:
-                    elementdetector.DISTANCE_ring3_data = data_wave[i]
+                    turn_out_kp = data_wave[i]
                 elif i == 2:
                     target_speed = data_wave[i]
                 elif i == 3:
@@ -1600,11 +1387,12 @@ while True:
                     elementdetector.state = data_wave[i]
                 elif i == 7:
                     balance_angle = data_wave[i]
+
         # 将数据发送到示波器
         wireless.send_ccd_image(WIRELESS_UART.ALL_CCD_BUFFER_INDEX)
         wireless.send_oscilloscope(
         #     #vel_kp, vel_ki, vel_kd, angle_kp, vel_disturbance, angle_disturbance, motor_l.duty(), current_angle
-              ccd_controller.follow,elementdetector.state,error, ccd_near.left, ccd_near.right, ccd_far.left, ccd_far.right
+              ccd_controller.follow,elementdetector.state,error, target_speed, current_angle
         #     #imu_data[3], imu_data[4], imu_data[5]
         #     #turn_in_disturbance,turn_output, error
         #     #gyro_bias_x , gyro_bias_y, gyro_bias_z
