@@ -1221,8 +1221,8 @@ while True:
         #menu(key_data)
         key_data = key.get()
         if key_data[0] or key_data[1] or key_data[2] or key_data[3]:
-            gyro_z.clear()
-            distance.clear()
+            element_distance.clear()
+            element_gyro.clear()
             stop_flag=1
             clearall()
         ticker_flag_menu=False
