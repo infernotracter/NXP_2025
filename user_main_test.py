@@ -616,16 +616,19 @@ class ElementDetector:
         elif self.state == RoadElement.lout:
             if self._left_out_out():
                 self.state = RoadElement.loutout
-        
+                
+        # 出圆环
         if self.state == RoadElement.loutout:
-            self.state = RoadElement.normal # 出圆环
+            self.state = RoadElement.normal 
 
+        # 十字
         elif self.state == RoadElement.normal:
             if self._crossroad_coming():
                 self.state = RoadElement.crossroad_coming
         elif self.state == RoadElement.crossroad_coming:
             if self._crossroad_out():
                 self.state = RoadElement.normal
+
         self._element_operations()  # 执行元素状态相关操作
         # if tempcheck != self.state:
         #     beep.start('short')
