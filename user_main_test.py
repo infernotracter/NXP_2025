@@ -568,10 +568,14 @@ class ElementDetector:
             if self._right_1( ):
                 self.state = RoadElement.r1
         elif self.state == RoadElement.l1:
-            if self._left_2( ):
+            if self._crossroad_coming():
+                self.state = RoadElement.crossroad_coming
+            elif self._left_2( ):
                 self.state = RoadElement.l2
         elif self.state == RoadElement.r1:
-            if self._right_2( ):
+            if self._crossroad_coming():
+                self.state = RoadElement.crossroad_coming
+            elif self._right_2( ):
                 self.state = RoadElement.r2
         # 防误判圆环 important
         elif self.state == RoadElement.r2:
@@ -622,9 +626,6 @@ class ElementDetector:
             self.state = RoadElement.normal 
 
         # 十字
-        elif self.state == RoadElement.normal:
-            if self._crossroad_coming():
-                self.state = RoadElement.crossroad_coming
         elif self.state == RoadElement.crossroad_coming:
             if self._crossroad_out():
                 self.state = RoadElement.normal
@@ -880,10 +881,10 @@ class ElementDetector:
 
     # 十字判断
     def _crossroad_coming(self):
-        near_ccd_normal= (ccd_near.left >self.ccd_near_l_lost and ccd_near.right < self.ccd_near_r_lost)
-        far_ccd_lost=check_tuple(ccd_far.data, 90, 30)
-        return near_ccd_normal and (far_ccd_lost==1)
-    
+        near_valid = (self.ccd_near_l[0] <=  ccd_near.left <= self.ccd_near_l[1] and 
+                self.ccd_near_r[0] <=  ccd_near.right <= self.ccd_near_r[1])
+        far_ccd_lost=(ccd_far.left < self.ccd_far_l_lost) and (ccd_far.right > self.ccd_far_r_lost)
+        return near_valid and far_ccd_lost
     def _crossroad_out(self):
         near_ccd_normal= (ccd_near.left >self.ccd_near_l_lost and ccd_near.right < self.ccd_near_r_lost)
         if near_ccd_normal and element_distance.data > self.DISTANCE_crossroad_data:
