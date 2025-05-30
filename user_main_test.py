@@ -131,7 +131,7 @@ class Beeper:
         if long is not None: self.long_duration = long
         if short is not None: self.short_duration = short
 beep = Beeper()
-
+target_speed = -40
 def scale_value(x, x_min, x_max):
     """
     将输入x从范围[x_min, x_max]线性映射到[0.4, 1]
@@ -636,6 +636,7 @@ class ElementDetector:
         return self.state
     
     def _element_operations(self):
+        global target_speed
         # 如果状态没有变化,直接返回,降低时间复杂度
         if self.prev_state == self.state:
             return
@@ -649,7 +650,7 @@ class ElementDetector:
         element_gyro.start()
         element_distance.start()
         if self.state == RoadElement.stop:  # 停止状态
-            movementtype.speed = 0          
+            target_speed = 10
         elif self.state == RoadElement.zebrain:
             ccd_controller.far = True
         elif self.state == RoadElement.normal: # 正常状态
@@ -1065,7 +1066,7 @@ acc_z = 0
 last_error2 = 0
 
 
-target_speed = -40
+
 balance_angle = -2850
 vel_kp = 3.71
 vel_ki = 2.84
@@ -1266,8 +1267,10 @@ while True:
         vel_loop_callback(pit1)
         turn_loop_callback(pit1)
         speed_k = scale_value(abs(ccd_near.mid - ccd_far.mid), 0, 7) # 弯道减速
-        motor_l.duty(my_limit(death_pwm(pwm_l_value - turn_output),-6000,6000))
-        motor_r.duty(my_limit(death_pwm(pwm_r_value + turn_output),-6000,6000))
+        speed_l = int(my_limit(death_pwm(pwm_l_value - turn_output),-6000,6000) * speed_k)
+        speed_r = int(my_limit(death_pwm(pwm_r_value + turn_output),-6000,6000) * speed_k)
+        motor_l.duty(speed_l)
+        motor_r.duty(speed_r)
         ticker_flag_pid = False
         
     if (ticker_flag_menu):
