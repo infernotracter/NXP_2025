@@ -143,24 +143,6 @@ def scale_value(x, x_min, x_max):
     return 1.0 - 0.6 * normalized
 
 
-def create_roll_checker():
-    history = []
-    def check(current_roll):
-        # 将新数据添加到历史记录中
-        history.append(current_roll)
-        # 保持最多保留最近20个数据点
-        if len(history) > 10:
-            history[:] = history[-10:]
-        # 如果数据不足20个，返回False
-        if len(history) < 10:
-            return False
-        # 统计不满足条件的数据个数
-        count = sum(1 for num in history if not (-60.0 < num < 0.0))
-        return count >= 8
-    return check
-checker = create_roll_checker()
-
-
 print("种族骑士王小桃来啦UwU")
 # 单位换算用
 ACC_SPL = 4096.0
@@ -560,15 +542,14 @@ class ElementDetector:
         #     if self._check_normal() and movementtype.mode == MOVEMENTTYPE.default:
         #         self.state = RoadElement.normal
 
-        # if self._check_zebra(self._ccd_near):
-        #     self.state = RoadElement.zebrain
-        #     movementtype.speed=0
-        # if self.state == RoadElement.zebrain:
-        #     if self._check_zebra_out():
-        #         self.zebra_count -= 1
-        #         self.state = RoadElement.normal
-        #         if self.zebra_count < 0:
-        #             self.state = RoadElement.stop # 完赛啦
+        if self._check_zebra(ccd_near):
+            self.state = RoadElement.zebrain
+        if self.state == RoadElement.zebrain:
+            if self._check_zebra_out():
+                self.zebra_count -= 1
+                self.state = RoadElement.normal
+                if self.zebra_count < 0:
+                    self.state = RoadElement.stop # 完赛啦
         
         # if self._check_normal():
         #         self.state = RoadElement.normal
