@@ -478,17 +478,17 @@ class ElementDetector:
         self.DISTANCE_ring3_data = 120
 
         # lin
-        self.GYRO_Z_ring_in_data = 1400
-        self.DISTANCE_ring_in_data = 80
+        self.GYRO_Z_ring_in_data = 1700
+        self.DISTANCE_ring_in_data = 150
 
         self.DISTANCE_ring_out_data = 70
-        self.DISTANCE_ring_out_out_data = 110
+        self.DISTANCE_ring_out_out_data = 200
         self.ccd_near_length = 60
         self.ccd_far_length = 60
         self.DISTANCE_ring_outcoming_data = 160
         self.DISTANCE_ring3_not_data = 300
         self.DISTANCE_zebra_out_data = 80 # 斑马线
-        self.ERROR_l_out_value = -20
+        self.ERROR_l_out_value = -13
         #crossroad
         self.DISTANCE_crossroad_data = 80  #十字路口
         #-------------------我们的gyro圆环识别数据-------------------
@@ -669,7 +669,7 @@ class ElementDetector:
             ccd_controller.follow = -self.ccd_near_length
 
         elif self.state == RoadElement.lin:
-            ccd_controller.follow = -self.ccd_near_length
+            ccd_controller.follow = 0
             # self.tmperror=stage_error.get_tmp()
 
         elif self.state == RoadElement.loutcoming:
