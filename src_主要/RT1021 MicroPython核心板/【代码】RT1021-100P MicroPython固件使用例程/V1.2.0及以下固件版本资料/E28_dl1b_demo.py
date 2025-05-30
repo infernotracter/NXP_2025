@@ -20,7 +20,7 @@ from seekfree import DL1B
 
 # 包含 gc 类
 import gc
-
+wireless = WIRELESS_UART(460800)
 # 学习板上 C19 对应二号拨码开关
 
 # 调用 machine 库的 Pin 类实例化一个引脚对象
@@ -69,7 +69,7 @@ while True:
     if (ticker_flag and ticker_count % 20 == 0):
         # 通过 get 接口读取数据
         tof_data = tof.get()
-        print("distance = {:>6d}.".format(tof_data))
+        wireless.send_oscilloscope(tof_data)
         ticker_flag = False
     
     # 如果拨码开关打开 对应引脚拉低 就退出循环
