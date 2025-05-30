@@ -840,6 +840,8 @@ class ElementDetector:
         if abs(element_distance.data) > self.DISTANCE_ring_outcoming_data:
             if check_tuple(ccd_near.data, 90, 30)==1 or check_tuple(ccd_far.data, 90, 30)==1:
                 return True
+        if abs(element_distance.data) > self.DISTANCE_ring3_data * 3:
+            self.state = RoadElement.normal
 
     def _right_outcoming(self):
         # 超过一定距离并且全白
@@ -851,6 +853,8 @@ class ElementDetector:
         if abs(element_distance.data) > self.DISTANCE_ring_out_out_data:
             if (self.ccd_near_l_lost > ccd_near.left and ccd_near.right < self.ccd_near_r_lost):
                 return True
+        if abs(element_distance.data) > self.DISTANCE_ring3_data * 1.5:
+            self.state = RoadElement.normal
 
 
     def _right_out(self):
