@@ -160,6 +160,14 @@ def create_roll_checker():
     return check
 checker = create_roll_checker()
 
+class speed_controller():
+    def __init__(self):
+        self.target_speed = 0.0
+        self.speed = 0.0
+        self.kp = 0.3
+    def update(self):
+        self.speed += self.kp * (self.target_speed - self.speed)
+        
 
 print("种族骑士王小桃来啦UwU")
 
