@@ -398,6 +398,7 @@ class RoadElement:
     lin = 7
     lout = 8
     loutcoming = 88
+    loutout = 888
     rin = 9
     rout = 10
     routcoming = 89
@@ -478,11 +479,11 @@ class ElementDetector:
         self.GYRO_Z_ring_in_data = 1400
         self.DISTANCE_ring_in_data = 80
 
-        self.DISTANCE_ring_out_data = 0.15
-        self.DISTANCE_ring_out_out_data = 170
+        self.DISTANCE_ring_out_data = 70
+        self.DISTANCE_ring_out_out_data = 110
         self.ccd_near_length = 60
         self.ccd_far_length = 60
-        self.DISTANCE_ring_outcoming_data = 300
+        self.DISTANCE_ring_outcoming_data = 160
         self.DISTANCE_ring3_not_data = 300
         self.DISTANCE_zebra_out_data = 80 # 斑马线
         self.ERROR_l_out_value = -20
@@ -611,7 +612,11 @@ class ElementDetector:
 
         elif self.state == RoadElement.lout:
             if self._left_out_out():
-                self.state = RoadElement.normal
+                self.state = RoadElement.loutout
+        
+        if self.state == RoadElement.loutout:
+            self.state = RoadElement.normal # 出圆环
+
         self._element_operations()  # 执行元素状态相关操作
         # if tempcheck != self.state:
         #     beep.start('short')
@@ -647,19 +652,19 @@ class ElementDetector:
             ccd_controller.follow = -self.ccd_near_length
 
         elif self.state == RoadElement.l3:
-            ccd_controller.follow = -self.ccd_near_length
+            ccd_controller.follow = self.ccd_near_length
         elif self.state == RoadElement.l3_not:
             ccd_controller.follow = -self.ccd_near_length
 
         elif self.state == RoadElement.lin:
-            ccd_controller.follow = self.ccd_near_length
+            ccd_controller.follow = -self.ccd_near_length
             # self.tmperror=stage_error.get_tmp()
 
         elif self.state == RoadElement.loutcoming:
-            ccd_controller.follow = -self.ccd_near_length
+            ccd_controller.fix_error_value = self.ERROR_l_out_value
 
         elif self.state == RoadElement.lout:
-            ccd_controller.fix_error_value = self.ERROR_l_out_value
+            ccd_controller.follow = -self.ccd_near_length
 
         self.prev_state=self.state
 
@@ -827,8 +832,9 @@ class ElementDetector:
                 return True
             
     def _left_out_out(self):
-        if abs(element_distance.data) > self.DISTANCE_ring_out_out_data or (self.ccd_near_l_lost < ccd_near.left and ccd_near.right < self.ccd_near_r_lost):
-            return True
+        if abs(element_distance.data) > self.DISTANCE_ring_out_out_data:
+            if (self.ccd_near_l_lost > ccd_near.left and ccd_near.right < self.ccd_near_r_lost):
+                return True
 
 
     def _right_out(self):
@@ -837,7 +843,8 @@ class ElementDetector:
             
     def _left_out(self):
         if abs(element_distance.data) > self.DISTANCE_ring_out_data:
-            return True
+            if ccd_near.right < self.ccd_near_r_lost:
+                return True
 
 #     def find_barrier(self):
 #         """障碍物检测"""
