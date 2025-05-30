@@ -834,7 +834,7 @@ class ElementDetector:
         if abs(element_distance.data) > self.DISTANCE_ring_outcoming_data:
             if (ccd_near.left<self.ccd_near_l_lost and ccd_near.right>self.ccd_near_r_lost)or (ccd_far.left <self.ccd_far_l_lost and ccd_far.right >self.ccd_far_r_lost):
                 return True
-        if abs(element_distance.data) > self.DISTANCE_ring3_data * 3:
+        if abs(element_distance.data) > self.DISTANCE_ring3_data * 3.5:
             self.state = RoadElement.normal
 
             
