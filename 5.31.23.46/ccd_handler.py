@@ -227,8 +227,8 @@ class ElementDetector:
 
         self.POINT_diff_data = 20            # 特征点差异阈值
 
-        self.DISTANCE_ring_2_data = 40
-        self.GYRO_Z_ring2_data = 400
+        self.DISTANCE_ring_2_data = 20
+        self.GYRO_Z_ring2_data = 200
 
         # l3
         self.GYRO_Z_ring3_data = 1000
@@ -244,7 +244,7 @@ class ElementDetector:
         self.ccd_far_length = 60
         self.DISTANCE_ring_outcoming_data = 160
         self.DISTANCE_ring3_not_data = 300
-        self.DISTANCE_zebra_out_data = 40 # 斑马线
+        self.DISTANCE_zebra_out_data = 80 # 斑马线
         self.ERROR_l_out_value = -13
         #crossroad
         self.DISTANCE_crossroad_data = 80  #十字路口
@@ -286,7 +286,8 @@ class ElementDetector:
     def update(self):
         """主检测函数: , imu_data, enc_data """
         tempcheck = self.state
-
+        if abs(element_distance.data)>350:
+            self.state = RoadElement.normal
 #         if self.find_barrier() :
 #             self.state = RoadElement.barrier
 #             if self.find_barrier() == 1:
@@ -304,20 +305,23 @@ class ElementDetector:
         # if self._check_normal():
         #         self.state = RoadElement.normal
 
+        
+        if self._check_zebra():
+            self.state = RoadElement.zebrain
+            #exit(0)
+            
         if self.state == RoadElement.normal:
             if self._left_1( ):
                 self.state = RoadElement.l1
-                
-        elif self._check_zebra():
-            self.state = RoadElement.zebrain
-
             
-        elif self.state == RoadElement.zebrain:
-            if self._check_zebra_out():
-                self.zebra_count -= 1
-                self.state = RoadElement.normal
-                if self.zebra_count < 0:
-                    quit() # 完赛啦
+#         elif self.state == RoadElement.zebrain:
+#             if self._check_zebra_out():
+#                 self.zebra_count -= 1
+#                 self.state = RoadElement.normal
+#                 if self.zebra_count < 0:
+#                     motor_l.duty(0)
+#                     motor_r.duty(0)
+#                     quit() # 完赛啦
 
         elif self.state == RoadElement.l1:
             if self._crossroad_coming():
@@ -411,6 +415,8 @@ class ElementDetector:
             return
         # 状态变化
         # 防止上次的循迹状态（error, follow）影响当前状态
+#         if self.state !=RoadElement.normal or self.state !=RoadElement.zebrain or self.state!=RoadElement.zebraout:
+#             speed_controller.target_speed=speed_controller.real_speed * 1
         ccd_controller.fix_error_value = 0
         ccd_controller.follow = 0
         ccd_controller.far = False
@@ -515,7 +521,7 @@ class ElementDetector:
         """斑马线检测逻辑"""
         crossings = 0         # 跳变次数统计
         threshold = 31
-        min_crossings = 12    #最小的斑马线检测点次数，待测
+        min_crossings = 8    #最小的斑马线检测点次数，待测
         for i in range(30, 97):    #在靠近赛道中间的部分检测，待测
             diff = abs(ccd_near.data[i] - ccd_near.data[i + 3])*100
             sum_ = ccd_near.data[i] + ccd_near.data[i + 3] + 1
@@ -735,8 +741,8 @@ alldistance = Distance()
 
 class Speed_controller:
     def __init__(self):
-        self.target_speed=-30
-        self.real_speed=0
+        self.target_speed=-40         #turn_out_kp=-125.73     turn_in_kp=-5.18
+        self.real_speed=-30
         self.fast_speed=-30
         self.slow_speed=-30
 #     def update(self):
