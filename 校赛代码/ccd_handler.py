@@ -227,8 +227,9 @@ class ElementDetector:
 
         self.POINT_diff_data = 20            # 特征点差异阈值
 
-        self.DISTANCE_ring_2_data = 80
-        self.GYRO_Z_ring2_data = 800
+        self.DISTANCE_ring_2_data = 60
+        self.GYRO_Z_ring2_data = 600
+
 
         # l3
         self.GYRO_Z_ring3_data = 1000
@@ -504,8 +505,8 @@ class ElementDetector:
         point_diff = abs(ccd_far.right -  ccd_near.right)
         
 #       print("{}   {}   {}   ".format(near_left_lost , near_right_valid  ,point_diff))
-#         if abs(element_distance.data) > self.DISTANCE_ring_2_data or abs(element_gyro.data) > self.GYRO_Z_ring2_data:
-#             self.state = RoadElement.normal
+        if abs(element_distance.data) > self.DISTANCE_ring_2_data or abs(element_gyro.data) > self.GYRO_Z_ring2_data:
+            self.state = RoadElement.normal
         return near_left_lost and near_right_valid and point_diff < self.POINT_diff_data
         # return ccd_near.left < self.ccd_near_l_lost
 
@@ -614,6 +615,8 @@ class ElementDetector:
         
         # 特征点稳定性检查
         point_diff = abs(ccd_far.left - ccd_near.left)
+        if abs(element_distance.data) > self.DISTANCE_ring_2_data or abs(element_gyro.data) > self.GYRO_Z_ring2_data:
+            self.state = RoadElement.normal
         
         return near_right_lost and near_left_valid and point_diff < self.POINT_diff_data
 
