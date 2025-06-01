@@ -485,9 +485,9 @@ while True:
         key_data = key.get()
         menu(key_data)
         if abs(alldistance.data)<2000:
-            speed_controller.target_speed = -30
+            speed_controller.target_speed = -24
         elif (alldistance.data)>8000:
-            speed_controller.target_speed = -30
+            speed_controller.target_speed = -24
         else:
             speed_controller.target_speed = speed_controller.tmp_speed
         ticker_flag_menu=False
