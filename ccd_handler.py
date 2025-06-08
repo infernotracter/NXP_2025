@@ -164,7 +164,11 @@ class RoadElement:
     zebraout = 111
     ramp = 12
     barrier = 13
-    crossroad_coming = 16
+    crossroad_1 = 16
+    crossroad_2 = 17
+    crossroad_all_in = 18
+    crossroad_4 = 19
+    crossroad_5 = 20
 
 
 class CCD_Controller:
@@ -205,6 +209,7 @@ class ElementDetector:
     """赛道元素检测器"""
     def __init__(self):
         self.crossing=0
+        self.FLAG_crossroad = True
         self.prev_state = RoadElement.normal
         self.state = RoadElement.normal
         self.ring_progress = 0  # 圆环进度
@@ -226,6 +231,8 @@ class ElementDetector:
         self.ccd_far_l = [20, 50]         # 远端CCD左边点范围
         self.ccd_far_l_lost = 7                 # 远端CCD左丢线阈值
         self.ccd_far_r_lost = 120               # 远端CCD右丢线阈值
+
+        self.DISTANCE_crossroad_all_in_data = 220
 
         self.POINT_diff_data = 20            # 特征点差异阈值
 
@@ -317,6 +324,21 @@ class ElementDetector:
             if self._left_1( ):
                 self.state = RoadElement.l1
             
+        # 四大十字
+        if self.state == RoadElement.normal:
+            if self._crossroad_coming():
+                self.state = RoadElement.crossroad_1
+        elif self.state == RoadElement.crossroad_1:
+                if self._crossroad_out():
+                    self.state = RoadElement.crossroad_2
+        elif self.state == RoadElement.crossroad_2:
+            if self._crossroad_all_in():
+                if self._crossroad_coming():
+                    self.state = RoadElement.crossroad_4
+        elif self.state == RoadElement.crossroad_4:
+            if self._crossroad_out():
+                self.state = RoadElement.normal
+
         elif self.state == RoadElement.zebrain:
             if self._check_zebra_out():
                 self.zebra_count -= 1
@@ -328,7 +350,7 @@ class ElementDetector:
 
         elif self.state == RoadElement.l1:
             if self._crossroad_coming():
-                self.state = RoadElement.normal
+                self.state = RoadElement.crossroad_1
             elif self._left_2( ):
                 self.state = RoadElement.l2
 
@@ -403,8 +425,10 @@ class ElementDetector:
                 self.state = RoadElement.routout 
 
         # 十字
-        elif self.state == RoadElement.crossroad_coming:
+        elif self.state == RoadElement.crossroad_1:
             if self._crossroad_out():
+                if self.FLAG_crossroad:
+                    self.state = RoadElement.crossroad_2
                 self.state = RoadElement.normal
 
         self._element_operations()  # 执行元素状态相关操作
@@ -431,6 +455,8 @@ class ElementDetector:
         if self.state == RoadElement.normal: # 正常状态
             ccd_controller.fix_error_value = 0
             ccd_controller.follow = 0
+            ccd_controller.far = False
+
         elif self.state == RoadElement.stop:  # 停止状态
             speed_controller.target_speed = 10
         elif self.state == RoadElement.zebrain:
@@ -459,8 +485,8 @@ class ElementDetector:
         elif self.state == RoadElement.lout:
             ccd_controller.follow = -self.ccd_near_length
 
-        elif self.state == RoadElement.crossroad_coming:
-            ccd_controller.fix_error_value = 0
+        elif self.state == RoadElement.crossroad_1:
+            ccd_controller.far = True
         elif self.state == RoadElement.r1:
             ccd_controller.follow = self.ccd_near_length
             
@@ -699,14 +725,18 @@ class ElementDetector:
 
     # 十字判断
     def _crossroad_coming(self):
-        near_valid = (self.ccd_near_l[0] <=  ccd_near.left <= self.ccd_near_l[1] and 
-                self.ccd_near_r[0] <=  ccd_near.right <= self.ccd_near_r[1])
+        near_valid = (ccd_far.left > self.ccd_far_l_lost) and (ccd_far.right < self.ccd_far_r_lost)
         far_ccd_lost=(ccd_far.left < self.ccd_far_l_lost) and (ccd_far.right > self.ccd_far_r_lost)
         return near_valid and far_ccd_lost
     def _crossroad_out(self):
-        near_ccd_normal= (ccd_near.left >self.ccd_near_l_lost and ccd_near.right < self.ccd_near_r_lost)
-        if near_ccd_normal and element_distance.data > self.DISTANCE_crossroad_data:
+        if abs(element_distance.data) > self.DISTANCE_crossroad_data:
             return True
+    def _crossroad_all_in(self):
+        if abs(element_distance.data) > self.DISTANCE_crossroad_all_in_data:
+            return True
+        if abs(element_distance.data) > self.DISTANCE_crossroad_data + 280:
+            self.state = RoadElement.normal
+
         
     # def _update_state(self, element, imu_data):
     #     """状态机更新"""
