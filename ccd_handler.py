@@ -418,10 +418,10 @@ class ElementDetector:
             return
         # 状态变化
         # 防止上次的循迹状态（error, follow）影响当前状态
-        if self.state ==RoadElement.normal or self.state ==RoadElement.zebrain or self.state==RoadElement.zebraout:
-            speed_controller.target_speed=speed_controller.tmp_speed
-        else:
-            speed_controller.target_speed=speed_controller.tmp_speed * 0.4
+        # if self.state ==RoadElement.normal or self.state ==RoadElement.zebrain or self.state==RoadElement.zebraout:
+        #     speed_controller.target_speed=speed_controller.tmp_speed
+        # else:
+        #     speed_controller.target_speed=speed_controller.tmp_speed * 0.4
         ccd_controller.fix_error_value = 0
         ccd_controller.follow = 0
         ccd_controller.far = False
