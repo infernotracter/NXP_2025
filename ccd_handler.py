@@ -353,7 +353,7 @@ class ElementDetector:
 
         elif self.state == RoadElement.l1:
             if self._crossroad_coming():
-                self.state = RoadElement.crossroad_2
+                self.state = RoadElement.crossroad_1
             elif self._left_2( ):
                 self.state = RoadElement.l2
 
