@@ -232,6 +232,8 @@ class ElementDetector:
         self.ccd_far_l_lost = 7                 # 远端CCD左丢线阈值
         self.ccd_far_r_lost = 120               # 远端CCD右丢线阈值
 
+        self.DISTANCE_crossroad_all_in_data = 220
+
         self.POINT_diff_data = 20            # 特征点差异阈值
 
         self.DISTANCE_ring_2_data = 20
@@ -330,15 +332,10 @@ class ElementDetector:
                 if self._crossroad_out():
                     self.state = RoadElement.crossroad_2
         elif self.state == RoadElement.crossroad_2:
-                if self._crossroad_out():
-                    self.state = RoadElement.crossroad_all_in
-        elif self.state == RoadElement.crossroad_all_in:
             if self._crossroad_all_in():
-                self.state = RoadElement.crossroad_4        
+                if self._crossroad_coming():
+                    self.state = RoadElement.crossroad_4
         elif self.state == RoadElement.crossroad_4:
-            if self._crossroad_coming():
-                self.state = RoadElement.crossroad_5
-        elif self.state == RoadElement.crossroad_5:
             if self._crossroad_out():
                 self.state = RoadElement.normal
 
@@ -732,14 +729,12 @@ class ElementDetector:
         far_ccd_lost=(ccd_far.left < self.ccd_far_l_lost) and (ccd_far.right > self.ccd_far_r_lost)
         return near_valid and far_ccd_lost
     def _crossroad_out(self):
-        near_ccd_normal= (ccd_near.left >self.ccd_near_l_lost and ccd_near.right < self.ccd_near_r_lost)
-        if near_ccd_normal and element_distance.data > self.DISTANCE_crossroad_data:
+        if abs(element_distance.data) > self.DISTANCE_crossroad_data:
             return True
     def _crossroad_all_in(self):
-        if element_distance.data > self.DISTANCE_crossroad_data:
-            if self._crossroad_coming():
-                return True
-        if element_distance.data > self.DISTANCE_crossroad_data + 280:
+        if abs(element_distance.data) > self.DISTANCE_crossroad_all_in_data:
+            return True
+        if abs(element_distance.data) > self.DISTANCE_crossroad_data + 280:
             self.state = RoadElement.normal
 
         
