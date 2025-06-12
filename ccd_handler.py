@@ -333,8 +333,10 @@ class ElementDetector:
                     self.state = RoadElement.crossroad_2
         elif self.state == RoadElement.crossroad_2:
             if self._crossroad_all_in():
-                if self._crossroad_coming():
-                    self.state = RoadElement.crossroad_4
+                    self.state = RoadElement.crossroad_all_in
+        elif self.state == RoadElement.crossroad_all_in:
+            if self._crossroad_coming():
+                self.state = RoadElement.crossroad_4
         elif self.state == RoadElement.crossroad_4:
             if self._crossroad_out():
                 self.state = RoadElement.normal
