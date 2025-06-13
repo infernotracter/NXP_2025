@@ -377,11 +377,11 @@ counter_turn_out = 0
 counter_turn_in = 0
 turn_out_last_error = 0
 turn_in_last_error = 0
-turn_out_kp = -70.73
+turn_out_kp = -74.73
 turn_out_ki = 0
-turn_out_kd = -13.89
-turn_in_kp = -5.6
-turn_in_ki = -1.0
+turn_out_kd = -15.89
+turn_in_kp = -5.7
+turn_in_ki = -1.2
 turn_in_kd = 0
 turn_in_disturbance = 0.0
 error = 0
@@ -514,7 +514,7 @@ while True:
         #debug += (encoder_l.get() - encoder_r.get()) * 0.01
         vel_loop_callback(pit1)
         turn_loop_callback(pit1)
-        speed_controller.slower()
+        #speed_controller.slower()
         #speed_controller.update()
         motor_l.duty(my_limit(death_pwm(pwm_l_value - turn_output),-6000,6000))
         motor_r.duty(my_limit(death_pwm(pwm_r_value + turn_output),-6000,6000))
