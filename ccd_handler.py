@@ -296,10 +296,6 @@ class ElementDetector:
     def update(self):
         """主检测函数: , imu_data, enc_data """
         tempcheck = self.state
-        if self._cross_lost():
-            self.state = RoadElement.cross_lost
-        else:
-            self.state = RoadElement.normal
         if  abs(element_distance.data)>300 and (self.state != RoadElement.lin) :
             self.state = RoadElement.normal
 #         if self.find_barrier() :
@@ -436,6 +432,10 @@ class ElementDetector:
 #                     self.state = RoadElement.crossroad_2
 #                 self.state = RoadElement.normal
 
+#         if self._cross_lost():
+#             self.state = RoadElement.cross_lost
+#         else:
+#             self.state = RoadElement.normal
         self._element_operations()  # 执行元素状态相关操作
         # if tempcheck != self.state:
         #     beep.start('short')
@@ -518,10 +518,10 @@ class ElementDetector:
     def _cross_lost(self):
         if ccd_near.invalid_midpoint and ccd_far.invalid_midpoint:
             if 60 < ccd_near.mid < 70:
-                if cross_gyro_z.state > 0:
-                    ccd_near.mid =(ccd.near.right + 127) // 2
-                elif cross_gyro_z.state < 0:
-                    ccd_near.mid = (ccd.near.left + 0) // 2
+                if cross_gyro_z.state < 0:
+                    ccd_near.mid = ( ccd_near.right + 127) // 2
+                elif cross_gyro_z.state > 0:
+                    ccd_near.mid = (ccd_near.left + 0) // 2
                 else:
                     ccd_near.mid = 64
 
@@ -834,6 +834,7 @@ class Gyro_Z:
         self.last_100 = []
         # 新增：状态属性（1: 正数多, -1: 负数多, 0: 相等）
         self.state = 0
+        self.data = 0.0
         
     def start(self):
         self.start_flag = True
