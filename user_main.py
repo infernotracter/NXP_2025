@@ -511,6 +511,7 @@ while True:
         element_distance.update(encl_data+encr_data,0.01)
         alldistance.update(encl_data+encr_data,0.01)
         speed_slow_distance.update(encl_data+encr_data, 0.01)
+        cross_gyro_z.update(imu_data[4])
         #debug += (encoder_l.get() - encoder_r.get()) * 0.01
         vel_loop_callback(pit1)
         turn_loop_callback(pit1)

@@ -14,6 +14,7 @@ def check_tuple(data, count_up, count_down):
 
 class CCDHandler:
     def __init__(self, channel):
+        self.invalid_midpoint = True # 中点无效标识
         self.data = [0] * 128
         self.last_mid = 64
         self.mid = 64
@@ -41,10 +42,13 @@ class CCDHandler:
         
         # 当上次中点无效时进行边界搜索
         if self.data[self.last_mid] < self.get_threshold():
+            self.invalid_midpoint = True
             self._handle_invalid_midpoint(searchgap, value)
             self.mid = min(max(self.mid, 5), 122)
             return self.mid
-        
+        else:
+            self.invalid_midpoint = False
+
         # 常规边界搜索
         self._search_boundaries(searchgap, value)
         
@@ -165,6 +169,7 @@ class RoadElement:
     ramp = 12
     barrier = 13
     crossroad_coming = 16
+    cross_lost = 17
 
 
 class CCD_Controller:
@@ -291,6 +296,10 @@ class ElementDetector:
     def update(self):
         """主检测函数: , imu_data, enc_data """
         tempcheck = self.state
+        if self._cross_lost():
+            self.state = RoadElement.cross_lost
+        else:
+            self.state = RoadElement.normal
         if  abs(element_distance.data)>300 and (self.state != RoadElement.lin) :
             self.state = RoadElement.normal
 #         if self.find_barrier() :
@@ -505,6 +514,16 @@ class ElementDetector:
             self.state = RoadElement.normal
 
         self.prev_state=self.state
+
+    def _cross_lost(self):
+        if ccd_near.invalid_midpoint and ccd_far.invalid_midpoint:
+            if 60 < ccd_near.mid < 70:
+                if cross_gyro_z.state > 0:
+                    ccd_near.mid =(ccd.near.right + 127) // 2
+                elif cross_gyro_z.state < 0:
+                    ccd_near.mid = (ccd.near.left + 0) // 2
+                else:
+                    ccd_near.mid = 64
 
     def _left_1(self):
         """左圆环检测逻辑"""
@@ -808,6 +827,43 @@ class Speed_controller:
 
 speed_controller=Speed_controller()
 
+class Gyro_Z:
+    def __init__(self):
+        self.start_flag = True
+        # 新增：存储最近100个数据的列表
+        self.last_100 = []
+        # 新增：状态属性（1: 正数多, -1: 负数多, 0: 相等）
+        self.state = 0
+        
+    def start(self):
+        self.start_flag = True
+        
+    def clear(self):
+        self.data = 0.0
+        # 新增：清空历史数据
+        self.last_100 = []
+        self.state = 0
+        
+    def update(self, tmpdata):
+        self.last_100.append(tmpdata + 142)
+        if len(self.last_100) > 50:
+            self.last_100.pop(0)  # 移除最旧的数据
+            
+        positive_count = sum(1 for x in self.last_100 if x > 0)
+        negative_count = sum(1 for x in self.last_100 if x < 0)
+        
+        # 更新状态
+        if positive_count > negative_count:
+            self.state = 1
+        elif positive_count < negative_count:
+            self.state = -1
+        else:
+            self.state = 0  # 正负数数量相等
+            
+        # 保留原有的数据溢出重置逻辑
+        if self.data > 999999999:
+            self.data = 0.0
+cross_gyro_z = Gyro_Z()
 
 class Gyro_Z_Test:
     """陀螺仪Z轴积分"""
