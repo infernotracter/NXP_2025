@@ -173,6 +173,7 @@ class RoadElement:
     barrier = 13
     crossroad_coming = 16
     cross_lost = 17
+    cross_lost_out = 18
 
 
 class CCD_Controller:
@@ -326,6 +327,10 @@ class ElementDetector:
             if self._cross_lost():
                 self.state = RoadElement.cross_lost
         
+        if self.state == RoadElement.cross_lost:
+            if self._cross_lost_out():
+                self.state = RoadElement.normal
+
         if self._check_zebra():
             self.state = RoadElement.zebrain
             element_distance.clear()
@@ -538,6 +543,10 @@ class ElementDetector:
             return True
         if abs(element_distance.data) > 180:
             self.state = RoadElement.normal
+
+    def _cross_lost_out(self):
+        if abs(element_gyro.data) > 300:
+            return True
 
     def _left_1(self):
         """左圆环检测逻辑"""
