@@ -241,7 +241,7 @@ class ElementDetector:
         self.POINT_diff_data = 20            # 特征点差异阈值
 
         self.DISTANCE_ring_2_data = 20
-        self.GYRO_Z_ring2_data = 150
+        self.GYRO_Z_ring2_data = 300
 
         # l3
         self.GYRO_Z_ring3_data = 300
@@ -399,41 +399,41 @@ class ElementDetector:
         # 出圆环
         elif self.state == RoadElement.loutout:
             self.state = RoadElement.normal
-# 
-#         # 在update方法中添加右圆环状态转换：
-#         if self.state == RoadElement.normal:
-#             if self._right_1():
-#                 self.state = RoadElement.r1
-# 
-#         elif self.state == RoadElement.r1:
-#             if self._crossroad_coming():
-#                 self.state = RoadElement.normal
-#             elif self._right_2():
-#                 self.state = RoadElement.r2
-# 
-#         elif self.state == RoadElement.r2:
-#             if self._right_3():
-#                 self.state = RoadElement.r3
-# 
-#         elif self.state == RoadElement.r3:
-#             if movementtype.mode == MOVEMENTTYPE.Mode_1:
-#                 if self._right_in_not():
-#                     self.state = RoadElement.normal
-#             elif movementtype.mode == MOVEMENTTYPE.Mode_2:
-#                 if self._right_in():
-#                     self.state = RoadElement.rin
-# 
-#         elif self.state == RoadElement.rin:
-#             if self._right_outcoming():
-#                 self.state = RoadElement.routcoming
-# 
-#         elif self.state == RoadElement.routcoming:
-#             if self._right_out():
-#                 self.state = RoadElement.rout
-# 
-#         elif self.state == RoadElement.rout:
-#             if self._right_out_out():
-#                 self.state = RoadElement.routout 
+
+        # 在update方法中添加右圆环状态转换：
+        if self.state == RoadElement.normal:
+            if self._right_1():
+                self.state = RoadElement.r1
+
+        elif self.state == RoadElement.r1:
+            if self._crossroad_coming():
+                self.state = RoadElement.normal
+            elif self._right_2():
+                self.state = RoadElement.r2
+
+        elif self.state == RoadElement.r2:
+            if self._right_3():
+                self.state = RoadElement.r3
+
+        elif self.state == RoadElement.r3:
+            if movementtype.mode == MOVEMENTTYPE.Mode_1:
+                if self._right_in_not():
+                    self.state = RoadElement.normal
+            elif movementtype.mode == MOVEMENTTYPE.Mode_2:
+                if self._right_in():
+                    self.state = RoadElement.rin
+
+        elif self.state == RoadElement.rin:
+            if self._right_outcoming():
+                self.state = RoadElement.routcoming
+
+        elif self.state == RoadElement.routcoming:
+            if self._right_out():
+                self.state = RoadElement.rout
+
+        elif self.state == RoadElement.rout:
+            if self._right_out_out():
+                self.state = RoadElement.routout 
 
         # 十字
 #         elif self.state == RoadElement.crossroad_1:
