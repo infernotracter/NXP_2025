@@ -497,8 +497,8 @@ print("""   ____   _           _   _           /\/|
  | |___  | | | (_| | | | | | | (_) |      
   \____| |_|  \__,_| |_| |_|  \___/       """)
 while True:
-    error=ccd_controller.get_error()+6
-    elementdetector.update()
+#     error=ccd_controller.get_error()+6
+#     elementdetector.update()
 #     if elementdetector.state==RoadElement.stop:
 #         stop_flag=0
     if end_switch.value() == 1:
@@ -513,8 +513,8 @@ while True:
         speed_slow_distance.update(encl_data+encr_data, 0.01)
         #debug += (encoder_l.get() - encoder_r.get()) * 0.01
         vel_loop_callback(pit1)
-        turn_loop_callback(pit1)
-        speed_controller.slower()
+#         turn_loop_callback(pit1)
+#         speed_controller.slower()
         #speed_controller.update()
         motor_l.duty(my_limit(death_pwm(pwm_l_value - turn_output),-6000,6000))
         motor_r.duty(my_limit(death_pwm(pwm_r_value + turn_output),-6000,6000))
@@ -546,22 +546,22 @@ while True:
                 print("Data[{:<6}] updata : {:<.3f}.\r\n".format(i, data_wave[i]))
                 # 根据通道号单独更新对应参数
 
-#                 if i == 0:
-#                     vel_kp = data_wave[i]
-#                 elif i == 1:
-#                     vel_ki = data_wave[i]
-#                 elif i == 2:
-#                     vel_kd = data_wave[i]
-#                 elif i == 3:
-#                     angle_kp = data_wave[i]
-#                 elif i == 4:
-#                     angle_ki = data_wave[i]
-#                 elif i == 5:
-#                     angle_kd = data_wave[i]
-#                 elif i == 6:
-#                     speed_kp = data_wave[i]
-#                 elif i == 7:
-#                     balance_angle = data_wave[i]
+                if i == 0:
+                    vel_kp = data_wave[i]
+                elif i == 1:
+                    vel_ki = data_wave[i]
+                elif i == 2:
+                    vel_kd = data_wave[i]
+                elif i == 3:
+                    angle_kp = data_wave[i]
+                elif i == 4:
+                    angle_ki = data_wave[i]
+                elif i == 5:
+                    angle_kd = data_wave[i]
+                elif i == 6:
+                    speed_kp = data_wave[i]
+                elif i == 7:
+                    balance_angle = data_wave[i]
 #                 if i == 0:
 #                     elementdetector.GYRO_Z_ring3_data = data_wave[i]
 #                 elif i == 1:
@@ -577,28 +577,28 @@ while True:
 #                     elementdetector.state = data_wave[i]
 #                 elif i == 7:
 #                     balance_angle = data_wave[i]
-                if i == 0:
-                    speed_controller.target_speed = data_wave[i]
-                elif i == 1:
-                    turn_in_kp = data_wave[i]
-                elif i == 2:
-                    turn_in_ki = data_wave[i]
-                elif i == 3:
-                    turn_out_kp = data_wave[i]
-                elif i == 4:
-                    turn_out_ki = data_wave[i]
-                elif i == 5:
-                    turn_out_kd = data_wave[i]
-                elif i == 6:
-                    elementdetector.state = data_wave[i]
-                elif i == 7:
-                    balance_angle = data_wave[i]
+#                 if i == 0:
+#                     speed_controller.target_speed = data_wave[i]
+#                 elif i == 1:
+#                     turn_in_kp = data_wave[i]
+#                 elif i == 2:
+#                     turn_in_ki = data_wave[i]
+#                 elif i == 3:
+#                     turn_out_kp = data_wave[i]
+#                 elif i == 4:
+#                     turn_out_ki = data_wave[i]
+#                 elif i == 5:
+#                     turn_out_kd = data_wave[i]
+#                 elif i == 6:
+#                     elementdetector.state = data_wave[i]
+#                 elif i == 7:
+#                     balance_angle = data_wave[i]
 
         # 将数据发送到示波器
         wireless.send_ccd_image(WIRELESS_UART.ALL_CCD_BUFFER_INDEX)
         wireless.send_oscilloscope(
-        #     #vel_kp, vel_ki, vel_kd, angle_kp, vel_disturbance, angle_disturbance, motor_l.duty(), current_angle
-              elementdetector.state,speed_controller.target_speed, abs(ccd_near.mid - ccd_far.mid), speed_slow_distance.data
+             vel_kp, vel_ki, vel_kd, angle_kp, vel_disturbance, angle_disturbance, motor_l.duty(), current_angle
+     #         elementdetector.state,speed_controller.target_speed, abs(ccd_near.mid - ccd_far.mid), speed_slow_distance.data
         #     #imu_data[3], imu_data[4], imu_data[5]
         #     #turn_in_disturbance,turn_output, error
         #     #gyro_bias_x , gyro_bias_y, gyro_bias_z
