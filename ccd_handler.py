@@ -36,18 +36,21 @@ class CCDHandler:
 
     def get_mid_point(self, value, reasonrange, follow=0, searchgap=0):
         """获取赛道中线坐标及边界"""
-        if  follow != 0:
+        if follow != 0:
             self.follow = follow
         self.data = ccd.get(self.channel)  # 获取最新数据
         
+        if self.data[64] < self.get_threshold():
+            self.invalid_midpoint = True
+        else:
+            self.invalid_midpoint = False
+
+
         # 当上次中点无效时进行边界搜索
         if self.data[self.last_mid] < self.get_threshold():
-            self.invalid_midpoint = True
             self._handle_invalid_midpoint(searchgap, value)
             self.mid = min(max(self.mid, 5), 122)
             return self.mid
-        else:
-            self.invalid_midpoint = False
 
         # 常规边界搜索
         self._search_boundaries(searchgap, value)
