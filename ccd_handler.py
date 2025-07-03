@@ -535,9 +535,8 @@ class ElementDetector:
 
     def _cross_lost(self):
         if ccd_near.invalid_midpoint and ccd_far.invalid_midpoint:
-            if 60 < ccd_near.mid < 70:
-                return True
-        if abs(element_distance.data) > 80:
+            return True
+        if abs(element_distance.data) > 180:
             self.state = RoadElement.normal
 
     def _left_1(self):
@@ -912,4 +911,5 @@ class Gyro_Z_Test:
 element_gyro = Gyro_Z_Test()
 debuggyroz = Gyro_Z_Test()
 print("王小桃快跑，邮箱来了")
+
 
