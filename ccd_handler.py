@@ -315,6 +315,13 @@ class ElementDetector:
         # if self._check_normal():
         #         self.state = RoadElement.normal
 
+        if self.state == RoadElement.normal:
+            if self._crossroad_coming():
+                self.state = RoadElement.crossroad_coming
+        
+        if self.state == RoadElement.crossroad_coming:
+            if self._cross_lost():
+                self.state = RoadElement.cross_lost
         
         if self._check_zebra():
             self.state = RoadElement.zebrain
@@ -351,7 +358,7 @@ class ElementDetector:
 
         elif self.state == RoadElement.l1:
             if self._crossroad_coming():
-                self.state = RoadElement.normal
+                self.state = RoadElement.crossroad_coming
             elif self._left_2( ):
                 self.state = RoadElement.l2
 
@@ -513,17 +520,22 @@ class ElementDetector:
         elif self.state == RoadElement.routout:
             self.state = RoadElement.normal
 
+        if self.state == RoadElement.cross_lost:
+            if cross_gyro_z.state > 0:
+                ccd_controller.fix_error_value = (ccd_near.right + 127) // 2
+            elif cross_gyro_z.state < 0:
+                ccd_controller.fix_error_value = (ccd_near.left + 0) // 2
+            else:
+                ccd_controller.fix_error_value = 64
+
         self.prev_state=self.state
 
     def _cross_lost(self):
         if ccd_near.invalid_midpoint and ccd_far.invalid_midpoint:
             if 60 < ccd_near.mid < 70:
-                if cross_gyro_z.state < 0:
-                    ccd_near.mid = ( ccd_near.right + 127) // 2
-                elif cross_gyro_z.state > 0:
-                    ccd_near.mid = (ccd_near.left + 0) // 2
-                else:
-                    ccd_near.mid = 64
+                return True
+        if abs(element_distance.data) > 80:
+            self.state = RoadElement.normal
 
     def _left_1(self):
         """左圆环检测逻辑"""
