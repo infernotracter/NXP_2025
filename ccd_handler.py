@@ -521,9 +521,9 @@ class ElementDetector:
             self.state = RoadElement.normal
 
         if self.state == RoadElement.cross_lost:
-            if cross_gyro_z.state > 0:
+            if cross_gyro_z.state < 0:
                 ccd_controller.fix_error_value = (ccd_near.right + 127) // 2
-            elif cross_gyro_z.state < 0:
+            elif cross_gyro_z.state > 0:
                 ccd_controller.fix_error_value = (ccd_near.left + 0) // 2
             else:
                 ccd_controller.fix_error_value = 64
