@@ -50,24 +50,6 @@ import utime
 # beep = Beeper()
 
 
-def create_roll_checker():
-    history = []
-    def check(current_roll):
-        # 将新数据添加到历史记录中
-        history.append(current_roll)
-        # 保持最多保留最近20个数据点
-        if len(history) > 10:
-            history[:] = history[-10:]
-        # 如果数据不足20个，返回False
-        if len(history) < 10:
-            return False
-        # 统计不满足条件的数据个数
-        count = sum(1 for num in history if not (-60.0 < num < 0.0))
-        return count >= 8
-    return check
-checker = create_roll_checker()
-
-
 print("种族骑士王小桃来啦UwU")
 # 单位换算用
 ACC_SPL = 4096.0
@@ -487,7 +469,37 @@ def death_pwm(value):
 #         elif key_cnt >= 2:
 #             key_cnt=0
 #     
-    
+
+tof = DL1B()
+class Tof_hander:
+    def __init__(self):
+        self.data = 0
+        self.state = False  # 初始状态设为False
+        self.data_history = []  # 用于存储最近100次数据
+        
+    def update(self):
+        # 获取最新数据
+        self.data = tof.get()
+        
+        # 将新数据添加到历史记录中
+        self.data_history.append(self.data)
+        
+        # 保留最近100次数据
+        if len(self.data_history) > 100:
+            self.data_history = self.data_history[-100:]
+        
+        # 当有足够数据时检查条件
+        if len(self.data_history) >= 100:
+            # 计算小于800的数据数量
+            count_below_800 = sum(1 for value in self.data_history if value < 800)
+            # 如果至少90次小于800则更新状态
+            if count_below_800 >= 90:
+                self.state = True
+            else:
+                self.state = False
+        # 当数据不足100时保持状态不变
+tof_hander=Tof_hander()
+
 movementtype.mode=MOVEMENTTYPE.Mode_2
 elementdetector.state = RoadElement.normal
 alldistance.start()
@@ -537,6 +549,7 @@ while True:
 
     if (ticker_flag_8ms):
         # profiler_8ms.update()
+        tof_hander.update()
         data_flag = wireless.data_analysis()
         for i in range(0, 8):
             # 判断哪个通道有数据更新
