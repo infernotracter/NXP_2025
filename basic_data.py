@@ -95,3 +95,34 @@ encr_data = 0  # 右数据编码器
 out_l = 0  # 左轮输出值
 out_r = 0  # 右轮输出值
 speed_d = 50  # 速度增量(调试用)
+
+
+
+class Tof_hander:
+    def __init__(self):
+        self.data = 0
+        self.state = False  # 初始状态设为False
+        self.data_history = []  # 用于存储最近100次数据
+        
+    def update(self):
+        # 获取最新数据
+        self.data = tof.get()
+        
+        # 将新数据添加到历史记录中
+        self.data_history.append(self.data)
+        
+        # 保留最近100次数据
+        if len(self.data_history) > 10:
+            self.data_history = self.data_history[-10:]
+        
+        # 当有足够数据时检查条件
+        if len(self.data_history) >= 10:
+            # 计算小于800的数据数量
+            count_below_800 = sum(1 for value in self.data_history if value < 800)
+            # 如果至少90次小于800则更新状态
+            if count_below_800 >= 5:
+                self.state = True
+            else:
+                self.state = False
+        # 当数据不足100时保持状态不变
+tof_hander=Tof_hander()

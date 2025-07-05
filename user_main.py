@@ -487,34 +487,6 @@ def death_pwm(value):
 #             key_cnt=0
 #
 
-class Tof_hander:
-    def __init__(self):
-        self.data = 0
-        self.state = False  # 初始状态设为False
-        self.data_history = []  # 用于存储最近100次数据
-        
-    def update(self):
-        # 获取最新数据
-        self.data = tof.get()
-        
-        # 将新数据添加到历史记录中
-        self.data_history.append(self.data)
-        
-        # 保留最近100次数据
-        if len(self.data_history) > 10:
-            self.data_history = self.data_history[-10:]
-        
-        # 当有足够数据时检查条件
-        if len(self.data_history) >= 10:
-            # 计算小于800的数据数量
-            count_below_800 = sum(1 for value in self.data_history if value < 800)
-            # 如果至少90次小于800则更新状态
-            if count_below_800 >= 5:
-                self.state = True
-            else:
-                self.state = False
-        # 当数据不足100时保持状态不变
-tof_hander=Tof_hander()
 
 movementtype.mode=MOVEMENTTYPE.Mode_2
 elementdetector.state = RoadElement.normal
@@ -549,6 +521,7 @@ while True:
         vel_loop_callback(pit1)
         turn_loop_callback(pit1)
         speed_controller.slower()
+        speed_controller.faster()
         #speed_controller.update()
         motor_l.duty(my_limit(death_pwm(pwm_l_value - turn_output),-6000,6000))
         motor_r.duty(my_limit(death_pwm(pwm_r_value + turn_output),-6000,6000))

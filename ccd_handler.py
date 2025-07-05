@@ -757,6 +757,7 @@ class Distance:
 element_distance = Distance()
 alldistance = Distance()
 speed_slow_distance = Distance()
+speed_fast_distance = Distance()
 
 def is_circus():
     circus_linto=(elementdetector.state==RoadElement.l1 or elementdetector.state==RoadElement.l2 or elementdetector.state==RoadElement.l3)
@@ -771,11 +772,16 @@ class Speed_controller:
         self.fast_speed=-80
         self.slow_speed=-60
         self.slower_flag = False
+        self.faster_flag = False
+        self.has_triggered_fast = False # 全局只触发一次的标志
         self.slow_distance_threshold = 120
+        self.fast_distance_threshold = 30
     def update(self):
         self.target_speed = self.tmp_speed
         if self.slower_flag:
             self.target_speed = self.slow_speed
+        elif self.faster_flag:
+            self.target_speed = self.fast_speed
     def slower(self):
         """检测是否需要进入慢速模式"""
         # 检测到需要减速的条件
@@ -786,16 +792,32 @@ class Speed_controller:
         if is_circus():
             speed_slow_distance.clear()
             self.slower_flag = True
-        self.distance_connect()
+        self.slower_distance_connect()
         self.update()
 
     
-    def distance_connect(self):
+    def slower_distance_connect(self):
         """检查是否达到慢速距离阈值，如果是则恢复正常速度"""
         if self.slower_flag and abs(speed_slow_distance.data) >= self.slow_distance_threshold:
             # 距离已达到阈值，恢复正常速度
             self.slower_flag = False
-            
+
+    def faster(self):
+        if tof_hander.state:
+            if not self.has_triggered_fast:
+                # 只在第一次触发时设置标志
+                self.has_triggered_fast = True
+                self.faster_flag = True
+                speed_fast_distance.clear()
+                speed_fast_distance.start()
+        self.faster_distance_connect
+        self.update()
+    
+    def faster_distance_connect(self):
+        if self.faster_flag and abs(speed_fast_distance.data) >= self.fast_distance_threshold:
+            # 距离已达到阈值，恢复正常速度
+            self.faster_flag = False
+
 #     def update(self):
 #         speed_kd=scale_value(abs(ccd_near.mid-ccd_far.mid),0,20)
 #         self.target_speed=min(int(self.target_speed *speed_kd),0)
