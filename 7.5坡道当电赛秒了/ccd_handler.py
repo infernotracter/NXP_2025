@@ -769,16 +769,16 @@ class Speed_controller:
     def __init__(self):
         self.target_speed=-80         #turn_out_kp=-125.73     turn_in_kp=-5.18
         self.tmp_speed=-80
-        self.fast_speed=-150
+        self.fast_speed=-300
         self.slow_speed=-60
-        self.slow_2_speed = -20 # 坡道后减速
+        self.slow_2_speed = 120 # 坡道后减速
         self.slower_flag = False
         self.faster_flag_1 = False
         self.faster_flag_2 = False
         self.has_triggered_fast = False # 全局只触发一次的标志
         self.slow_distance_threshold = 120
-        self.fast_distance_threshold_1 = 120
-        self.fast_distance_threshold_2 = 400
+        self.fast_distance_threshold_1 = 220
+        self.fast_distance_threshold_2 = 500
     def update(self):
         self.target_speed = self.tmp_speed
         if self.faster_flag_1:
@@ -790,6 +790,8 @@ class Speed_controller:
     def slower(self):
         """检测是否需要进入慢速模式"""
         # 检测到需要减速的条件
+        if self.faster_flag_1 or self.faster_flag_2:
+            return
         if abs(ccd_far.mid) - 64 > 15:
             # 重置距离计数器并开始记录
             speed_slow_distance.clear()
@@ -815,7 +817,7 @@ class Speed_controller:
                 self.faster_flag_1 = True
                 speed_fast_distance.clear()
                 speed_fast_distance.start()
-        self.faster_distance_connect
+        self.faster_distance_connect()
         self.update()
     
     def faster_distance_connect(self):
@@ -825,6 +827,7 @@ class Speed_controller:
             self.faster_flag_2 = True
         if self.faster_flag_2 and abs(speed_fast_distance.data) >= self.fast_distance_threshold_2:
             self.faster_flag_2 = False
+            
 
 
 #     def update(self):
