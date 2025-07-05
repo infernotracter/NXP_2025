@@ -769,13 +769,13 @@ class Speed_controller:
     def __init__(self):
         self.target_speed=-80         #turn_out_kp=-125.73     turn_in_kp=-5.18
         self.tmp_speed=-80
-        self.fast_speed=-80
+        self.fast_speed=-150
         self.slow_speed=-60
         self.slower_flag = False
         self.faster_flag = False
         self.has_triggered_fast = False # 全局只触发一次的标志
         self.slow_distance_threshold = 120
-        self.fast_distance_threshold = 30
+        self.fast_distance_threshold = 120
     def update(self):
         self.target_speed = self.tmp_speed
         if self.slower_flag:
