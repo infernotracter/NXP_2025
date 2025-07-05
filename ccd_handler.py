@@ -14,7 +14,6 @@ def check_tuple(data, count_up, count_down):
 
 class CCDHandler:
     def __init__(self, channel):
-        self.invalid_midpoint = True # 中点无效标识
         self.data = [0] * 128
         self.last_mid = 64
         self.mid = 64
@@ -36,22 +35,16 @@ class CCDHandler:
 
     def get_mid_point(self, value, reasonrange, follow=0, searchgap=0):
         """获取赛道中线坐标及边界"""
-        if follow != 0:
+        if  follow != 0:
             self.follow = follow
         self.data = ccd.get(self.channel)  # 获取最新数据
         
-        if self.data[64] < self.get_threshold():
-            self.invalid_midpoint = True
-        else:
-            self.invalid_midpoint = False
-
-
         # 当上次中点无效时进行边界搜索
         if self.data[self.last_mid] < self.get_threshold():
             self._handle_invalid_midpoint(searchgap, value)
             self.mid = min(max(self.mid, 5), 122)
             return self.mid
-
+        
         # 常规边界搜索
         self._search_boundaries(searchgap, value)
         
@@ -172,8 +165,6 @@ class RoadElement:
     ramp = 12
     barrier = 13
     crossroad_coming = 16
-    cross_lost = 17
-    cross_lost_out = 18
 
 
 class CCD_Controller:
@@ -242,7 +233,7 @@ class ElementDetector:
         self.POINT_diff_data = 20            # 特征点差异阈值
 
         self.DISTANCE_ring_2_data = 20
-        self.GYRO_Z_ring2_data = 300
+        self.GYRO_Z_ring2_data = 150
 
         # l3
         self.GYRO_Z_ring3_data = 300
@@ -300,7 +291,7 @@ class ElementDetector:
     def update(self):
         """主检测函数: , imu_data, enc_data """
         tempcheck = self.state
-        if  abs(element_distance.data)>300 and (self.state != RoadElement.lin) :
+        if  abs(element_distance.data)>300 and (self.state != RoadElement.lin) and (self.state != RoadElement.rin):
             self.state = RoadElement.normal
 #         if self.find_barrier() :
 #             self.state = RoadElement.barrier
@@ -319,18 +310,7 @@ class ElementDetector:
         # if self._check_normal():
         #         self.state = RoadElement.normal
 
-        if self.state == RoadElement.normal:
-            if self._crossroad_coming():
-                self.state = RoadElement.crossroad_coming
         
-        if self.state == RoadElement.crossroad_coming:
-            if self._cross_lost():
-                self.state = RoadElement.cross_lost
-        
-        if self.state == RoadElement.cross_lost:
-            if self._cross_lost_out():
-                self.state = RoadElement.normal
-
         if self._check_zebra():
             self.state = RoadElement.zebrain
             element_distance.clear()
@@ -366,7 +346,7 @@ class ElementDetector:
 
         elif self.state == RoadElement.l1:
             if self._crossroad_coming():
-                self.state = RoadElement.crossroad_coming
+                self.state = RoadElement.normal
             elif self._left_2( ):
                 self.state = RoadElement.l2
 
@@ -404,7 +384,7 @@ class ElementDetector:
         # 出圆环
         elif self.state == RoadElement.loutout:
             self.state = RoadElement.normal
-
+# 
         # 在update方法中添加右圆环状态转换：
         if self.state == RoadElement.normal:
             if self._right_1():
@@ -447,10 +427,6 @@ class ElementDetector:
 #                     self.state = RoadElement.crossroad_2
 #                 self.state = RoadElement.normal
 
-#         if self._cross_lost():
-#             self.state = RoadElement.cross_lost
-#         else:
-#             self.state = RoadElement.normal
         self._element_operations()  # 执行元素状态相关操作
         # if tempcheck != self.state:
         #     beep.start('short')
@@ -528,25 +504,7 @@ class ElementDetector:
         elif self.state == RoadElement.routout:
             self.state = RoadElement.normal
 
-        if self.state == RoadElement.cross_lost:
-            if cross_gyro_z.state < 0:
-                ccd_controller.fix_error_value = (ccd_near.right + 127) // 2
-            elif cross_gyro_z.state > 0:
-                ccd_controller.fix_error_value = (ccd_near.left + 0) // 2
-            else:
-                ccd_controller.fix_error_value = 64
-
         self.prev_state=self.state
-
-    def _cross_lost(self):
-        if ccd_near.invalid_midpoint and ccd_far.invalid_midpoint:
-            return True
-        if abs(element_distance.data) > 180:
-            self.state = RoadElement.normal
-
-    def _cross_lost_out(self):
-        if abs(element_gyro.data) > 300:
-            return True
 
     def _left_1(self):
         """左圆环检测逻辑"""
@@ -808,10 +766,10 @@ def is_circus():
     return circus_linto or circus_rinto or circus_in or circus_out
 class Speed_controller:
     def __init__(self):
-        self.target_speed=-120         #turn_out_kp=-125.73     turn_in_kp=-5.18
-        self.tmp_speed=-120
-        self.fast_speed=-120
-        self.slow_speed=-100
+        self.target_speed=-80         #turn_out_kp=-125.73     turn_in_kp=-5.18
+        self.tmp_speed=-80
+        self.fast_speed=-80
+        self.slow_speed=-60
         self.slower_flag = False
         self.slow_distance_threshold = 120
     def update(self):
@@ -850,44 +808,6 @@ class Speed_controller:
 
 speed_controller=Speed_controller()
 
-class Gyro_Z:
-    def __init__(self):
-        self.start_flag = True
-        # 新增：存储最近100个数据的列表
-        self.last_100 = []
-        # 新增：状态属性（1: 正数多, -1: 负数多, 0: 相等）
-        self.state = 0
-        self.data = 0.0
-        
-    def start(self):
-        self.start_flag = True
-        
-    def clear(self):
-        self.data = 0.0
-        # 新增：清空历史数据
-        self.last_100 = []
-        self.state = 0
-        
-    def update(self, tmpdata):
-        self.last_100.append(tmpdata + 142)
-        if len(self.last_100) > 50:
-            self.last_100.pop(0)  # 移除最旧的数据
-            
-        positive_count = sum(1 for x in self.last_100 if x > 0)
-        negative_count = sum(1 for x in self.last_100 if x < 0)
-        
-        # 更新状态
-        if positive_count > negative_count:
-            self.state = 1
-        elif positive_count < negative_count:
-            self.state = -1
-        else:
-            self.state = 0  # 正负数数量相等
-            
-        # 保留原有的数据溢出重置逻辑
-        if self.data > 999999999:
-            self.data = 0.0
-cross_gyro_z = Gyro_Z()
 
 class Gyro_Z_Test:
     """陀螺仪Z轴积分"""
@@ -920,5 +840,4 @@ class Gyro_Z_Test:
 element_gyro = Gyro_Z_Test()
 debuggyroz = Gyro_Z_Test()
 print("王小桃快跑，邮箱来了")
-
 

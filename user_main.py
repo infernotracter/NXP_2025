@@ -10,44 +10,61 @@ import utime
 
 
 
-# class Beeper:
-#     def __init__(self, beerpin = 'C9'):
-#         self.beep_pin = Pin(beerpin , Pin.OUT, pull = Pin.PULL_UP_47K, value = False)
-#         self.start_time = 0       # 鸣叫开始时间戳
-#         self.duration = 0         # 当前鸣叫持续时间
-#         self.is_active = False    # 鸣叫状态标志
-#         self.long_duration = 30  # 长鸣时长(ms)
-#         self.short_duration = 10 # 短鸣时长(ms)
-#         self._last_update = 0     # 上次更新时间戳
-# 
-#     def start(self, duration_type):
-#         """触发蜂鸣器鸣叫
-#         :param duration_type: 'long' 或 'short'
-#         """
-#         self.duration = self.long_duration if duration_type == 'long' else self.short_duration
-#         self.start_time = utime.ticks_ms()
-#         self.beep_pin.high()
-#         self.is_active = True
-# 
-#     def update(self):
-#         """需在循环中定期调用，建议调用间隔<=10ms"""
-#         if not self.is_active:
-#             return
-#             
-#         current = utime.ticks_ms()
-#         elapsed = utime.ticks_diff(current, self.start_time)
-#         
-#         # 持续时间达到后关闭
-#         if elapsed >= self.duration:
-#             self.beep_pin.low()
-#             self.is_active = False
-#             self.duration = 0
-# 
-#     def set_durations(self, long=None, short=None):
-#         """动态修改鸣叫时长"""
-#         if long is not None: self.long_duration = long
-#         if short is not None: self.short_duration = short
-# beep = Beeper()
+class Beeper:
+    def __init__(self, beerpin = 'C9'):
+        self.beep_pin = Pin(beerpin , Pin.OUT, pull = Pin.PULL_UP_47K, value = False)
+        self.start_time = 0       # 鸣叫开始时间戳
+        self.duration = 0         # 当前鸣叫持续时间
+        self.is_active = False    # 鸣叫状态标志
+        self.long_duration = 60  # 长鸣时长(ms)
+        self.short_duration = 30 # 短鸣时长(ms)
+        self._last_update = 0     # 上次更新时间戳
+
+    def start(self, duration_type):
+        """触发蜂鸣器鸣叫:param duration_type: 'long' 或 'short'
+        """
+        self.duration = self.long_duration if duration_type == 'long' else self.short_duration
+        self.start_time = utime.ticks_ms()
+        self.beep_pin.high()
+        self.is_active = True
+
+    def update(self):
+        """需在循环中定期调用，建议调用间隔<=10ms"""
+        if not self.is_active:
+            return
+            
+        current = utime.ticks_ms()
+        elapsed = utime.ticks_diff(current, self.start_time)
+        
+        # 持续时间达到后关闭
+        if elapsed >= self.duration:
+            self.beep_pin.low()
+            self.is_active = False
+            self.duration = 0
+
+    def set_durations(self, long=None, short=None):
+        """动态修改鸣叫时长"""
+        if long is not None: self.long_duration = long
+        if short is not None: self.short_duration = short
+beep = Beeper()
+
+
+def create_roll_checker():
+    history = []
+    def check(current_roll):
+        # 将新数据添加到历史记录中
+        history.append(current_roll)
+        # 保持最多保留最近20个数据点
+        if len(history) > 10:
+            history[:] = history[-10:]
+        # 如果数据不足20个，返回False
+        if len(history) < 10:
+            return False
+        # 统计不满足条件的数据个数
+        count = sum(1 for num in history if not (-60.0 < num < 0.0))
+        return count >= 8
+    return check
+checker = create_roll_checker()
 
 
 print("种族骑士王小桃来啦UwU")
@@ -74,7 +91,7 @@ def time_pit_pid_handler(time):
 
 # 实例化 PIT ticker 模块
 pit0 = ticker(0)
-pit0.capture_list(ccd, key)
+pit0.capture_list(ccd, key, tof)
 pit0.callback(time_pit_pid_handler)
 pit0.start(5)
 
@@ -468,9 +485,8 @@ def death_pwm(value):
 #             turn_out_kd = 0
 #         elif key_cnt >= 2:
 #             key_cnt=0
-#     
+#
 
-tof = DL1B()
 class Tof_hander:
     def __init__(self):
         self.data = 0
@@ -485,15 +501,15 @@ class Tof_hander:
         self.data_history.append(self.data)
         
         # 保留最近100次数据
-        if len(self.data_history) > 100:
-            self.data_history = self.data_history[-100:]
+        if len(self.data_history) > 10:
+            self.data_history = self.data_history[-10:]
         
         # 当有足够数据时检查条件
-        if len(self.data_history) >= 100:
+        if len(self.data_history) >= 10:
             # 计算小于800的数据数量
             count_below_800 = sum(1 for value in self.data_history if value < 800)
             # 如果至少90次小于800则更新状态
-            if count_below_800 >= 90:
+            if count_below_800 >= 5:
                 self.state = True
             else:
                 self.state = False
@@ -503,6 +519,7 @@ tof_hander=Tof_hander()
 movementtype.mode=MOVEMENTTYPE.Mode_2
 elementdetector.state = RoadElement.normal
 alldistance.start()
+beep.start('short')
 print("""   ____   _           _   _           /\/|
   / ___| (_)   __ _  | | | |   ___   |/\/ 
  | |     | |  / _` | | | | |  / _ \       
@@ -517,13 +534,17 @@ while True:
         break  # 跳出判断
         
     if (ticker_flag_pid):
+        beep.update()
+        tof_hander.update()
+        if tof_hander.state:
+            beep.start('short')
+        print(tof_hander.data, tof_hander.state)
         # profiler_gyro.update()
         imu_data = imu.get()
         element_gyro.update(imu_data[5],0.01)
         element_distance.update(encl_data+encr_data,0.01)
         alldistance.update(encl_data+encr_data,0.01)
         speed_slow_distance.update(encl_data+encr_data, 0.01)
-        cross_gyro_z.update(imu_data[4])
         #debug += (encoder_l.get() - encoder_r.get()) * 0.01
         vel_loop_callback(pit1)
         turn_loop_callback(pit1)
@@ -549,7 +570,6 @@ while True:
 
     if (ticker_flag_8ms):
         # profiler_8ms.update()
-        tof_hander.update()
         data_flag = wireless.data_analysis()
         for i in range(0, 8):
             # 判断哪个通道有数据更新
@@ -612,7 +632,7 @@ while True:
         wireless.send_ccd_image(WIRELESS_UART.ALL_CCD_BUFFER_INDEX)
         wireless.send_oscilloscope(
         #     #vel_kp, vel_ki, vel_kd, angle_kp, vel_disturbance, angle_disturbance, motor_l.duty(), current_angle
-              elementdetector.state,speed_controller.target_speed, abs(ccd_near.mid - ccd_far.mid), speed_slow_distance.data
+              elementdetector.state,tof_hander.data, abs(ccd_near.mid - ccd_far.mid), speed_slow_distance.data
         #     #imu_data[3], imu_data[4], imu_data[5]
         #     #turn_in_disturbance,turn_output, error
         #     #gyro_bias_x , gyro_bias_y, gyro_bias_z
