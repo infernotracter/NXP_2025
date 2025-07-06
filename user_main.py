@@ -491,12 +491,14 @@ def death_pwm(value):
 movementtype.mode=MOVEMENTTYPE.Mode_2
 elementdetector.state = RoadElement.normal
 alldistance.start()
-beep.start('short')
+#beep.start('short')
 print("""   ____   _           _   _           /\/|
   / ___| (_)   __ _  | | | |   ___   |/\/ 
  | |     | |  / _` | | | | |  / _ \       
  | |___  | | | (_| | | | | | | (_) |      
   \____| |_|  \__,_| |_| |_|  \___/       """)
+speed_controller.faster_flag_1 = False
+speed_controller.has_triggered_fast = False
 while True:
     error=ccd_controller.get_error()+6
     elementdetector.update()
@@ -510,13 +512,13 @@ while True:
         tof_hander.update()
         if tof_hander.state:
             beep.start('short')
-        print(tof_hander.data, tof_hander.state)
         # profiler_gyro.update()
         imu_data = imu.get()
         element_gyro.update(imu_data[5],0.01)
         element_distance.update(encl_data+encr_data,0.01)
         alldistance.update(encl_data+encr_data,0.01)
         speed_slow_distance.update(encl_data+encr_data, 0.01)
+        speed_fast_distance.update(encl_data+encr_data, 0.01)
         #debug += (encoder_l.get() - encoder_r.get()) * 0.01
         vel_loop_callback(pit1)
         turn_loop_callback(pit1)
@@ -543,6 +545,7 @@ while True:
 
     if (ticker_flag_8ms):
         # profiler_8ms.update()
+        print(tof_hander.state, speed_controller.faster_flag_1, speed_controller.has_triggered_fast, speed_controller.faster_flag_2)
         data_flag = wireless.data_analysis()
         for i in range(0, 8):
             # 判断哪个通道有数据更新
@@ -605,7 +608,7 @@ while True:
         wireless.send_ccd_image(WIRELESS_UART.ALL_CCD_BUFFER_INDEX)
         wireless.send_oscilloscope(
         #     #vel_kp, vel_ki, vel_kd, angle_kp, vel_disturbance, angle_disturbance, motor_l.duty(), current_angle
-              elementdetector.state,tof_hander.data, abs(ccd_near.mid - ccd_far.mid), speed_slow_distance.data
+              elementdetector.state,speed_controller.target_speed, speed_fast_distance.data, speed_slow_distance.data
         #     #imu_data[3], imu_data[4], imu_data[5]
         #     #turn_in_disturbance,turn_output, error
         #     #gyro_bias_x , gyro_bias_y, gyro_bias_z
