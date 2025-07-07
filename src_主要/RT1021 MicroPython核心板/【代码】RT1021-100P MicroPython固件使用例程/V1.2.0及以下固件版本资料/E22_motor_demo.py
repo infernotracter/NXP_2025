@@ -45,21 +45,10 @@ motor_duty = 0
 motor_duty_max = 10000
 
 while True:
-    time.sleep_ms(100)
-    
-    if motor_dir:
-        motor_duty = motor_duty + 50
-        if motor_duty >= motor_duty_max:
-            motor_dir = 0
-    else:
-        motor_duty = motor_duty - 50
-        if motor_duty <= -motor_duty_max:
-            motor_dir = 1
-    
-    led.value(motor_duty < 0)
+
     # duty 接口更新占空比 范围 ±10000
-    motor_l.duty(motor_duty)
-    motor_r.duty(motor_duty)
+    motor_l.duty(2000)
+    motor_r.duty(2000)
     
     # 如果拨码开关打开 对应引脚拉低 就退出循环
     # 这么做是为了防止写错代码导致异常 有一个退出的手段
