@@ -9,64 +9,6 @@ from ccd_handler import *
 import utime
 
 
-
-class Beeper:
-    def __init__(self, beerpin = 'C9'):
-        self.beep_pin = Pin(beerpin , Pin.OUT, pull = Pin.PULL_UP_47K, value = False)
-        self.start_time = 0       # 鸣叫开始时间戳
-        self.duration = 0         # 当前鸣叫持续时间
-        self.is_active = False    # 鸣叫状态标志
-        self.long_duration = 60  # 长鸣时长(ms)
-        self.short_duration = 30 # 短鸣时长(ms)
-        self._last_update = 0     # 上次更新时间戳
-
-    def start(self, duration_type):
-        """触发蜂鸣器鸣叫:param duration_type: 'long' 或 'short'
-        """
-        self.duration = self.long_duration if duration_type == 'long' else self.short_duration
-        self.start_time = utime.ticks_ms()
-        self.beep_pin.high()
-        self.is_active = True
-
-    def update(self):
-        """需在循环中定期调用，建议调用间隔<=10ms"""
-        if not self.is_active:
-            return
-            
-        current = utime.ticks_ms()
-        elapsed = utime.ticks_diff(current, self.start_time)
-        
-        # 持续时间达到后关闭
-        if elapsed >= self.duration:
-            self.beep_pin.low()
-            self.is_active = False
-            self.duration = 0
-
-    def set_durations(self, long=None, short=None):
-        """动态修改鸣叫时长"""
-        if long is not None: self.long_duration = long
-        if short is not None: self.short_duration = short
-beep = Beeper()
-
-
-def create_roll_checker():
-    history = []
-    def check(current_roll):
-        # 将新数据添加到历史记录中
-        history.append(current_roll)
-        # 保持最多保留最近20个数据点
-        if len(history) > 10:
-            history[:] = history[-10:]
-        # 如果数据不足20个，返回False
-        if len(history) < 10:
-            return False
-        # 统计不满足条件的数据个数
-        count = sum(1 for num in history if not (-60.0 < num < 0.0))
-        return count >= 8
-    return check
-checker = create_roll_checker()
-
-
 print("种族骑士王小桃来啦UwU")
 # 单位换算用
 ACC_SPL = 4096.0
@@ -544,6 +486,7 @@ while True:
         ticker_flag_menu=False
 
     if (ticker_flag_8ms):
+        read_detection_data_new()
         # profiler_8ms.update()
         print(tof_hander.state, speed_controller.faster_flag_1, speed_controller.has_triggered_fast, speed_controller.faster_flag_2)
         data_flag = wireless.data_analysis()
