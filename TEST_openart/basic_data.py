@@ -377,7 +377,7 @@ def read_detection_data_new():
                 for obj in detected_objects:
                     if (obj['color'] == 'pink' or obj['color'] == 'yellow'
                         or obj['color'] == 'brown' or obj['color'] == 'purple'
-                        ) and obj['width'] * obj['height'] > 100:
+                        ) and obj['width'] * obj['height'] > 400:
                         beep.start('long')
                     # print(f"  颜色: {obj['color']}, 位置: ({obj['x']},{obj['y']})", end="")
                     # print(f", 大小: {obj['width']}x{obj['height']}")
