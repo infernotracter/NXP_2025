@@ -465,6 +465,7 @@ class Openart_Validator:
         
         # 设置ID锁定规则（示例使用ID1需100距离，ID2需200距离）
         self.lock_rules = {RoadElement.l3: 600, RoadElement.r3: 600}
+        self.state = 'valid'
 
     def check_id(self, input_id):
         """
@@ -476,7 +477,7 @@ class Openart_Validator:
         
         # 检查ID是否被锁定
         if self._is_id_locked(input_id, current_distance):
-            return "invalid"
+            self.state = 'invalid'
         
         # 检查是否与上一次有效ID相同
         if input_id == self.last_valid_id:
@@ -488,9 +489,9 @@ class Openart_Validator:
         # 检查是否达到连续三次
         if self.consecutive_count == 3:
             self._lock_id(input_id, current_distance)
-            return "locked"
+            self.state = 'locked'
         
-        return "valid"
+        self.state = 'valid'
     
     def _is_id_locked(self, id, current_distance):
         """检查ID是否处于锁定状态"""

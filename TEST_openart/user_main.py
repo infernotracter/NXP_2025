@@ -478,12 +478,12 @@ while True:
     error=ccd_controller.get_error()
     if elementdetector_flag:
         elementdetector.update()
-
-    tmp_openart_state = read_detection_data_new()
-    if openart_l3.check_id(tmp_openart_state) == 'locked':
+    openart_l3.check_id(read_detection_data_new())
+    print(openart_l3.state, openart_l3.consecutive_count)
+    if openart_l3.state == 'locked':
         elementdetector.state = RoadElement.l3
         elementdetector_flag = True
-    elif openart_l3.check_id(tmp_openart_state) == 'valid':
+    elif openart_l3.state == 'valid':
         elementdetector_flag = False
 
 #     if elementdetector.state==RoadElement.stop:
@@ -602,9 +602,7 @@ while True:
         #     #turn_in_disturbance,turn_output, error
         #     #gyro_bias_x , gyro_bias_y, gyro_bias_z
          #   vel_disturbance,current_angle
-            turn_output,imu_data[4]
-         #   vel_disturbance,current_angle
-            turn_output,imu_data[4]
+            elementdetector.state
              )
         gc.collect()
         ticker_flag_8ms = False
