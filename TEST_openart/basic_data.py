@@ -170,7 +170,32 @@ beep = Beeper()
 
 
 
-
+# 赛道元素状态枚举
+# 赛道元素状态枚举
+class RoadElement:
+    stop = -1
+    normal = 0
+    l1 = 1
+    l2 = 2
+    r1 = 5
+    r2 = 4
+    l3_not = 14
+    r3_not = 15
+    l3 = 3
+    r3 = 6
+    lin = 7
+    lout = 8
+    loutcoming = 88
+    loutout = 888
+    rin = 9
+    rout = 10
+    routcoming = 89
+    routout = 999
+    zebrain = 11
+    zebraout = 111
+    ramp = 12
+    barrier = 13
+    crossroad_coming = 16
 
 
 
