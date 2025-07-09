@@ -3,6 +3,7 @@ from smartcar import *
 from seekfree import *
 from display import *
 import math
+import utime
 wireless = WIRELESS_UART(460800)
 # 屏幕实例化
 cs = Pin('C5', Pin.OUT, pull=Pin.PULL_UP_47K, value=1)
@@ -41,7 +42,7 @@ ccd = TSL1401(5)
 # 实例化 KEY_HANDLER 模块
 key = KEY_HANDLER(10)
 imu = IMU963RA()
-tof = DL1B()
+#tof = DL1B()
 def scale_value(x, x_min, x_max):
     """
     将输入x从范围[x_min, x_max]线性映射到[0.4, 1]
@@ -167,6 +168,17 @@ class Beeper:
         if long is not None: self.long_duration = long
         if short is not None: self.short_duration = short
 beep = Beeper()
+
+
+
+
+
+
+
+
+
+
+
 
 '''
 ------------------------------------
@@ -375,12 +387,10 @@ def read_detection_data_new():
             if detected_objects:
                 # print(f"解析到 {len(detected_objects)} 个物体:")
                 for obj in detected_objects:
-                    if (obj['color'] == 'pink' or obj['color'] == 'yellow'
-                        or obj['color'] == 'brown' or obj['color'] == 'purple'
-                        ) and obj['width'] * obj['height'] > 400:
-                        beep.start('long')
-                    # print(f"  颜色: {obj['color']}, 位置: ({obj['x']},{obj['y']})", end="")
-                    # print(f", 大小: {obj['width']}x{obj['height']}")
+                    if (obj['color'] != 'purple'):
+                        beep.start('short')
+                    print(f"  颜色: {obj['color']}, 位置: ({obj['x']},{obj['y']})", end="")
+                    print(f", 大小: {obj['width']}x{obj['height']}")
                 
                 # 发送ACK响应
                 # uart3.write(f"ACK:{len(detected_objects)}\n".encode())

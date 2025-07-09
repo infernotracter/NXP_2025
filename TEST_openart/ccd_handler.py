@@ -767,8 +767,9 @@ def is_circus():
     return circus_linto or circus_rinto or circus_in or circus_out
 class Speed_controller:
     def __init__(self):
-        self.target_speed=-80         #turn_out_kp=-125.73     turn_in_kp=-5.18
-        self.tmp_speed=-80
+        self.start_flag = 0
+        self.target_speed=100*self.start_flag      #turn_out_kp=-125.73     turn_in_kp=-5.18
+        self.tmp_speed = -100
         self.fast_speed=-300
         self.slow_speed=-60
         self.slow_2_speed = 120 # 坡道后减速
@@ -781,12 +782,12 @@ class Speed_controller:
         self.fast_distance_threshold_2 = 500
     def update(self):
         self.target_speed = self.tmp_speed
-        if self.faster_flag_1:
-            self.target_speed = self.fast_speed
-        if self.faster_flag_2:
-            self.target_speed = self.slow_2_speed
-        elif self.slower_flag:
-            self.target_speed = self.slow_speed
+#         if self.faster_flag_1:
+#             self.target_speed = self.fast_speed
+#         if self.faster_flag_2:
+#             self.target_speed = self.slow_2_speed
+#         elif self.slower_flag:
+#             self.target_speed = self.tmp_speed * 0.8
     def slower(self):
         """检测是否需要进入慢速模式"""
         # 检测到需要减速的条件
@@ -802,7 +803,10 @@ class Speed_controller:
         self.slower_distance_connect()
         self.update()
 
-    
+    def start_update(self,key):
+        if key:
+            self.start_flag = 1
+            self.target_speed=100*self.start_flag
     def slower_distance_connect(self):
         """检查是否达到慢速距离阈值，如果是则恢复正常速度"""
         if self.slower_flag and abs(speed_slow_distance.data) >= self.slow_distance_threshold:
