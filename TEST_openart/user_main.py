@@ -479,8 +479,8 @@ while True:
     if elementdetector_flag:
         elementdetector.update()
     openart_l3.check_id(read_detection_data_new())
-    print(openart_l3.state, openart_l3.consecutive_count)
-    if openart_l3.state == 'locked':
+    print(openart_l3.state, openart_l3.count)
+    if openart_l3.state == 'ok':
         elementdetector.state = RoadElement.l3
         elementdetector_flag = True
     elif openart_l3.state == 'valid':
