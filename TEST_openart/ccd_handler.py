@@ -139,32 +139,6 @@ class CCDHandler:
 ccd_near = CCDHandler(1)
 ccd_far=CCDHandler(0)
 
-# 赛道元素状态枚举
-# 赛道元素状态枚举
-class RoadElement:
-    stop = -1
-    normal = 0
-    l1 = 1
-    l2 = 2
-    r1 = 5
-    r2 = 4
-    l3_not = 14
-    r3_not = 15
-    l3 = 3
-    r3 = 6
-    lin = 7
-    lout = 8
-    loutcoming = 88
-    loutout = 888
-    rin = 9
-    rout = 10
-    routcoming = 89
-    routout = 999
-    zebrain = 11
-    zebraout = 111
-    ramp = 12
-    barrier = 13
-    crossroad_coming = 16
 
 
 class CCD_Controller:
@@ -734,30 +708,7 @@ class ElementDetector:
 #             self.state = RoadElement.normal
 elementdetector = ElementDetector()
 
-class Distance:
-    """行驶距离"""
-    def __init__(self):
-        self.start_flag = False
-        self.data = 0
-        self.start()
-    def start(self):
-        self.start_flag = True
-    
-    def clear(self):
-        self.data=0
 
-    def update(self, tmpdata, k):
-        if self.start_flag:
-            self.data += tmpdata * k
-        if self.data > 999999:
-            self.data = 0.0
-    def off(self):
-        self.data = 0
-        self.start_flag = False
-element_distance = Distance()
-alldistance = Distance()
-speed_slow_distance = Distance()
-speed_fast_distance = Distance()
 
 def is_circus():
     circus_linto=(elementdetector.state==RoadElement.l1 or elementdetector.state==RoadElement.l2 or elementdetector.state==RoadElement.l3)

@@ -496,9 +496,19 @@ print("""   ____   _           _   _           /\/|
   \____| |_|  \__,_| |_| |_|  \___/       """)
 speed_controller.faster_flag_1 = False
 speed_controller.has_triggered_fast = False
+elementdetector_flag = False # 遇到方块才开始elementdetector
 while True:
     error=ccd_controller.get_error()
-    elementdetector.update()
+    if elementdetector_flag:
+        elementdetector.update()
+
+    tmp_openart_state = read_detection_data_new()
+    if openart_l3.check_id(tmp_openart_state) == 'locked':
+        elementdetector.state = RoadElement.l3
+        elementdetector_flag = True
+    elif openart_l3.check_id(tmp_openart_state) == 'valid':
+        elementdetector_flag = False
+
 #     if elementdetector.state==RoadElement.stop:
 #         stop_flag=0
     if end_switch.value() == 1:
@@ -506,7 +516,6 @@ while True:
         
     if (ticker_flag_pid):
         beep.update() # 蜂鸣器计时状态更新，自己不会叫的
-        read_detection_data_new()
 #         tof_hander.update()
 #         if tof_hander.state:
 #             beep.start('short')
@@ -514,6 +523,7 @@ while True:
         imu_data = imu.get()
         element_gyro.update(imu_data[5],0.01)
         element_distance.update(encl_data+encr_data,0.01)
+        openart_distance.update(encl_data+encr_data, 0.01)
         alldistance.update(encl_data+encr_data,0.01)
 #         speed_slow_distance.update(encl_data+encr_data, 0.01)
 #         speed_fast_distance.update(encl_data+encr_data, 0.01)

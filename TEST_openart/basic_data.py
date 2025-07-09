@@ -167,6 +167,32 @@ class Beeper:
 beep = Beeper()
 
 
+# 赛道元素状态枚举
+# 赛道元素状态枚举
+class RoadElement:
+    stop = -1
+    normal = 0
+    l1 = 1
+    l2 = 2
+    r1 = 5
+    r2 = 4
+    l3_not = 14
+    r3_not = 15
+    l3 = 3
+    r3 = 6
+    lin = 7
+    lout = 8
+    loutcoming = 88
+    loutout = 888
+    rin = 9
+    rout = 10
+    routcoming = 89
+    routout = 999
+    zebrain = 11
+    zebraout = 111
+    ramp = 12
+    barrier = 13
+    crossroad_coming = 16
 
 
 
@@ -383,12 +409,119 @@ def read_detection_data_new():
             if detected_objects:
                 # print(f"解析到 {len(detected_objects)} 个物体:")
                 for obj in detected_objects:
-                    if (obj['color'] == 'pink' or obj['color'] == 'yellow'
-                        or obj['color'] == 'brown' or obj['color'] == 'purple'
-                        ) and obj['width'] * obj['height'] > 400:
+                    if (obj['color'] == 'yellow'):
                         beep.start('short')
+                        return RoadElement.l3
                     # print(f"  颜色: {obj['color']}, 位置: ({obj['x']},{obj['y']})", end="")
                     # print(f", 大小: {obj['width']}x{obj['height']}")
                 
                 # 发送ACK响应
                 # uart3.write(f"ACK:{len(detected_objects)}\n".encode())
+
+class Distance:
+    """行驶距离"""
+    def __init__(self):
+        self.start_flag = False
+        self.data = 0
+        self.start()
+    def start(self):
+        self.start_flag = True
+    
+    def clear(self):
+        self.data=0
+
+    def update(self, tmpdata, k):
+        if self.start_flag:
+            self.data += tmpdata * k
+        if self.data > 999999:
+            self.data = 0.0
+    def off(self):
+        self.data = 0
+        self.start_flag = False
+element_distance = Distance()
+alldistance = Distance()
+speed_slow_distance = Distance()
+speed_fast_distance = Distance()
+openart_distance = Distance()
+
+
+class Openart_Validator:
+    def __init__(self, openart_distance):
+        """
+        初始化ID验证器
+        :param distance_obj: Distance类的实例，用于获取当前行驶距离
+        """
+        self.distance_obj = openart_distance        # 距离传感器对象
+        self.last_valid_id = None               # 上一次有效的ID
+        self.consecutive_count = 0              # 连续输入相同ID的次数
+        
+        # 存储每个ID的锁定信息（锁定时距离、解锁所需距离）
+        # 格式: {id: {'locked': bool, 'lock_start_distance': float, 'unlock_distance': float}}
+        self.lock_info = {}
+        
+        # 设置ID锁定规则（示例使用ID1需100距离，ID2需200距离）
+        self.lock_rules = {RoadElement.l3: 600, RoadElement.r3: 600}
+
+    def check_id(self, input_id):
+        """
+        检查输入的ID是否有效
+        :param input_id: 输入的ID
+        :return: 返回处理结果字符串（无效时返回"invalid"，有效时返回"valid"，触发锁定返回"locked"）
+        """
+        current_distance = self.distance_obj.data
+        
+        # 检查ID是否被锁定
+        if self._is_id_locked(input_id, current_distance):
+            return "invalid"
+        
+        # 检查是否与上一次有效ID相同
+        if input_id == self.last_valid_id:
+            self.consecutive_count += 1
+        else:
+            self.consecutive_count = 1
+            self.last_valid_id = input_id
+        
+        # 检查是否达到连续三次
+        if self.consecutive_count == 3:
+            self._lock_id(input_id, current_distance)
+            return "locked"
+        
+        return "valid"
+    
+    def _is_id_locked(self, id, current_distance):
+        """检查ID是否处于锁定状态"""
+        if id in self.lock_info and self.lock_info[id]['locked']:
+            # 检查是否达到解锁距离
+            locked_distance = current_distance - self.lock_info[id]['lock_start_distance']
+            if locked_distance >= self.lock_info[id]['unlock_distance']:
+                # 解锁ID
+                self.lock_info[id]['locked'] = False
+            else:
+                return True  # ID仍处于锁定状态
+        return False
+    
+    def _lock_id(self, id, current_distance):
+        """锁定指定的ID"""
+        if id not in self.lock_rules:
+            return  # 无锁定规则则不处理
+        
+        unlock_distance = self.lock_rules[id]
+        
+        # 创建或更新锁定记录
+        if id not in self.lock_info:
+            self.lock_info[id] = {
+                'locked': True,
+                'lock_start_distance': current_distance,
+                'unlock_distance': unlock_distance
+            }
+        else:
+            self.lock_info[id].update({
+                'locked': True,
+                'lock_start_distance': current_distance
+            })
+        
+        # 重置连续计数和上一次有效ID
+        self.consecutive_count = 0
+        self.last_valid_id = None
+
+openart_l3 = Openart_Validator(openart_distance)
