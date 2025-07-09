@@ -9,6 +9,64 @@ from ccd_handler import *
 import utime
 
 
+
+class Beeper:
+    def __init__(self, beerpin = 'C9'):
+        self.beep_pin = Pin(beerpin , Pin.OUT, pull = Pin.PULL_UP_47K, value = False)
+        self.start_time = 0       # 鸣叫开始时间戳
+        self.duration = 0         # 当前鸣叫持续时间
+        self.is_active = False    # 鸣叫状态标志
+        self.long_duration = 60  # 长鸣时长(ms)
+        self.short_duration = 30 # 短鸣时长(ms)
+        self._last_update = 0     # 上次更新时间戳
+
+    def start(self, duration_type):
+        """触发蜂鸣器鸣叫:param duration_type: 'long' 或 'short'
+        """
+        self.duration = self.long_duration if duration_type == 'long' else self.short_duration
+        self.start_time = utime.ticks_ms()
+        self.beep_pin.high()
+        self.is_active = True
+
+    def update(self):
+        """需在循环中定期调用，建议调用间隔<=10ms"""
+        if not self.is_active:
+            return
+            
+        current = utime.ticks_ms()
+        elapsed = utime.ticks_diff(current, self.start_time)
+        
+        # 持续时间达到后关闭
+        if elapsed >= self.duration:
+            self.beep_pin.low()
+            self.is_active = False
+            self.duration = 0
+
+    def set_durations(self, long=None, short=None):
+        """动态修改鸣叫时长"""
+        if long is not None: self.long_duration = long
+        if short is not None: self.short_duration = short
+#beep = Beeper()
+
+
+def create_roll_checker():
+    history = []
+    def check(current_roll):
+        # 将新数据添加到历史记录中
+        history.append(current_roll)
+        # 保持最多保留最近20个数据点
+        if len(history) > 10:
+            history[:] = history[-10:]
+        # 如果数据不足20个，返回False
+        if len(history) < 10:
+            return False
+        # 统计不满足条件的数据个数
+        count = sum(1 for num in history if not (-60.0 < num < 0.0))
+        return count >= 8
+    return check
+checker = create_roll_checker()
+
+
 print("种族骑士王小桃来啦UwU")
 # 单位换算用
 ACC_SPL = 4096.0
@@ -132,7 +190,7 @@ def clearall():
     key.clear(3)
     key.clear(4)
 stop_flag = 1
-gyro_bias_x = -726
+gyro_bias_x = 0
 gyro_bias_y = 16.15
 gyro_bias_z = -140.56
 # def get_offset():
@@ -160,16 +218,11 @@ def pid_controller(now, target, kp, ki, kd, sum_err, last_err):
     error = target - now
     sum_err += error
     derivative = error - last_err
+    sum_err=my_limit(sum_err,-1500,1500)
     output = kp * error + ki * sum_err + kd * derivative
     return output, sum_err, error
 
-#增量式
-# def pid_increment(now, target, kp, ki, kd, last_err, prev_err):
-#     error = target - now
-#     increment = kp*(error - last_err) + ki*error + kd*(error - 2*last_err + prev_err)
-#     last_err = error
-#     prev_err = last_err
-#     return increment, last_err, prev_err
+
 def pid_increment(now, target, kp, ki, kd, last_err, prev_err):
     error = target - now
     increment = kp*(error - last_err) + ki*error + kd*(error - 2*last_err + prev_err)
@@ -192,14 +245,14 @@ acc_z = 0
 last_error2 = 0
 
 
-balance_angle =-2711.82                   #-2724.24
-vel_kp = 2.271                         #3.71
-vel_ki = 2.674                         #2.84
+balance_angle = -2590.322                        #-2711.82                   #-2724.24
+vel_kp = 4.92                              #2.271                         #3.71
+vel_ki = 3.304                              #2.674                         #2.84
 vel_kd = 0
-angle_kp =0.062                        #0.103
+angle_kp = 0.09                           #0.062                        #0.103
 angle_ki = 0
 angle_kd = 0
-speed_kp =-2.03
+speed_kp = 8.594                         #-12.937
 speed_ki = 0
 speed_kd = 0
 
@@ -217,7 +270,7 @@ turn_last_error = 0
 turn_output = 0
 pwm = 0
 current_angle = 0
-
+unlimit_data=0
 angle_disturbance = 0
 pwm_l_value = 0
 pwm_r_value = 0
@@ -237,7 +290,7 @@ def vel_loop_callback(pit1):
     global yaw_vel, counter_speed, counter_angle
     global imu, gyro_bias_y, gyro_bias_z
     global motor_l, motor_r,encl_data,encr_data
-    global imu_data, now_speed 
+    global imu_data, now_speed,unlimit_data 
     global vel_disturbance  # Add this line
 
     imu_data = imu.get()
@@ -269,11 +322,11 @@ def vel_loop_callback(pit1):
             speed_kp, speed_ki, speed_kd,
             speed_sum_error, speed_last_error
         )
-#        angle_disturbance = max(min(angle_disturbance, 450), -450)
+#       angle_disturbance = max(min(angle_disturbance, 400), -400)
 
     # Ensure vel_disturbance is initialized before use
-    if 'vel_disturbance' not in globals():
-        vel_disturbance = 0
+#     if 'vel_disturbance' not in globals():
+#         vel_disturbance = 0
 
     target_angle = balance_angle - angle_disturbance
 
@@ -286,7 +339,9 @@ def vel_loop_callback(pit1):
             angle_kp, angle_ki, angle_kd,
             angle_sum_error, angle_last_error
         )
-        #vel_disturbance = max(min(vel_disturbance, 60), -60)
+        unlimit_data=vel_disturbance
+#       vel_disturbance = max(min(vel_disturbance, 60), -60)
+        
 
     target_vel = vel_disturbance
     # 内环控制
@@ -318,11 +373,11 @@ counter_turn_out = 0
 counter_turn_in = 0
 turn_out_last_error = 0
 turn_in_last_error = 0
-turn_out_kp = -70.73
+turn_out_kp = -95.5                            #-76.73
 turn_out_ki = 0
-turn_out_kd = -13.89
-turn_in_kp = -5.6
-turn_in_ki = -1.0
+turn_out_kd = 0                              #-13.89
+turn_in_kp = -8.948                           #-8.6
+turn_in_ki = 0                             #-0.65
 turn_in_kd = 0
 turn_in_disturbance = 0.0
 error = 0
@@ -364,9 +419,9 @@ def turn_loop_callback(pit1):
 
 def death_pwm(value):
     if value > 0:
-        return value + 650
+        return value + 450
     else:
-        return value - 650
+        return value - 450
     
 # 菜单相关变量
 # point = 30
@@ -442,7 +497,7 @@ print("""   ____   _           _   _           /\/|
 speed_controller.faster_flag_1 = False
 speed_controller.has_triggered_fast = False
 while True:
-    error=ccd_controller.get_error()+6
+    error=ccd_controller.get_error()
     elementdetector.update()
 #     if elementdetector.state==RoadElement.stop:
 #         stop_flag=0
@@ -450,22 +505,23 @@ while True:
         break  # 跳出判断
         
     if (ticker_flag_pid):
-        beep.update()
-        tof_hander.update()
-        if tof_hander.state:
-            beep.start('short')
+        beep.update() # 蜂鸣器计时状态更新，自己不会叫的
+        read_detection_data_new()
+#         tof_hander.update()
+#         if tof_hander.state:
+#             beep.start('short')
         # profiler_gyro.update()
         imu_data = imu.get()
         element_gyro.update(imu_data[5],0.01)
         element_distance.update(encl_data+encr_data,0.01)
         alldistance.update(encl_data+encr_data,0.01)
-        speed_slow_distance.update(encl_data+encr_data, 0.01)
-        speed_fast_distance.update(encl_data+encr_data, 0.01)
+#         speed_slow_distance.update(encl_data+encr_data, 0.01)
+#         speed_fast_distance.update(encl_data+encr_data, 0.01)
         #debug += (encoder_l.get() - encoder_r.get()) * 0.01
         vel_loop_callback(pit1)
         turn_loop_callback(pit1)
-        speed_controller.slower()
-        speed_controller.faster()
+        #speed_controller.slower()
+        #speed_controller.faster()
         #speed_controller.update()
         motor_l.duty(my_limit(death_pwm(pwm_l_value - turn_output),-6000,6000))
         motor_r.duty(my_limit(death_pwm(pwm_r_value + turn_output),-6000,6000))
@@ -486,9 +542,8 @@ while True:
         ticker_flag_menu=False
 
     if (ticker_flag_8ms):
-        read_detection_data_new()
         # profiler_8ms.update()
-        print(tof_hander.state, speed_controller.faster_flag_1, speed_controller.has_triggered_fast, speed_controller.faster_flag_2)
+        #print(tof_hander.state, speed_controller.faster_flag_1, speed_controller.has_triggered_fast, speed_controller.faster_flag_2)
         data_flag = wireless.data_analysis()
         for i in range(0, 8):
             # 判断哪个通道有数据更新
@@ -510,9 +565,9 @@ while True:
 #                 elif i == 4:
 #                     angle_ki = data_wave[i]
 #                 elif i == 5:
-#                     angle_kd = data_wave[i]
-#                 elif i == 6:
 #                     speed_kp = data_wave[i]
+#                 elif i == 6:
+#                     speed_kd = data_wave[i]
 #                 elif i == 7:
 #                     balance_angle = data_wave[i]
 #                 if i == 0:
@@ -535,26 +590,20 @@ while True:
                 elif i == 1:
                     turn_in_kp = data_wave[i]
                 elif i == 2:
-                    turn_in_ki = data_wave[i]
-                elif i == 3:
                     turn_out_kp = data_wave[i]
-                elif i == 4:
-                    turn_out_ki = data_wave[i]
-                elif i == 5:
-                    turn_out_kd = data_wave[i]
-                elif i == 6:
-                    elementdetector.state = data_wave[i]
-                elif i == 7:
-                    balance_angle = data_wave[i]
+                elif i == 3:
+                    speed_kp = data_wave[i]
 
         # 将数据发送到示波器
         wireless.send_ccd_image(WIRELESS_UART.ALL_CCD_BUFFER_INDEX)
         wireless.send_oscilloscope(
-        #     #vel_kp, vel_ki, vel_kd, angle_kp, vel_disturbance, angle_disturbance, motor_l.duty(), current_angle
-              elementdetector.state,speed_controller.target_speed, speed_fast_distance.data, speed_slow_distance.data
+             #vel_kp, vel_ki, vel_kd, angle_kp,angle_disturbance,current_angle
+        #      elementdetector.state,speed_controller.target_speed, speed_fast_distance.data, speed_slow_distance.data
         #     #imu_data[3], imu_data[4], imu_data[5]
         #     #turn_in_disturbance,turn_output, error
         #     #gyro_bias_x , gyro_bias_y, gyro_bias_z
+         #   vel_disturbance,current_angle
+            turn_output,imu_data[4]
              )
         gc.collect()
         ticker_flag_8ms = False

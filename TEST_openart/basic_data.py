@@ -128,8 +128,6 @@ class Tof_hander:
 tof_hander=Tof_hander()
 
 
-
-
 class Beeper:
     def __init__(self, beerpin = 'C9'):
         self.beep_pin = Pin(beerpin , Pin.OUT, pull = Pin.PULL_UP_47K, value = False)
@@ -167,6 +165,16 @@ class Beeper:
         if long is not None: self.long_duration = long
         if short is not None: self.short_duration = short
 beep = Beeper()
+
+
+
+
+
+
+
+
+
+
 
 '''
 ------------------------------------
@@ -378,7 +386,7 @@ def read_detection_data_new():
                     if (obj['color'] == 'pink' or obj['color'] == 'yellow'
                         or obj['color'] == 'brown' or obj['color'] == 'purple'
                         ) and obj['width'] * obj['height'] > 400:
-                        beep.start('long')
+                        beep.start('short')
                     # print(f"  颜色: {obj['color']}, 位置: ({obj['x']},{obj['y']})", end="")
                     # print(f", 大小: {obj['width']}x{obj['height']}")
                 
