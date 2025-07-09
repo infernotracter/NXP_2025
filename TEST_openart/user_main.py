@@ -475,9 +475,6 @@ speed_controller.faster_flag_1 = False
 speed_controller.has_triggered_fast = False
 elementdetector_flag = False # 遇到方块才开始elementdetector
 while True:
-    read_detection_data_new()
-    error=ccd_controller.get_error()
-    elementdetector.update()
     error=ccd_controller.get_error()
     if elementdetector_flag:
         elementdetector.update()
