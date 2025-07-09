@@ -152,6 +152,7 @@ def clearall():
     key.clear(4)
 stop_flag = 1
 gyro_bias_x = 0
+gyro_bias_x = 0
 gyro_bias_y = 16.15
 gyro_bias_z = -140.56
 # def get_offset():
@@ -179,8 +180,10 @@ def pid_controller(now, target, kp, ki, kd, sum_err, last_err):
     error = target - now
     sum_err += error
     derivative = error - last_err
+    sum_err=my_limit(sum_err,-1500,1500)
     output = kp * error + ki * sum_err + kd * derivative
     return output, sum_err, error
+
 
 
 def pid_increment(now, target, kp, ki, kd, last_err, prev_err):
@@ -208,10 +211,15 @@ last_error2 = 0
 balance_angle = -2590.322                        #-2711.82                   #-2724.24
 vel_kp = 4.92                              #2.271                         #3.71
 vel_ki = 3.304                              #2.674                         #2.84
+balance_angle = -2590.322                        #-2711.82                   #-2724.24
+vel_kp = 4.92                              #2.271                         #3.71
+vel_ki = 3.304                              #2.674                         #2.84
 vel_kd = 0
+angle_kp = 0.09                           #0.062                        #0.103
 angle_kp = 0.09                           #0.062                        #0.103
 angle_ki = 0
 angle_kd = 0
+speed_kp = 8.594                         #-12.937
 speed_kp = 8.594                         #-12.937
 speed_ki = 0
 speed_kd = 0
@@ -230,6 +238,7 @@ turn_last_error = 0
 turn_output = 0
 pwm = 0
 current_angle = 0
+unlimit_data=0
 unlimit_data=0
 angle_disturbance = 0
 pwm_l_value = 0
@@ -250,6 +259,7 @@ def vel_loop_callback(pit1):
     global yaw_vel, counter_speed, counter_angle
     global imu, gyro_bias_y, gyro_bias_z
     global motor_l, motor_r,encl_data,encr_data
+    global imu_data, now_speed,unlimit_data 
     global imu_data, now_speed,unlimit_data 
     global vel_disturbance  # Add this line
 
@@ -287,6 +297,8 @@ def vel_loop_callback(pit1):
     # Ensure vel_disturbance is initialized before use
 #     if 'vel_disturbance' not in globals():
 #         vel_disturbance = 0
+#     if 'vel_disturbance' not in globals():
+#         vel_disturbance = 0
 
     target_angle = balance_angle - angle_disturbance
 
@@ -299,6 +311,9 @@ def vel_loop_callback(pit1):
             angle_kp, angle_ki, angle_kd,
             angle_sum_error, angle_last_error
         )
+        unlimit_data=vel_disturbance
+#       vel_disturbance = max(min(vel_disturbance, 60), -60)
+        
         unlimit_data=vel_disturbance
 #       vel_disturbance = max(min(vel_disturbance, 60), -60)
         
@@ -380,7 +395,9 @@ def turn_loop_callback(pit1):
 def death_pwm(value):
     if value > 0:
         return value + 450
+        return value + 450
     else:
+        return value - 450
         return value - 450
     
 # 菜单相关变量
@@ -456,10 +473,22 @@ print("""   ____   _           _   _           /\/|
   \____| |_|  \__,_| |_| |_|  \___/       """)
 speed_controller.faster_flag_1 = False
 speed_controller.has_triggered_fast = False
+elementdetector_flag = False # 遇到方块才开始elementdetector
 while True:
     read_detection_data_new()
     error=ccd_controller.get_error()
     elementdetector.update()
+    error=ccd_controller.get_error()
+    if elementdetector_flag:
+        elementdetector.update()
+
+    tmp_openart_state = read_detection_data_new()
+    if openart_l3.check_id(tmp_openart_state) == 'locked':
+        elementdetector.state = RoadElement.l3
+        elementdetector_flag = True
+    elif openart_l3.check_id(tmp_openart_state) == 'valid':
+        elementdetector_flag = False
+
 #     if elementdetector.state==RoadElement.stop:
 #         stop_flag=0
     if end_switch.value() == 1:
@@ -475,12 +504,17 @@ while True:
         imu_data = imu.get()
         element_gyro.update(imu_data[5],0.01)
         element_distance.update(encl_data+encr_data,0.01)
+        openart_distance.update(encl_data+encr_data, 0.01)
         alldistance.update(encl_data+encr_data,0.01)
+#         speed_slow_distance.update(encl_data+encr_data, 0.01)
+#         speed_fast_distance.update(encl_data+encr_data, 0.01)
 #         speed_slow_distance.update(encl_data+encr_data, 0.01)
 #         speed_fast_distance.update(encl_data+encr_data, 0.01)
         #debug += (encoder_l.get() - encoder_r.get()) * 0.01
         vel_loop_callback(pit1)
         turn_loop_callback(pit1)
+        #speed_controller.slower()
+        #speed_controller.faster()
         #speed_controller.slower()
         #speed_controller.faster()
         #speed_controller.update()
@@ -530,6 +564,8 @@ while True:
 #                     speed_kp = data_wave[i]
 #                 elif i == 6:
 #                     speed_kd = data_wave[i]
+#                 elif i == 6:
+#                     speed_kd = data_wave[i]
 #                 elif i == 7:
 #                     balance_angle = data_wave[i]
 #                 if i == 0:
@@ -555,15 +591,21 @@ while True:
                     turn_out_kp = data_wave[i]
                 elif i == 3:
                     speed_kp = data_wave[i]
+                elif i == 3:
+                    speed_kp = data_wave[i]
 
         # 将数据发送到示波器
         wireless.send_ccd_image(WIRELESS_UART.ALL_CCD_BUFFER_INDEX)
         wireless.send_oscilloscope(
              #vel_kp, vel_ki, vel_kd, angle_kp,angle_disturbance,current_angle
         #      elementdetector.state,speed_controller.target_speed, speed_fast_distance.data, speed_slow_distance.data
+             #vel_kp, vel_ki, vel_kd, angle_kp,angle_disturbance,current_angle
+        #      elementdetector.state,speed_controller.target_speed, speed_fast_distance.data, speed_slow_distance.data
         #     #imu_data[3], imu_data[4], imu_data[5]
         #     #turn_in_disturbance,turn_output, error
         #     #gyro_bias_x , gyro_bias_y, gyro_bias_z
+         #   vel_disturbance,current_angle
+            turn_output,imu_data[4]
          #   vel_disturbance,current_angle
             turn_output,imu_data[4]
              )

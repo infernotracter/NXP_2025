@@ -129,8 +129,6 @@ class Tof_hander:
 tof_hander=Tof_hander()
 
 
-
-
 class Beeper:
     def __init__(self, beerpin = 'C9'):
         self.beep_pin = Pin(beerpin , Pin.OUT, pull = Pin.PULL_UP_47K, value = False)
