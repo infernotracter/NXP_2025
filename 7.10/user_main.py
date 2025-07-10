@@ -1,12 +1,11 @@
 # 基础库、NXP库、第三方库
 import gc
 import utime
-import math
 from basic_data import *
 from ccd_handler import *
 #from menutext import *
 #from tof_hander import *
-import utime
+from uart import *
 
 
 
@@ -456,11 +455,24 @@ print("""   ____   _           _   _           /\/|
  | |     | |  / _` | | | | |  / _ \       
  | |___  | | | (_| | | | | | | (_) |      
   \____| |_|  \__,_| |_| |_|  \___/       """)
+elementdetector_flag = False # 遇到方块才开始elementdetector
+elementdetector.state = RoadElement.normal
 while True:
 #     error=ccd_controller.get_error()+6
 #     elementdetector.update()
 #     if elementdetector.state==RoadElement.stop:
 #         stop_flag=0
+    error=ccd_controller.get_error()
+    if elementdetector_flag:
+        elementdetector.update()
+    if read_detection_data_new() == 'green' or read_detection_data_new() == 'yellow':
+        beep.start('short')
+        elementdetector_flag = True
+        openart_distance.data = 0
+    if abs(openart_distance.data) > 800:
+        elementdetector.state = 0
+        openart_distance.data = 0
+        elementdetector_flag = False
     if end_switch.value() == 1:
         break  # 跳出判断
         
