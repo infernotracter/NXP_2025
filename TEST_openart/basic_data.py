@@ -455,7 +455,7 @@ class Openart_Validator:
         self.count = 0
 
     def check_id(self, input_id):
-        if input_id == 'green' or input_id == 'yellow':
+        if input_id == 'green' or input_id == 'yellow' or input_id == 'red':
             beep.start('short')
             self.count += 1
             if self.count == 1:
