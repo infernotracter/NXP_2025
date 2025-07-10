@@ -672,6 +672,13 @@ class ElementDetector:
                 return True
         if abs(element_distance.data) > self.DISTANCE_ring3_data * 1.5:
             self.state = RoadElement.normal
+
+    def _crossroad_1(self):
+        if ccd_near.left < self.ccd_near_l_lost or ccd_near.right > self.ccd_near_r_lost:
+            return True
+    def _crossroad_2(self):
+        if ccd_near.left > self.ccd_near_l_lost and ccd_near.right < self.ccd_near_r_lost:
+            return True
 #     def find_barrier(self):
 #         """障碍物检测"""
 #         self.last_lenth=self.lenth
