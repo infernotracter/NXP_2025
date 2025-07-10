@@ -450,22 +450,21 @@ openart_distance = Distance()
 
 class Openart_Validator:
     def __init__(self, target_distance):
-        self.distance = target_distance
         self.last_id = None
         self.state = 'waiting'
         self.count = 0
 
     def check_id(self, input_id):
-        if input_id == 'green' or input_id == 'yellow' or input_id == 'red':
+        if input_id == 'green' or input_id == 'yellow':
             beep.start('short')
             self.count += 1
             if self.count == 1:
                 self.state = 'valid'
                 openart_distance.data = 0
             elif self.count > 1:
-                if abs(openart_distance.data) > self.distance:
+                if abs(openart_distance.data) > 400:
                     openart_distance.data = 0
                     self.count = -1
                     self.state = 'waiting'
 
-openart_l3 = Openart_Validator(400)
+openart_l3 = Openart_Validator(600)
