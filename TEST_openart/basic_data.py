@@ -450,6 +450,7 @@ openart_distance = Distance()
 
 class Openart_Validator:
     def __init__(self, target_distance):
+        self.distance = target_distance
         self.last_id = None
         self.state = 'waiting'
         self.count = 0
@@ -462,9 +463,9 @@ class Openart_Validator:
                 self.state = 'valid'
                 openart_distance.data = 0
             elif self.count > 1:
-                if abs(openart_distance.data) > 400:
+                if abs(openart_distance.data) > self.distance:
                     openart_distance.data = 0
                     self.count = -1
                     self.state = 'waiting'
 
-openart_l3 = Openart_Validator(600)
+openart_l3 = Openart_Validator(400)
