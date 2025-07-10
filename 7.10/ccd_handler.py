@@ -766,7 +766,8 @@ def is_circus():
     return circus_linto or circus_rinto or circus_in or circus_out
 class Speed_controller:
     def __init__(self):
-        self.target_speed=0         #turn_out_kp=-125.73     turn_in_kp=-5.18
+        self.start_flag = 0
+        self.target_speed= 100*self.start_flag       #turn_out_kp=-125.73     turn_in_kp=-5.18
         self.tmp_speed=-120
         self.fast_speed=-120
         self.slow_speed=-100
@@ -789,6 +790,10 @@ class Speed_controller:
         self.distance_connect()
         self.update()
 
+    def start_update(self, key):
+        if key:
+            self.start_flag = 1
+            self.target_speed = 100*self.start_flag
     
     def distance_connect(self):
         """检查是否达到慢速距离阈值，如果是则恢复正常速度"""

@@ -328,7 +328,7 @@ def vel_loop_callback(pit1):
             speed_kp, speed_ki, speed_kd,
             speed_sum_error, speed_last_error
         )
-#        angle_disturbance = max(min(angle_disturbance, 450), -450)
+        angle_disturbance = max(min(angle_disturbance, 450), -450)
 
     # Ensure vel_disturbance is initialized before use
     if 'vel_disturbance' not in globals():
@@ -514,14 +514,13 @@ while True:
         #debug += (encoder_l.get() - encoder_r.get()) * 0.01
         vel_loop_callback(pit1)
 #         turn_loop_callback(pit1)
-#         speed_controller.slower()
-        #speed_controller.update()
         motor_l.duty(my_limit(death_pwm(pwm_l_value - turn_output),-6000,6000))
         motor_r.duty(my_limit(death_pwm(pwm_r_value + turn_output),-6000,6000))
         ticker_flag_pid = False
         
     if (ticker_flag_menu):
         key_data = key.get()
+        speed_controller.start_update(key_data[0])
         #menu(key_data)
         # # 弯道减速
         # if abs(ccd_far.mid - ccd_near.mid) > 15:
