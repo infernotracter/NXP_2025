@@ -471,19 +471,21 @@ print("""   ____   _           _   _           /\/|
  | |     | |  / _` | | | | |  / _ \       
  | |___  | | | (_| | | | | | | (_) |      
   \____| |_|  \__,_| |_| |_|  \___/       """)
-speed_controller.faster_flag_1 = False
-speed_controller.has_triggered_fast = False
+#speed_controller.faster_flag_1 = False
+#speed_controller.has_triggered_fast = False
 elementdetector_flag = False # 遇到方块才开始elementdetector
+elementdetector.state = RoadElement.normal
 while True:
     error=ccd_controller.get_error()
     if elementdetector_flag:
         elementdetector.update()
-    openart_l3.check_id(read_detection_data_new())
-    print(openart_l3.state, openart_l3.count)
-    if openart_l3.state == 'ok':
-        elementdetector.state = RoadElement.l3
+    if read_detection_data_new() == 'green' or read_detection_data_new() == 'yellow':
+        beep.start('short')
         elementdetector_flag = True
-    elif openart_l3.state == 'valid':
+        openart_distance.data = 0
+    if abs(openart_distance.data) > 800:
+        elementdetector.state = 0
+        openart_distance.data = 0
         elementdetector_flag = False
 
 #     if elementdetector.state==RoadElement.stop:
@@ -581,13 +583,11 @@ while True:
 #                 elif i == 7:
 #                     balance_angle = data_wave[i]
                 if i == 0:
-                    speed_controller.target_speed = data_wave[i]
+                    speed_controller.tmp_speed = data_wave[i]
                 elif i == 1:
                     turn_in_kp = data_wave[i]
                 elif i == 2:
                     turn_out_kp = data_wave[i]
-                elif i == 3:
-                    speed_kp = data_wave[i]
                 elif i == 3:
                     speed_kp = data_wave[i]
 
@@ -602,7 +602,7 @@ while True:
         #     #turn_in_disturbance,turn_output, error
         #     #gyro_bias_x , gyro_bias_y, gyro_bias_z
          #   vel_disturbance,current_angle
-            elementdetector.state
+            elementdetector.state,openart_distance.data, openart_l3.count
              )
         gc.collect()
         ticker_flag_8ms = False

@@ -410,8 +410,6 @@ def read_detection_data_new():
             if detected_objects:
                 # print(f"解析到 {len(detected_objects)} 个物体:")
                 for obj in detected_objects:
-                    if (obj['color'] != 'purple'):
-                        beep.start('short')
                     return obj['color']
                     print(f"  颜色: {obj['color']}, 位置: ({obj['x']},{obj['y']})", end="")
                     print(f", 大小: {obj['width']}x{obj['height']}")
@@ -458,13 +456,15 @@ class Openart_Validator:
 
     def check_id(self, input_id):
         if input_id == 'green' or input_id == 'yellow':
+            beep.start('short')
             self.count += 1
-            if self.count == 5:
+            if self.count == 1:
                 self.state = 'valid'
-                openart_distance.clear()
-            elif self.count > 5:
-                if openart_distance.data > 500:
-                    self.count = 0
+                openart_distance.data = 0
+            elif self.count > 1:
+                if abs(openart_distance.data) > 400:
+                    openart_distance.data = 0
+                    self.count = -1
                     self.state = 'waiting'
 
 openart_l3 = Openart_Validator(600)

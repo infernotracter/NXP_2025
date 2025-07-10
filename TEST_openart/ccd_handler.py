@@ -217,14 +217,14 @@ class ElementDetector:
         self.GYRO_Z_ring_in_data = 1700
         self.DISTANCE_ring_in_data = 100
 
-        self.DISTANCE_ring_out_data = 70
+        self.DISTANCE_ring_out_data = 30
         self.DISTANCE_ring_out_out_data = 200
         self.ccd_near_length = 60
         self.ccd_far_length = 60
         self.DISTANCE_ring_outcoming_data = 200
         self.DISTANCE_ring3_not_data = 300
         self.DISTANCE_zebra_out_data = 100      #斑马线
-        self.ERROR_l_out_value = -13
+        self.ERROR_l_out_value = -23
         #crossroad
         self.DISTANCE_crossroad_data = 80  #十字路口
 
@@ -265,7 +265,7 @@ class ElementDetector:
     def update(self):
         """主检测函数: , imu_data, enc_data """
         tempcheck = self.state
-        if  abs(element_distance.data)>300 and (self.state != RoadElement.lin) and (self.state != RoadElement.rin):
+        if  abs(element_distance.data)>400 and (self.state != RoadElement.lin) and (self.state != RoadElement.rin):
             self.state = RoadElement.normal
 #         if self.find_barrier() :
 #             self.state = RoadElement.barrier
@@ -334,12 +334,8 @@ class ElementDetector:
 
 
         elif self.state == RoadElement.l3:
-            if movementtype.mode == MOVEMENTTYPE.Mode_1:
-                if self._left_in_not():
-                    self.state = RoadElement.normal
-            elif movementtype.mode == MOVEMENTTYPE.Mode_2:
-                if self._left_in():
-                    self.state = RoadElement.lin
+            if self._left_in():
+                self.state = RoadElement.lin
 
         # 出圆环
 
@@ -719,8 +715,8 @@ def is_circus():
 class Speed_controller:
     def __init__(self):
         self.start_flag = 0
-        self.target_speed=100*self.start_flag      #turn_out_kp=-125.73     turn_in_kp=-5.18
-        self.tmp_speed = -100
+        self.tmp_speed = 80
+        self.target_speed=self.tmp_speed*self.start_flag      #turn_out_kp=-125.73     turn_in_kp=-5.18
         self.fast_speed=-300
         self.slow_speed=-60
         self.slow_2_speed = 120 # 坡道后减速
@@ -757,7 +753,7 @@ class Speed_controller:
     def start_update(self,key):
         if key:
             self.start_flag = 1
-            self.target_speed=100*self.start_flag
+        self.target_speed=self.tmp_speed*self.start_flag
     def slower_distance_connect(self):
         """检查是否达到慢速距离阈值，如果是则恢复正常速度"""
         if self.slower_flag and abs(speed_slow_distance.data) >= self.slow_distance_threshold:
