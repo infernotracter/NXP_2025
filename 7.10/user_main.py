@@ -465,14 +465,6 @@ while True:
     error=ccd_controller.get_error()
     if elementdetector_flag:
         elementdetector.update()
-    if read_detection_data_new() == 'green' or read_detection_data_new() == 'yellow':
-        beep.start('short')
-        elementdetector_flag = True
-        openart_distance.data = 0
-    if abs(openart_distance.data) > 800:
-        elementdetector.state = 0
-        openart_distance.data = 0
-        elementdetector_flag = False
     if end_switch.value() == 1:
         break  # 跳出判断
         
@@ -491,6 +483,14 @@ while True:
         ticker_flag_pid = False
         
     if (ticker_flag_menu):
+        if read_detection_data_new() == 'green' or read_detection_data_new() == 'yellow':
+            beep.start('short')
+            elementdetector_flag = True
+            openart_distance.data = 0
+        if abs(openart_distance.data) > 800:
+            elementdetector.state = 0
+            openart_distance.data = 0
+            elementdetector_flag = False
         key_data = key.get()
         speed_controller.start_update(key_data[0])
         #menu(key_data)
