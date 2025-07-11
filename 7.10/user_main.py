@@ -486,7 +486,7 @@ while True:
         if read_detection_data_new() == 'green' or read_detection_data_new() == 'yellow':
             beep.start('short')
             elementdetector_flag = True
-            openart_distance.data = 0
+            openart_distance.data = RoadElement.l1
         if abs(openart_distance.data) > 800:
             elementdetector.state = 0
             openart_distance.data = 0
