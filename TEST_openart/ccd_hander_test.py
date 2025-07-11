@@ -213,8 +213,8 @@ class ElementDetector:
         self.DISTANCE_ring3_data = 120
 
         # lin
-        self.GYRO_Z_ring_in_data = 1700
-        self.DISTANCE_ring_in_data = 100
+        self.GYRO_Z_ring_in_data = 5500
+        self.DISTANCE_ring_in_data = 600
 
         self.DISTANCE_ring_out_data = 30
         self.DISTANCE_ring_out_out_data = 200
@@ -223,7 +223,7 @@ class ElementDetector:
         self.DISTANCE_ring_outcoming_data = 200
         self.DISTANCE_ring3_not_data = 300
         self.DISTANCE_zebra_out_data = 100      #斑马线
-        self.ERROR_l_out_value = -23
+        self.ERROR_l_out_value = -35
         #crossroad
         self.DISTANCE_crossroad_data = 80  #十字路口
 
@@ -341,14 +341,6 @@ class ElementDetector:
         # 出圆环
 
         elif self.state == RoadElement.lin:
-            if self._left_outcoming():
-                self.state = RoadElement.loutcoming
-
-        elif self.state == RoadElement.loutcoming:
-            if self._left_out():
-                self.state = RoadElement.lout
-
-        elif self.state == RoadElement.lout:
             if self._left_out_out():
                 self.state = RoadElement.loutout
                 
@@ -438,7 +430,7 @@ class ElementDetector:
             ccd_controller.follow = -self.ccd_near_length
 
         elif self.state == RoadElement.l3:
-            ccd_controller.follow = self.ccd_near_length
+            ccd_controller.fix_error_value = self.ERROR_l_out_value
         elif self.state == RoadElement.l3_not:
             ccd_controller.follow = -self.ccd_near_length
 
@@ -571,8 +563,11 @@ class ElementDetector:
 
     def _left_in(self):
         # 陀螺仪极性取反（原右转检测正方向，左转检测负方向）
-        if abs(element_gyro.data) > self.GYRO_Z_ring_in_data or abs(element_distance.data) > self.DISTANCE_ring_in_data:
-            return True
+        if abs(element_gyro.data) > self.GYRO_Z_ring_in_data and abs(element_distance.data) > self.DISTANCE_ring_in_data:
+            if (self.ccd_near_l[0] <=  ccd_near.left <= self.ccd_near_l[1] and 
+                     self.ccd_near_r[0] <=  ccd_near.right <= self.ccd_near_r[1]):
+                if (self.ccd_far_r[0] <= ccd_far.right <= self.ccd_far_r[1]):
+                    return True
 
     def _left_outcoming(self):
         # 超过一定距离并且全白
