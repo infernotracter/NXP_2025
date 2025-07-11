@@ -140,13 +140,12 @@ ccd_near = CCDHandler(1)
 ccd_far=CCDHandler(0)
 
 
-
 class CCD_Controller:
     """CCD控制器, 远近端, follow跟随偏移"""
     def __init__(self):
         self.error = 0
         self.last_error = 0
-        self.far = False  # 是否使用远端CCD
+        self.far = True  # 是否使用远端CCD
         self.fix_error_value = 0  # 是否固定error值 出圆环时需要
         self.follow = 0
         self.value = 31
@@ -206,8 +205,8 @@ class ElementDetector:
 
         self.POINT_diff_data = 20            # 特征点差异阈值
 
-        self.DISTANCE_ring_2_data = 20
-        self.GYRO_Z_ring2_data = 150
+        self.DISTANCE_ring_2_data = 500
+        self.GYRO_Z_ring2_data = 900
 
         # l3
         self.GYRO_Z_ring3_data = 300
@@ -265,7 +264,7 @@ class ElementDetector:
     def update(self):
         """主检测函数: , imu_data, enc_data """
         tempcheck = self.state
-        if  abs(element_distance.data)>400 and (self.state != RoadElement.lin) and (self.state != RoadElement.rin):
+        if  abs(element_distance.data)>900 and (self.state != RoadElement.lin) :
             self.state = RoadElement.normal
 #         if self.find_barrier() :
 #             self.state = RoadElement.barrier
@@ -334,8 +333,12 @@ class ElementDetector:
 
 
         elif self.state == RoadElement.l3:
-            if self._left_in():
-                self.state = RoadElement.lin
+            if movementtype.mode == MOVEMENTTYPE.Mode_1:
+                if self._left_in_not():
+                    self.state = RoadElement.normal
+            elif movementtype.mode == MOVEMENTTYPE.Mode_2:
+                if self._left_in():
+                    self.state = RoadElement.lin
 
         # 出圆环
 
@@ -355,40 +358,40 @@ class ElementDetector:
         elif self.state == RoadElement.loutout:
             self.state = RoadElement.normal
 # 
-        # 在update方法中添加右圆环状态转换：
-        if self.state == RoadElement.normal:
-            if self._right_1():
-                self.state = RoadElement.r1
-
-        elif self.state == RoadElement.r1:
-            if self._crossroad_coming():
-                self.state = RoadElement.normal
-            elif self._right_2():
-                self.state = RoadElement.r2
-
-        elif self.state == RoadElement.r2:
-            if self._right_3():
-                self.state = RoadElement.r3
-
-        elif self.state == RoadElement.r3:
-            if movementtype.mode == MOVEMENTTYPE.Mode_1:
-                if self._right_in_not():
-                    self.state = RoadElement.normal
-            elif movementtype.mode == MOVEMENTTYPE.Mode_2:
-                if self._right_in():
-                    self.state = RoadElement.rin
-
-        elif self.state == RoadElement.rin:
-            if self._right_outcoming():
-                self.state = RoadElement.routcoming
-
-        elif self.state == RoadElement.routcoming:
-            if self._right_out():
-                self.state = RoadElement.rout
-
-        elif self.state == RoadElement.rout:
-            if self._right_out_out():
-                self.state = RoadElement.routout 
+#         # 在update方法中添加右圆环状态转换：
+#         if self.state == RoadElement.normal:
+#             if self._right_1():
+#                 self.state = RoadElement.r1
+# 
+#         elif self.state == RoadElement.r1:
+#             if self._crossroad_coming():
+#                 self.state = RoadElement.normal
+#             elif self._right_2():
+#                 self.state = RoadElement.r2
+# 
+#         elif self.state == RoadElement.r2:
+#             if self._right_3():
+#                 self.state = RoadElement.r3
+# 
+#         elif self.state == RoadElement.r3:
+#             if movementtype.mode == MOVEMENTTYPE.Mode_1:
+#                 if self._right_in_not():
+#                     self.state = RoadElement.normal
+#             elif movementtype.mode == MOVEMENTTYPE.Mode_2:
+#                 if self._right_in():
+#                     self.state = RoadElement.rin
+# 
+#         elif self.state == RoadElement.rin:
+#             if self._right_outcoming():
+#                 self.state = RoadElement.routcoming
+# 
+#         elif self.state == RoadElement.routcoming:
+#             if self._right_out():
+#                 self.state = RoadElement.rout
+# 
+#         elif self.state == RoadElement.rout:
+#             if self._right_out_out():
+#                 self.state = RoadElement.routout 
 
         # 十字
 #         elif self.state == RoadElement.crossroad_1:
@@ -421,7 +424,7 @@ class ElementDetector:
         if self.state == RoadElement.normal: # 正常状态
             ccd_controller.fix_error_value = 0
             ccd_controller.follow = 0
-            ccd_controller.far = False
+            ccd_controller.far = True
 
         elif self.state == RoadElement.stop:  # 停止状态
             speed_controller.target_speed = 10
@@ -672,13 +675,6 @@ class ElementDetector:
                 return True
         if abs(element_distance.data) > self.DISTANCE_ring3_data * 1.5:
             self.state = RoadElement.normal
-
-    def _crossroad_1(self):
-        if ccd_near.left < self.ccd_near_l_lost or ccd_near.right > self.ccd_near_r_lost:
-            return True
-    def _crossroad_2(self):
-        if ccd_near.left > self.ccd_near_l_lost and ccd_near.right < self.ccd_near_r_lost:
-            return True
 #     def find_barrier(self):
 #         """障碍物检测"""
 #         self.last_lenth=self.lenth
@@ -711,8 +707,6 @@ class ElementDetector:
 #             self.state = RoadElement.normal
 elementdetector = ElementDetector()
 
-
-
 def is_circus():
     circus_linto=(elementdetector.state==RoadElement.l1 or elementdetector.state==RoadElement.l2 or elementdetector.state==RoadElement.l3)
     circus_rinto=(elementdetector.state==RoadElement.r1 or elementdetector.state==RoadElement.r2 or elementdetector.state==RoadElement.r3)
@@ -722,7 +716,7 @@ def is_circus():
 class Speed_controller:
     def __init__(self):
         self.start_flag = 0
-        self.tmp_speed = 80
+        self.tmp_speed = 140
         self.target_speed=self.tmp_speed*self.start_flag      #turn_out_kp=-125.73     turn_in_kp=-5.18
         self.fast_speed=-300
         self.slow_speed=-60
@@ -757,37 +751,38 @@ class Speed_controller:
         self.slower_distance_connect()
         self.update()
 
-    def start_update(self,key):
+    def start_update(self, key, elementdetector_flag):
         if key:
             self.start_flag = 1
-        self.target_speed=self.tmp_speed*self.start_flag
-    def slower_distance_connect(self):
-        """检查是否达到慢速距离阈值，如果是则恢复正常速度"""
-        if self.slower_flag and abs(speed_slow_distance.data) >= self.slow_distance_threshold:
-            # 距离已达到阈值，恢复正常速度
-            self.slower_flag = False
-
-    def faster(self):
-        if tof_hander.state:
-            if not self.has_triggered_fast:
-                # 只在第一次触发时设置标志
-                self.has_triggered_fast = True
-                self.faster_flag_1 = True
-                speed_fast_distance.clear()
-                speed_fast_distance.start()
-        self.faster_distance_connect()
-        self.update()
-    
-    def faster_distance_connect(self):
-        if self.faster_flag_1 and abs(speed_fast_distance.data) >= self.fast_distance_threshold_1:
-            # 距离已达到阈值，恢复正常速度
-            self.faster_flag_1 = False
-            self.faster_flag_2 = True
-        if self.faster_flag_2 and abs(speed_fast_distance.data) >= self.fast_distance_threshold_2:
-            self.faster_flag_2 = False
+        if elementdetector_flag:
+            self.target_speed=100
+        else:
+            self.target_speed=self.tmp_speed*self.start_flag
+#     def slower_distance_connect(self):
+#         """检查是否达到慢速距离阈值，如果是则恢复正常速度"""
+#         if self.slower_flag and abs(speed_slow_distance.data) >= self.slow_distance_threshold:
+#             # 距离已达到阈值，恢复正常速度
+#             self.slower_flag = False
+# 
+#     def faster(self):
+#         if tof_hander.state:
+#             if not self.has_triggered_fast:
+#                 # 只在第一次触发时设置标志
+#                 self.has_triggered_fast = True
+#                 self.faster_flag_1 = True
+#                 speed_fast_distance.clear()
+#                 speed_fast_distance.start()
+#         self.faster_distance_connect()
+#         self.update()
+#     
+#     def faster_distance_connect(self):
+#         if self.faster_flag_1 and abs(speed_fast_distance.data) >= self.fast_distance_threshold_1:
+#             # 距离已达到阈值，恢复正常速度
+#             self.faster_flag_1 = False
+#             self.faster_flag_2 = True
+#         if self.faster_flag_2 and abs(speed_fast_distance.data) >= self.fast_distance_threshold_2:
+#             self.faster_flag_2 = False
             
-
-
 #     def update(self):
 #         speed_kd=scale_value(abs(ccd_near.mid-ccd_far.mid),0,20)
 #         self.target_speed=min(int(self.target_speed *speed_kd),0)

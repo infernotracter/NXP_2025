@@ -2,7 +2,6 @@ from machine import *
 from smartcar import *
 from seekfree import *
 from display import *
-import math
 import utime
 wireless = WIRELESS_UART(460800)
 # 屏幕实例化
@@ -42,7 +41,7 @@ ccd = TSL1401(5)
 # 实例化 KEY_HANDLER 模块
 key = KEY_HANDLER(10)
 imu = IMU963RA()
-#tof = DL1B()
+
 def scale_value(x, x_min, x_max):
     """
     将输入x从范围[x_min, x_max]线性映射到[0.4, 1]
@@ -97,79 +96,6 @@ out_l = 0  # 左轮输出值
 out_r = 0  # 右轮输出值
 speed_d = 50  # 速度增量(调试用)
 
-
-
-class Tof_hander:
-    def __init__(self):
-        self.data = 0
-        self.state = False  # 初始状态设为False
-        self.data_history = []  # 用于存储最近100次数据
-        
-    def update(self):
-        # 获取最新数据
-        self.data = tof.get()
-        
-        # 将新数据添加到历史记录中
-        self.data_history.append(self.data)
-        
-        # 保留最近100次数据
-        if len(self.data_history) > 10:
-            self.data_history = self.data_history[-10:]
-        
-        # 当有足够数据时检查条件
-        if len(self.data_history) >= 10:
-            # 计算小于800的数据数量
-            count_below_800 = sum(1 for value in self.data_history if value < 800)
-            # 如果至少90次小于800则更新状态
-            if count_below_800 >= 5:
-                self.state = True
-            else:
-                self.state = False
-        # 当数据不足100时保持状态不变
-tof_hander=Tof_hander()
-
-
-class Beeper:
-    def __init__(self, beerpin = 'C9'):
-        self.beep_pin = Pin(beerpin , Pin.OUT, pull = Pin.PULL_UP_47K, value = False)
-        self.start_time = 0       # 鸣叫开始时间戳
-        self.duration = 0         # 当前鸣叫持续时间
-        self.is_active = False    # 鸣叫状态标志
-        self.long_duration = 60  # 长鸣时长(ms)
-        self.short_duration = 30 # 短鸣时长(ms)
-        self._last_update = 0     # 上次更新时间戳
-
-    def start(self, duration_type):
-        """触发蜂鸣器鸣叫:param duration_type: 'long' 或 'short'
-        """
-        self.duration = self.long_duration if duration_type == 'long' else self.short_duration
-        self.start_time = utime.ticks_ms()
-        self.beep_pin.high()
-        self.is_active = True
-
-    def update(self):
-        """需在循环中定期调用，建议调用间隔<=10ms"""
-        if not self.is_active:
-            return
-            
-        current = utime.ticks_ms()
-        elapsed = utime.ticks_diff(current, self.start_time)
-        
-        # 持续时间达到后关闭
-        if elapsed >= self.duration:
-            self.beep_pin.low()
-            self.is_active = False
-            self.duration = 0
-
-    def set_durations(self, long=None, short=None):
-        """动态修改鸣叫时长"""
-        if long is not None: self.long_duration = long
-        if short is not None: self.short_duration = short
-beep = Beeper()
-
-
-
-
 # 赛道元素状态枚举
 # 赛道元素状态枚举
 class RoadElement:
@@ -197,230 +123,6 @@ class RoadElement:
     barrier = 13
     crossroad_coming = 16
 
-
-
-
-
-
-
-'''
-------------------------------------
-下为openart的串口配置
-------------------------------------
-'''
-# 串口配置 - 使用UART1 (LPUART2)
-uart3 = UART(3, 115200)
-
-# 颜色列表 - 必须与摄像头程序完全一致
-COLOR_NAMES = [
-    "red", "green", "yellow", "orange", 
-    "purple", "pink", "cyan", "brown"
-]
-def parse_detection_packet(packet):
-    """
-    解析检测数据包
-    格式: AA [颜色ID(1) x(1) y(1) w(1) h(1)]... 55
-    """
-    if len(packet) < 3 or packet[0] != 0xAA or packet[-1] != 0x55:
-        print("无效包格式:", packet)
-        return []
-    
-    objects = []
-    # 计算实际数据长度 (去掉头尾)
-    data_len = len(packet) - 2
-    
-    # 检查数据完整性 (每组检测数据5字节)
-    if data_len % 5 != 0:
-        print(f"数据不完整: len={len(packet)} data_len={data_len}")
-        return []
-    
-    # 解析每个检测对象
-    for i in range(0, data_len, 5):
-        start_idx = 1 + i  # 跳过包头
-        
-        color_idx = packet[start_idx]
-        x = packet[start_idx + 1]
-        y = packet[start_idx + 2]
-        w = packet[start_idx + 3]
-        h = packet[start_idx + 4]
-        
-        # 验证颜色索引范围
-        color_name = COLOR_NAMES[color_idx] if color_idx < len(COLOR_NAMES) else f"未知({color_idx})"
-        
-        objects.append({
-            "color": color_name,
-            "x": x,
-            "y": y,
-            "width": w,
-            "height": h
-        })
-    
-    return objects
-
-def read_detection_data():
-    # 检查接收缓冲区
-    buf_len = uart3.any()
-    if buf_len:
-        buf = uart3.read(buf_len)
-        print(f"原始数据 (len={buf_len}):", buf)
-        
-        # 尝试解析数据包
-        detected_objects = parse_detection_packet(buf)
-        
-        if detected_objects:
-            # print(f"解析到 {len(detected_objects)} 个物体:")
-            for obj in detected_objects:
-                if (obj['color'] == 'pink' or obj['color'] == 'yellow') and obj['width'] * obj['height'] > 100:
-                    beep.start('long')
-                    
-
-                # print(f"  颜色: {obj['color']}, 位置: ({obj['x']},{obj['y']})", end="")
-                # print(f", 大小: {obj['width']}x{obj['height']}")
-                
-            # 可改为只回送解析结果
-            # response = f"收到{len(detected_objects)}个对象"
-            # uart3.write(response.encode())
-
-
-
-
-
-
-# 全局接收缓冲区
-PACKET_BUFFER = bytearray()
-
-def find_frame(data, start_idx=0):
-    """在缓冲区内查找完整帧"""
-    while start_idx < len(data):
-        # 查找包头
-        header_pos = data.find(b'\xAA', start_idx)
-        if header_pos == -1:
-            return -1, -1
-            
-        # 查找包尾
-        footer_pos = data.find(b'\x55', header_pos + 1)
-        if footer_pos == -1:
-            return header_pos, -1  # 有头无尾
-            
-        return header_pos, footer_pos
-        
-    return -1, -1  # 没有完整帧
-
-def process_incoming_data(new_data):
-    """处理新接收的数据，提取完整帧"""
-    global PACKET_BUFFER
-    
-    # 添加新数据到缓冲区
-    PACKET_BUFFER.extend(new_data)
-    packets = []
-    
-    start_idx = 0
-    while True:
-        # 查找帧位置
-        header_pos, footer_pos = find_frame(PACKET_BUFFER, start_idx)
-        
-        if header_pos == -1:
-            # 无包头，清空缓冲区
-            PACKET_BUFFER = bytearray()
-            break
-            
-        if footer_pos == -1:
-            # 有包头但无包尾，保留未处理数据
-            PACKET_BUFFER = PACKET_BUFFER[header_pos:]
-            break
-            
-        # 提取完整帧
-        frame = PACKET_BUFFER[header_pos:footer_pos+1]
-        packets.append(frame)
-        
-        # 继续查找后续帧
-        start_idx = footer_pos + 1
-        
-        # 如果已经处理完所有数据
-        if start_idx >= len(PACKET_BUFFER):
-            PACKET_BUFFER = bytearray()
-            break
-    
-    return packets
-
-def parse_detection_packet_new(packet):
-    """
-    解析检测数据包
-    格式: AA [颜色ID(1) x(1) y(1) w(1) h(1)]... 55
-    """
-    # 验证最小帧大小
-    if len(packet) < 7:  # AA + 最小对象(5字节) + 55
-        print(f"帧太短: len={len(packet)}")
-        return []
-    
-    # 验证帧头帧尾
-    if packet[0] != 0xAA or packet[-1] != 0x55:
-        print(f"无效帧头尾: {packet[0]:02X} / {packet[-1]:02X}")
-        return []
-    
-    objects = []
-    data_bytes = packet[1:-1]  # 移除头尾
-    
-    # 每5字节表示一个检测对象
-    object_count = len(data_bytes) // 5
-    if len(data_bytes) % 5 != 0:
-        print(f"数据长度错误: len={len(data_bytes)}")
-        return []
-    
-    # 解析每个检测对象
-    for i in range(object_count):
-        offset = i * 5
-        color_id = data_bytes[offset]
-        x = data_bytes[offset+1]
-        y = data_bytes[offset+2]
-        w = data_bytes[offset+3]
-        h = data_bytes[offset+4]
-        
-        # 验证颜色索引范围
-        if color_id < len(COLOR_NAMES):
-            color_name = COLOR_NAMES[color_id]
-        else:
-            color_name = f"未知({color_id})"
-        
-        objects.append({
-            "color": color_name,
-            "x": x,
-            "y": y,
-            "width": w,
-            "height": h
-        })
-    
-    return objects
-
-def read_detection_data_new():
-    # 检查接收缓冲区
-    buf_len = uart3.any()
-    if buf_len:
-        raw_data = uart3.read(buf_len)
-        # print(f"原始数据: len={len(raw_data)}")
-        
-        # 处理新数据提取完整帧
-        frames = process_incoming_data(raw_data)
-        
-        # 处理每个完整帧
-        for frame in frames:
-            # print(f"完整帧: {bytes(frame).hex()}")
-            detected_objects = parse_detection_packet_new(frame)
-            
-            if detected_objects:
-                # print(f"解析到 {len(detected_objects)} 个物体:")
-                for obj in detected_objects:
-                    return obj['color']
-                    print(f"  颜色: {obj['color']}, 位置: ({obj['x']},{obj['y']})", end="")
-                    print(f", 大小: {obj['width']}x{obj['height']}")
-                
-                # 发送ACK响应
-                # uart3.write(f"ACK:{len(detected_objects)}\n".encode())
-
-
-
-
-
 class Distance:
     """行驶距离"""
     def __init__(self):
@@ -444,28 +146,43 @@ class Distance:
 element_distance = Distance()
 alldistance = Distance()
 speed_slow_distance = Distance()
-speed_fast_distance = Distance()
 openart_distance = Distance()
+elementdetector_flag = False
+class Beeper:
+    def __init__(self, beerpin = 'C9'):
+        self.beep_pin = Pin(beerpin , Pin.OUT, pull = Pin.PULL_UP_47K, value = False)
+        self.start_time = 0       # 鸣叫开始时间戳
+        self.duration = 0         # 当前鸣叫持续时间
+        self.is_active = False    # 鸣叫状态标志
+        self.long_duration = 30  # 长鸣时长(ms)
+        self.short_duration = 10 # 短鸣时长(ms)
+        self._last_update = 0     # 上次更新时间戳
 
+    def start(self, duration_type):
+        """触发蜂鸣器鸣叫
+        :param duration_type: 'long' 或 'short'
+        """
+        self.duration = self.long_duration if duration_type == 'long' else self.short_duration
+        self.start_time = utime.ticks_ms()
+        self.beep_pin.high()
+        self.is_active = True
 
-class Openart_Validator:
-    def __init__(self, target_distance):
-        self.distance = target_distance
-        self.last_id = None
-        self.state = 'waiting'
-        self.count = 0
+    def update(self):
+        """需在循环中定期调用，建议调用间隔<=10ms"""
+        if not self.is_active:
+            return
+            
+        current = utime.ticks_ms()
+        elapsed = utime.ticks_diff(current, self.start_time)
+        
+        # 持续时间达到后关闭
+        if elapsed >= self.duration:
+            self.beep_pin.low()
+            self.is_active = False
+            self.duration = 0
 
-    def check_id(self, input_id):
-        if input_id == 'green' or input_id == 'yellow' or input_id == 'red':
-            beep.start('short')
-            self.count += 1
-            if self.count == 1:
-                self.state = 'valid'
-                openart_distance.data = 0
-            elif self.count > 1:
-                if abs(openart_distance.data) > self.distance:
-                    openart_distance.data = 0
-                    self.count = -1
-                    self.state = 'waiting'
-
-openart_l3 = Openart_Validator(400)
+    def set_durations(self, long=None, short=None):
+        """动态修改鸣叫时长"""
+        if long is not None: self.long_duration = long
+        if short is not None: self.short_duration = short
+beep = Beeper()

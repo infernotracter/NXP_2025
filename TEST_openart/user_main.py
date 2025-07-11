@@ -1,13 +1,12 @@
 # 基础库、NXP库、第三方库
 import gc
 import utime
-import math
 from basic_data import *
 from ccd_handler import *
 #from menutext import *
 #from tof_hander import *
-import utime
-
+from uart import *
+from collections import deque
 
 
 def create_roll_checker():
@@ -129,7 +128,7 @@ checker = create_roll_checker()
 
 # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
-#movementtype.aim_speed=0
+movementtype.aim_speed=0
 
 # 在主程序初始化阶段创建实例
 profiler_1ms = TickerProfiler("5ms", expected_interval_ms=5)
@@ -151,8 +150,7 @@ def clearall():
     key.clear(3)
     key.clear(4)
 stop_flag = 1
-gyro_bias_x = 0
-gyro_bias_x = 0
+gyro_bias_x = -726
 gyro_bias_y = 16.15
 gyro_bias_z = -140.56
 # def get_offset():
@@ -180,12 +178,16 @@ def pid_controller(now, target, kp, ki, kd, sum_err, last_err):
     error = target - now
     sum_err += error
     derivative = error - last_err
-    sum_err=my_limit(sum_err,-1500,1500)
     output = kp * error + ki * sum_err + kd * derivative
     return output, sum_err, error
 
-
-
+#增量式
+# def pid_increment(now, target, kp, ki, kd, last_err, prev_err):
+#     error = target - now
+#     increment = kp*(error - last_err) + ki*error + kd*(error - 2*last_err + prev_err)
+#     last_err = error
+#     prev_err = last_err
+#     return increment, last_err, prev_err
 def pid_increment(now, target, kp, ki, kd, last_err, prev_err):
     error = target - now
     increment = kp*(error - last_err) + ki*error + kd*(error - 2*last_err + prev_err)
@@ -208,19 +210,14 @@ acc_z = 0
 last_error2 = 0
 
 
-balance_angle = -2590.322                        #-2711.82                   #-2724.24
-vel_kp = 4.92                              #2.271                         #3.71
-vel_ki = 3.304                              #2.674                         #2.84
-balance_angle = -2590.322                        #-2711.82                   #-2724.24
-vel_kp = 4.92                              #2.271                         #3.71
-vel_ki = 3.304                              #2.674                         #2.84
+balance_angle = -2794.03               #-2711.82                   #-2724.24
+vel_kp = 2.01                        #2.271                         #3.71
+vel_ki = 3.154                     #2.674                         #2.84
 vel_kd = 0
-angle_kp = 0.09                           #0.062                        #0.103
-angle_kp = 0.09                           #0.062                        #0.103
+angle_kp =0.059                   #0.062                        #0.103
 angle_ki = 0
-angle_kd = 0
-speed_kp = 8.594                         #-12.937
-speed_kp = 8.594                         #-12.937
+angle_kd = 0.047
+speed_kp = 8.755                  #-2.03
 speed_ki = 0
 speed_kd = 0
 
@@ -238,8 +235,7 @@ turn_last_error = 0
 turn_output = 0
 pwm = 0
 current_angle = 0
-unlimit_data=0
-unlimit_data=0
+
 angle_disturbance = 0
 pwm_l_value = 0
 pwm_r_value = 0
@@ -259,8 +255,7 @@ def vel_loop_callback(pit1):
     global yaw_vel, counter_speed, counter_angle
     global imu, gyro_bias_y, gyro_bias_z
     global motor_l, motor_r,encl_data,encr_data
-    global imu_data, now_speed,unlimit_data 
-    global imu_data, now_speed,unlimit_data 
+    global imu_data, now_speed 
     global vel_disturbance  # Add this line
 
     imu_data = imu.get()
@@ -292,13 +287,11 @@ def vel_loop_callback(pit1):
             speed_kp, speed_ki, speed_kd,
             speed_sum_error, speed_last_error
         )
-        angle_disturbance = max(min(angle_disturbance, 300), -300)
+        angle_disturbance = max(min(angle_disturbance, 500), -500)
 
     # Ensure vel_disturbance is initialized before use
-#     if 'vel_disturbance' not in globals():
-#         vel_disturbance = 0
-#     if 'vel_disturbance' not in globals():
-#         vel_disturbance = 0
+    if 'vel_disturbance' not in globals():
+        vel_disturbance = 0
 
     target_angle = balance_angle - angle_disturbance
 
@@ -311,12 +304,7 @@ def vel_loop_callback(pit1):
             angle_kp, angle_ki, angle_kd,
             angle_sum_error, angle_last_error
         )
-        unlimit_data=vel_disturbance
-#       vel_disturbance = max(min(vel_disturbance, 60), -60)
-        
-        unlimit_data=vel_disturbance
-#       vel_disturbance = max(min(vel_disturbance, 60), -60)
-        
+        #vel_disturbance = max(min(vel_disturbance, 60), -60)
 
     target_vel = vel_disturbance
     # 内环控制
@@ -348,11 +336,11 @@ counter_turn_out = 0
 counter_turn_in = 0
 turn_out_last_error = 0
 turn_in_last_error = 0
-turn_out_kp = -60.05                            #-76.73
+turn_out_kp = -86.73
 turn_out_ki = 0
-turn_out_kd = 0                              #-13.89
-turn_in_kp = -2.345                          #-8.6
-turn_in_ki = -0.97                             #-0.65
+turn_out_kd = -13.89
+turn_in_kp = -2.3
+turn_in_ki = -0.77
 turn_in_kd = 0
 turn_in_disturbance = 0.0
 error = 0
@@ -394,11 +382,18 @@ def turn_loop_callback(pit1):
 
 def death_pwm(value):
     if value > 0:
-        return value + 450
-        return value + 450
+        return value + 650
     else:
-        return value - 450
-        return value - 450
+        return value - 650
+
+# max_size = 20
+# angle_queue = deque(maxlen=max_size)
+# def protect():
+#     global current_angle,angle_queue
+#     angle_queue.append(current_angle)
+#     
+#     for i in angle_queue:
+#         i
     
 # 菜单相关变量
 # point = 30
@@ -459,71 +454,53 @@ def death_pwm(value):
 #             turn_out_kd = 0
 #         elif key_cnt >= 2:
 #             key_cnt=0
-#
-
-
-#movementtype.mode=MOVEMENTTYPE.Mode_2
+#     
+    
+movementtype.mode=MOVEMENTTYPE.Mode_2
 elementdetector.state = RoadElement.normal
 alldistance.start()
-#beep.start('short')
 print("""   ____   _           _   _           /\/|
   / ___| (_)   __ _  | | | |   ___   |/\/ 
  | |     | |  / _` | | | | |  / _ \       
  | |___  | | | (_| | | | | | | (_) |      
   \____| |_|  \__,_| |_| |_|  \___/       """)
-#speed_controller.faster_flag_1 = False
-#speed_controller.has_triggered_fast = False
-elementdetector_flag = False # 遇到方块才开始elementdetector
 elementdetector.state = RoadElement.normal
 while True:
-    error=ccd_controller.get_error()
-    if elementdetector_flag:
-        elementdetector.update()
-    if read_detection_data_new() == 'green' or read_detection_data_new() == 'yellow':
-        beep.start('short')
-        elementdetector_flag = True
-        openart_distance.data = 0
-    if abs(openart_distance.data) > 800:
-        elementdetector.state = 0
-        openart_distance.data = 0
-        elementdetector_flag = False
-
 #     if elementdetector.state==RoadElement.stop:
 #         stop_flag=0
+    error=ccd_controller.get_error() + 10
+    if elementdetector_flag:
+        elementdetector.update()
     if end_switch.value() == 1:
         break  # 跳出判断
-        
     if (ticker_flag_pid):
- 
-        beep.update()
-#         tof_hander.update()
-#         if tof_hander.state:
-#             beep.start('short')
         # profiler_gyro.update()
         imu_data = imu.get()
         element_gyro.update(imu_data[5],0.01)
         element_distance.update(encl_data+encr_data,0.01)
-        openart_distance.update(encl_data+encr_data, 0.01)
-        alldistance.update(encl_data+encr_data,0.01)
-#         speed_slow_distance.update(encl_data+encr_data, 0.01)
-#         speed_fast_distance.update(encl_data+encr_data, 0.01)
-#         speed_slow_distance.update(encl_data+encr_data, 0.01)
-#         speed_fast_distance.update(encl_data+encr_data, 0.01)
+        openart_distance.update(encl_data+encr_data,0.01)
+        speed_slow_distance.update(encl_data+encr_data, 0.01)
         #debug += (encoder_l.get() - encoder_r.get()) * 0.01
         vel_loop_callback(pit1)
         turn_loop_callback(pit1)
-        #speed_controller.slower()
-        #speed_controller.faster()
-        #speed_controller.slower()
-        #speed_controller.faster()
-        #speed_controller.update()
         motor_l.duty(my_limit(death_pwm(pwm_l_value - turn_output),-6000,6000))
         motor_r.duty(my_limit(death_pwm(pwm_r_value + turn_output),-6000,6000))
         ticker_flag_pid = False
         
     if (ticker_flag_menu):
+        if read_detection_data_new() == 'green' or read_detection_data_new() == 'yellow':
+            beep.start('short')
+            elementdetector_flag = True
+            openart_distance.data = 0
+            if elementdetector.state == RoadElement.normal:
+                elementdetector.state = RoadElement.l1
+        if abs(openart_distance.data) > 1000:
+            elementdetector.state = 0
+            openart_distance.data = 0
+            ccd_controller.far = True
+            elementdetector_flag = False
         key_data = key.get()
-        speed_controller.start_update(key_data[0])
+        speed_controller.start_update(key_data[0], elementdetector_flag)
         #menu(key_data)
         # # 弯道减速
         # if abs(ccd_far.mid - ccd_near.mid) > 15:
@@ -538,7 +515,7 @@ while True:
 
     if (ticker_flag_8ms):
         # profiler_8ms.update()
-        #print(tof_hander.state, speed_controller.faster_flag_1, speed_controller.has_triggered_fast, speed_controller.faster_flag_2)
+        beep.update()
         data_flag = wireless.data_analysis()
         for i in range(0, 8):
             # 判断哪个通道有数据更新
@@ -554,17 +531,11 @@ while True:
 #                 elif i == 1:
 #                     vel_ki = data_wave[i]
 #                 elif i == 2:
-#                     vel_kd = data_wave[i]
-#                 elif i == 3:
 #                     angle_kp = data_wave[i]
+#                 elif i == 3:
+#                     angle_kd = data_wave[i]
 #                 elif i == 4:
-#                     angle_ki = data_wave[i]
-#                 elif i == 5:
 #                     speed_kp = data_wave[i]
-#                 elif i == 6:
-#                     speed_kd = data_wave[i]
-#                 elif i == 6:
-#                     speed_kd = data_wave[i]
 #                 elif i == 7:
 #                     balance_angle = data_wave[i]
 #                 if i == 0:
@@ -588,21 +559,14 @@ while True:
                     turn_in_kp = data_wave[i]
                 elif i == 2:
                     turn_out_kp = data_wave[i]
-                elif i == 3:
-                    speed_kp = data_wave[i]
-
         # 将数据发送到示波器
         wireless.send_ccd_image(WIRELESS_UART.ALL_CCD_BUFFER_INDEX)
         wireless.send_oscilloscope(
-             #vel_kp, vel_ki, vel_kd, angle_kp,angle_disturbance,current_angle
-        #      elementdetector.state,speed_controller.target_speed, speed_fast_distance.data, speed_slow_distance.data
-             #vel_kp, vel_ki, vel_kd, angle_kp,angle_disturbance,current_angle
-        #      elementdetector.state,speed_controller.target_speed, speed_fast_distance.data, speed_slow_distance.data
+        #vel_kp, vel_ki, vel_kd, angle_kp, vel_disturbance, angle_disturbance, current_angle
+          elementdetector.state,speed_controller.target_speed
         #     #imu_data[3], imu_data[4], imu_data[5]
         #     #turn_in_disturbance,turn_output, error
         #     #gyro_bias_x , gyro_bias_y, gyro_bias_z
-         #   vel_disturbance,current_angle
-            elementdetector.state,openart_distance.data, openart_l3.count
              )
         gc.collect()
         ticker_flag_8ms = False
