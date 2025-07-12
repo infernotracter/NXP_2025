@@ -336,7 +336,7 @@ counter_turn_out = 0
 counter_turn_in = 0
 turn_out_last_error = 0
 turn_in_last_error = 0
-turn_out_kp = -81.73
+turn_out_kp = -76.1
 turn_out_ki = 0
 turn_out_kd = -13.89
 turn_in_kp = -2.3
@@ -455,20 +455,21 @@ print("""   ____   _           _   _           /\/|
  | |     | |  / _` | | | | |  / _ \       
  | |___  | | | (_| | | | | | | (_) |      
   \____| |_|  \__,_| |_| |_|  \___/       """)
-elementdetector.state = RoadElement.l0
+elementdetector.state = RoadElement.normal
 elementdetector_flag = False
 while True:
 #     if elementdetector.state==RoadElement.stop:
 #         stop_flag=0
     error=ccd_controller.get_error() + 10
-    if True:
+    if elementdetector_flag:
         elementdetector.update()
-    if end_switch.value() == 0:
+    if end_switch.value() == 1:
         break  # 跳出判断
         
     if (ticker_flag_pid):
         # profiler_gyro.update()
         imu_data = imu.get()
+        # print(encl_data, encr_data)
         element_gyro.update(imu_data[5],0.01)
         element_distance.update(encl_data+encr_data,0.01)
         openart_distance.update(encl_data+encr_data,0.01)
@@ -487,7 +488,7 @@ while True:
             openart_distance.data = 0
             if elementdetector.state == RoadElement.normal:
                 elementdetector.state = RoadElement.l0
-        if abs(openart_distance.data) > 1200:
+        if abs(openart_distance.data) > 800:
             elementdetector.state = 0
             openart_distance.data = 0
             elementdetector_flag = False
