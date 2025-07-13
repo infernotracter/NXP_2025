@@ -172,7 +172,7 @@ class CCD_Controller:
     def __init__(self):
         self.error = 0
         self.last_error = 0
-        self.far = False  # 是否使用远端CCD
+        self.far = True  # 是否使用远端CCD
         self.fix_error_value = 0  # 是否固定error值 出圆环时需要
         self.follow = 0
         self.value = 31
@@ -357,40 +357,6 @@ class RoadElement:
     crossroad_coming = 16
 
 
-class CCD_Controller:
-    """CCD控制器, 远近端, follow跟随偏移"""
-    def __init__(self):
-        self.error = 0
-        self.last_error = 0
-        self.far = False  # 是否使用远端CCD
-        self.fix_error_value = 0  # 是否固定error值 出圆环时需要
-        self.follow = 0
-        self.value = 31
-        self.ccd_near_length = 60
-        self.ccd_far_length = 60
-    def get_error(self):
-        """获取CCD误差"""
-        ccd_far.get_mid_point(value=self.value, reasonrange=128, follow=0, searchgap=0)
-        ccd_near.get_mid_point(value=self.value, reasonrange=128, follow=0, searchgap=0)
-        if self.fix_error_value != 0:
-            return self.fix_error_value   #直接返回
-        
-        if self.far:
-            self.error = ccd_far.mid - 64
-        else:
-            self.error = ccd_near.mid - 64
-        
-        if self.follow > 0:
-            self.error = (ccd_near.left*2 + self.follow)//2 -64
-            return self.error
-            
-        elif self.follow < 0:
-            self.error = (ccd_near.right*2 +self.follow)//2 -64
-            return self.error
-            
-        return self.error
-ccd_controller = CCD_Controller()
-
 class ElementDetector:
     """赛道元素检测器"""
     def __init__(self):
@@ -422,25 +388,25 @@ class ElementDetector:
 
         self.POINT_diff_data = 20            # 特征点差异阈值
 
-        self.DISTANCE_ring_2_data = 20
-        self.GYRO_Z_ring2_data = 150
+        self.DISTANCE_ring_2_data = 100
+        self.GYRO_Z_ring2_data = 1550
 
         # l3
-        self.GYRO_Z_ring3_data = 300
+        self.GYRO_Z_ring3_data = 900
         self.DISTANCE_ring3_data = 120
 
         # lin
         self.GYRO_Z_ring_in_data = 1700
         self.DISTANCE_ring_in_data = 100
 
-        self.DISTANCE_ring_out_data = 70
+        self.DISTANCE_ring_out_data = 100
         self.DISTANCE_ring_out_out_data = 200
         self.ccd_near_length = 60
         self.ccd_far_length = 60
         self.DISTANCE_ring_outcoming_data = 200
         self.DISTANCE_ring3_not_data = 300
         self.DISTANCE_zebra_out_data = 100      #斑马线
-        self.ERROR_l_out_value = -18
+        self.ERROR_l_out_value = -25
         #crossroad
         self.DISTANCE_crossroad_data = 80  #十字路口
 
@@ -632,14 +598,14 @@ class ElementDetector:
         #     speed_controller.target_speed=speed_controller.tmp_speed * 0.4
         ccd_controller.fix_error_value = 0
         ccd_controller.follow = 0
-        ccd_controller.far = False
+        ccd_controller.far = True
         element_gyro.clear()
         element_distance.clear()
         element_gyro.start()
         if self.state == RoadElement.normal: # 正常状态
             ccd_controller.fix_error_value = 0
             ccd_controller.follow = 0
-            ccd_controller.far = False
+            ccd_controller.far = True
 
         elif self.state == RoadElement.stop:  # 停止状态
             speed_controller.target_speed = 10
@@ -693,6 +659,11 @@ class ElementDetector:
 
         elif self.state == RoadElement.routout:
             self.state = RoadElement.normal
+
+        if self.state == RoadElement.normal: # 正常状态
+            ccd_controller.fix_error_value = 0
+            ccd_controller.follow = 0
+            ccd_controller.far = True
 
         self.prev_state=self.state
 
@@ -798,16 +769,12 @@ class ElementDetector:
         if abs(element_distance.data) > self.DISTANCE_ring_outcoming_data:
             if (ccd_near.left<self.ccd_near_l_lost and ccd_near.right>self.ccd_near_r_lost)or (ccd_far.left <self.ccd_far_l_lost and ccd_far.right >self.ccd_far_r_lost):
                 return True
-        if abs(element_distance.data) > self.DISTANCE_ring3_data * 4.5:
-            self.state = RoadElement.normal
 
             
     def _left_out_out(self):
         if abs(element_distance.data) > self.DISTANCE_ring_out_out_data:
             if ( ccd_near.right < self.ccd_near_r_lost):
                 return True
-        if abs(element_distance.data) > self.DISTANCE_ring3_data * 2.5:
-            self.state = RoadElement.normal
             
     def _left_out(self):
         if abs(element_distance.data) > self.DISTANCE_ring_out_data:
@@ -933,7 +900,7 @@ def is_circus():
 class Speed_controller:
     def __init__(self):
         self.start_flag = 0
-        self.tmp_speed = 80
+        self.tmp_speed = 120
         self.target_speed=self.tmp_speed*self.start_flag      #turn_out_kp=-125.73     turn_in_kp=-5.18
         self.fast_speed=-300
         self.slow_speed=-60
@@ -951,8 +918,8 @@ class Speed_controller:
 #             self.target_speed = self.fast_speed
 #         if self.faster_flag_2:
 #             self.target_speed = self.slow_2_speed
-#         elif self.slower_flag:
-#             self.target_speed = self.tmp_speed * 0.8
+        if self.slower_flag:
+            self.target_speed = 100
     def slower(self):
         """检测是否需要进入慢速模式"""
         # 检测到需要减速的条件
@@ -972,14 +939,14 @@ class Speed_controller:
         if key:
             self.start_flag = 1
         if elementdetector_flag:
-            self.target_speed=80
+            self.target_speed=100
         else:
             self.target_speed=self.tmp_speed*self.start_flag
-#     def slower_distance_connect(self):
-#         """检查是否达到慢速距离阈值，如果是则恢复正常速度"""
-#         if self.slower_flag and abs(speed_slow_distance.data) >= self.slow_distance_threshold:
-#             # 距离已达到阈值，恢复正常速度
-#             self.slower_flag = False
+    def slower_distance_connect(self):
+        """检查是否达到慢速距离阈值，如果是则恢复正常速度"""
+        if self.slower_flag and abs(speed_slow_distance.data) >= self.slow_distance_threshold:
+            # 距离已达到阈值，恢复正常速度
+            self.slower_flag = False
 # 
 #     def faster(self):
 #         if tof_hander.state:
@@ -1043,5 +1010,6 @@ class Gyro_Z_Test:
 element_gyro = Gyro_Z_Test()
 debuggyroz = Gyro_Z_Test()
 print("王小桃快跑，邮箱来了")
+
 
 

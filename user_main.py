@@ -217,7 +217,7 @@ vel_kd = 0
 angle_kp = 0.036      # 0.059                   #0.062                        #0.103
 angle_ki = 0
 angle_kd = 0.036      #0.047
-speed_kp = 8.755                  #-2.03
+speed_kp = 6.1                  #-2.03
 speed_ki = 0
 speed_kd = 0
 
@@ -287,7 +287,7 @@ def vel_loop_callback(pit1):
             speed_kp, speed_ki, speed_kd,
             speed_sum_error, speed_last_error
         )
-        angle_disturbance = max(min(angle_disturbance, 450), -450)
+        angle_disturbance = max(min(angle_disturbance, 500), -500)
 
     # Ensure vel_disturbance is initialized before use
     if 'vel_disturbance' not in globals():
@@ -336,7 +336,7 @@ counter_turn_out = 0
 counter_turn_in = 0
 turn_out_last_error = 0
 turn_in_last_error = 0
-turn_out_kp = -81.73
+turn_out_kp = -71.2
 turn_out_ki = 0
 turn_out_kd = -13.89
 turn_in_kp = -2.3
@@ -448,22 +448,23 @@ def death_pwm(value):
 #     
     
 movementtype.mode=MOVEMENTTYPE.Mode_2
-elementdetector.state = RoadElement.normal
 alldistance.start()
 print("""   ____   _           _   _           /\/|
   / ___| (_)   __ _  | | | |   ___   |/\/ 
  | |     | |  / _` | | | | |  / _ \       
  | |___  | | | (_| | | | | | | (_) |      
   \____| |_|  \__,_| |_| |_|  \___/       """)
-elementdetector.state = RoadElement.l0
+elementdetector.state = RoadElement.normal
 elementdetector_flag = False
 while True:
 #     if elementdetector.state==RoadElement.stop:
 #         stop_flag=0
     error=ccd_controller.get_error() + 10
-    if True:
+    if elementdetector_flag:
         elementdetector.update()
-    if end_switch.value() == 0:
+        if elementdetector.state == RoadElement.normal:
+            elementdetector_flag = False
+    if end_switch.value() == 1:
         break  # 跳出判断
         
     if (ticker_flag_pid):
@@ -472,7 +473,7 @@ while True:
         element_gyro.update(imu_data[5],0.01)
         element_distance.update(encl_data+encr_data,0.01)
         openart_distance.update(encl_data+encr_data,0.01)
-        speed_slow_distance.update(encl_data+encr_data, 0.01)
+        #speed_slow_distance.update(encl_data+encr_data, 0.01)
         #debug += (encoder_l.get() - encoder_r.get()) * 0.01
         vel_loop_callback(pit1)
         turn_loop_callback(pit1)
@@ -487,16 +488,19 @@ while True:
             openart_distance.data = 0
             if elementdetector.state == RoadElement.normal:
                 elementdetector.state = RoadElement.l0
-        if abs(openart_distance.data) > 1200:
+        if abs(openart_distance.data) > 800:
             elementdetector.state = 0
             openart_distance.data = 0
+            ccd_controller.follow = 0
+            ccd_controller.far = True
+            ccd_controller.fix_error_value = 0
             elementdetector_flag = False
         key_data = key.get()
         speed_controller.start_update(key_data[0], elementdetector_flag)
         #menu(key_data)
         # # 弯道减速
-        # if abs(ccd_far.mid - ccd_near.mid) > 15:
-        #     speed_controller.target_speed = int(speed_controller.tmp_speed * 0.6)
+#         if abs(ccd_far.mid - ccd_near.mid) > 15:
+#             speed_controller.target_speed = int(speed_controller.tmp_speed * 0.85)
         # if abs(alldistance.data)<2000:
         #     speed_controller.target_speed = -24
         # elif (alldistance.data)>8000:
@@ -551,11 +555,13 @@ while True:
                     turn_in_kp = data_wave[i]
                 elif i == 2:
                     turn_out_kp = data_wave[i]
+                elif i == 3:
+                    speed_kp = data_wave[i]
         # 将数据发送到示波器
         wireless.send_ccd_image(WIRELESS_UART.ALL_CCD_BUFFER_INDEX)
         wireless.send_oscilloscope(
         #vel_kp, vel_ki, vel_kd, angle_kp, vel_disturbance, angle_disturbance, current_angle
-          elementdetector.state,speed_controller.target_speed
+          elementdetector.state,speed_controller.target_speed, element_gyro.data, element_distance.data, ccd_controller.follow 
         #     #imu_data[3], imu_data[4], imu_data[5]
         #     #turn_in_disturbance,turn_output, error
         #     #gyro_bias_x , gyro_bias_y, gyro_bias_z
@@ -563,9 +569,6 @@ while True:
         gc.collect()
         ticker_flag_8ms = False
     gc.collect()
-
-
-
 
 
 
