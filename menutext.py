@@ -9,10 +9,13 @@ class MenuText:
         self.turn_menu = False
         self.speed_meun = False
         self.ring_menu = False
-        self.key=[0, 0, 0, 0]
+        self.key=[0,0,0,0]
         self.value = 31
         self.string_size = 16
         self.point = 30
+        self.turn_out_kp_move = 0
+    def key_update(self, key_data):
+        self.key = key_data
     def show_controll(self):
         if self.main_menu:
             self.show_main_menu()
@@ -92,3 +95,109 @@ class MenuText:
             self.main_menu = True
             self.point = 30
             lcd.clear(0x0000)
+    def show_turn_menu(self):
+        lcd.str16(16, 30, "turn out kp={}".format(-70.73+self.turn_out_kp_move), 0xFFFF)
+        lcd.str16(16, 46, "return", 0xFFFF)
+        lcd.str16(0, self.point, ">", 0xF800)
+        self.point_move(46, 30)
+        if self.point == 30:
+            if self.key[2]:
+                key.clear(3)
+                self.turn_out_kp_move += 0.1
+                lcd.clear(0x0000)
+            if self.key[3]:
+                key.clear(4)
+                self.turn_out_kp_move -= 0.1
+                lcd.clear(0x0000)
+        if self.point == 46 and self.key[2]:
+            key.clear(3)
+            self.turn_menu = False
+            self.main_menu = True
+            self.point = 30
+            lcd.clear(0x0000)
+    
+    def show_speed_menu(self):
+        lcd.str16(16, 30, "tmp_speed={}".format(speed_controller.tmp_speed), 0xFFFF)
+        lcd.str16(16, 46, "return", 0xFFFF)
+        lcd.str16(0, self.point, ">", 0xF800)
+        self.point_move(46, 30)
+        if self.point == 30:
+            if self.key[2]:
+                key.clear(3)
+                speed_controller.tmp_speed += 1
+                lcd.clear(0x0000)
+            if self.key[3]:
+                key.clear(4)
+                speed_controller.tmp_speed -= 1
+                lcd.clear(0x0000)
+        if self.point == 46 and self.key[2]:
+            key.clear(3)
+            self.speed_meun = False
+            self.main_menu = True
+            self.point = 30
+            lcd.clear(0x0000)
+    
+    def show_ring_menu(self):
+        lcd.str16(16, 30,"DISTANCE_ring3_data={}".format(elementdetector.DISTANCE_ring3_data), 0xFFFF)
+        lcd.str16(16, 46, "DISTANCE_ring_in_data={}".format(elementdetector.DISTANCE_ring_in_data), 0xFFFF)
+        lcd.str16(16, 62, "DISTANCE_ring_outcoming_data={}".format(elementdetector.DISTANCE_ring_outcoming_data), 0xFFFF)
+        lcd.str16(16, 78, "DISTANCE_ring_out_data={}".format(elementdetector.DISTANCE_ring_out_data), 0xFFFF)
+        lcd.str16(16, 94, "ERROR_l_out_value={}".format(elementdetector.ERROR_l_out_value), 0xFFFF)
+        lcd.str16(16, 110, "return", 0xFFFF)
+        lcd.str16(0, self.point, ">", 0xF800)
+        lcd.str24(0, 134, "gyro={:.2f}".format(element_gyro.data), 0xFFFF)
+        lcd.str24(0, 158, "dis={:.2f}".format(element_distance.data), 0xFFFF)
+        lcd.str24(0, 182, "state={}".format(elementdetector.state), 0xFFFF)
+        self.point_move(110, 30)
+        if self.point == 30:
+            if self.key[2]:
+                key.clear(3)
+                elementdetector.DISTANCE_ring3_data += 5
+                lcd.clear(0x0000)
+            if self.key[3]:
+                key.clear(4)
+                elementdetector.DISTANCE_ring3_data -= 5
+                lcd.clear(0x0000)
+        if self.point == 46:
+            if self.key[2]:
+                key.clear(3)
+                elementdetector.DISTANCE_ring_in_data += 5
+                lcd.clear(0x0000)
+            if self.key[3]:
+                key.clear(4)
+                elementdetector.DISTANCE_ring_in_data -= 5
+                lcd.clear(0x0000)
+        if self.point == 62:
+            if self.key[2]:
+                key.clear(3)
+                elementdetector.DISTANCE_ring_outcoming_data += 5
+                lcd.clear(0x0000)
+            if self.key[3]:
+                key.clear(4)
+                elementdetector.DISTANCE_ring_outcoming_data -= 5
+                lcd.clear(0x0000)
+        if self.point == 78:
+            if self.key[2]:
+                key.clear(3)
+                elementdetector.DISTANCE_ring_out_data += 5
+                lcd.clear(0x0000)
+            if self.key[3]:
+                key.clear(4)
+                elementdetector.DISTANCE_ring_out_data -= 5
+                lcd.clear(0x0000)
+        if self.point == 94:
+            if self.key[2]:
+                key.clear(3)
+                elementdetector.ERROR_l_out_value += 1
+                lcd.clear(0x0000)
+            if self.key[3]:
+                key.clear(4)
+                elementdetector.ERROR_l_out_value -= 1
+                lcd.clear(0x0000)
+        if self.point == 110 and self.key[2]:
+            key.clear(3)
+            self.ring_menu = False
+            self.main_menu = True
+            self.point = 30
+            lcd.clear(0x0000)
+menu_controller=MenuText()
