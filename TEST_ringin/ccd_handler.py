@@ -396,8 +396,8 @@ class ElementDetector:
         self.DISTANCE_ring3_data = 120
 
         # lin
-        self.GYRO_Z_ring_in_data = 99999
-        self.DISTANCE_ring_in_data = 900 #150
+        self.GYRO_Z_ring_in_data = 5500
+        self.DISTANCE_ring_in_data = 600 #150
 
         self.DISTANCE_ring_out_data = 80
         self.DISTANCE_ring_out_out_data = 200
@@ -523,15 +523,15 @@ class ElementDetector:
 
         # 出圆环
 
+        # elif self.state == RoadElement.lin:
+        #     if self._left_outcoming():
+        #         self.state = RoadElement.loutcoming
+
+        # elif self.state == RoadElement.lin:
+        #     if self._left_out():
+        #         self.state = RoadElement.lout
+
         elif self.state == RoadElement.lin:
-            if self._left_outcoming():
-                self.state = RoadElement.loutcoming
-
-        elif self.state == RoadElement.loutcoming:
-            if self._left_out():
-                self.state = RoadElement.lout
-
-        elif self.state == RoadElement.lout:
             if self._left_out_out():
                 self.state = RoadElement.loutout
                 
@@ -759,8 +759,10 @@ class ElementDetector:
 
     def _left_in(self):
         # 陀螺仪极性取反（原右转检测正方向，左转检测负方向）
-        if abs(element_gyro.data) > self.GYRO_Z_ring_in_data or abs(element_distance.data) > self.DISTANCE_ring_in_data:
-            return True
+        if abs(element_gyro.data) > self.GYRO_Z_ring_in_data and abs(element_distance.data) > self.DISTANCE_ring_in_data:
+            if (ccd_near.right <= self.ccd_near_r_lost):
+                if (ccd_far.right <= self.ccd_far_r_lost):
+                    return True
 
     def _left_outcoming(self):
         # 超过一定距离并且全白
