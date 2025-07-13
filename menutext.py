@@ -28,16 +28,16 @@ class MenuText:
         if self.ring_menu:
             self.show_ring_menu()
     def point_move(self, hight, low):
-        if self.key[0]:
-            lcd.clear(0x0000)
-            self.point += self.string_size
-            key.clear(1)
-            if self.point == hight + self.string_size:
-                self.point = low
         if self.key[1]:
             lcd.clear(0x0000)
-            self.point -= self.string_size
+            self.point += self.string_size
             key.clear(2)
+            if self.point == hight + self.string_size:
+                self.point = low
+        if self.key[0]:
+            lcd.clear(0x0000)
+            self.point -= self.string_size
+            key.clear(1)
             if self.point == low - self.string_size:
                 self.point = hight
     def show_main_menu(self):
