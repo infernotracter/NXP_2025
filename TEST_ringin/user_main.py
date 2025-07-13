@@ -454,13 +454,13 @@ print("""   ____   _           _   _           /\/|
  | |     | |  / _` | | | | |  / _ \       
  | |___  | | | (_| | | | | | | (_) |      
   \____| |_|  \__,_| |_| |_|  \___/       """)
-elementdetector.state = RoadElement.normal
+elementdetector.state = RoadElement.l0
 elementdetector_flag = False
 while True:
 #     if elementdetector.state==RoadElement.stop:
 #         stop_flag=0
     error=ccd_controller.get_error() + 10
-    if elementdetector_flag:
+    if True:
         elementdetector.update()
     if end_switch.value() == 1:
         break  # 跳出判断
@@ -568,8 +568,4 @@ while True:
 
 
 
-
-
-
-q
 
