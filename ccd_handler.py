@@ -139,33 +139,6 @@ class CCDHandler:
 ccd_near = CCDHandler(1)
 ccd_far=CCDHandler(0)
 
-# 赛道元素状态枚举
-# 赛道元素状态枚举
-class RoadElement:
-    stop = -1
-    normal = 0
-    l1 = 1
-    l2 = 2
-    r1 = 5
-    r2 = 4
-    l3_not = 14
-    r3_not = 15
-    l3 = 3
-    r3 = 6
-    lin = 7
-    lout = 8
-    loutcoming = 88
-    loutout = 888
-    rin = 9
-    rout = 10
-    routcoming = 89
-    routout = 999
-    zebrain = 11
-    zebraout = 111
-    ramp = 12
-    barrier = 13
-    crossroad_coming = 16
-
 
 class CCD_Controller:
     """CCD控制器, 远近端, follow跟随偏移"""
@@ -328,34 +301,6 @@ class CCDHandler:
 ccd_near = CCDHandler(1)
 ccd_far=CCDHandler(0)
 
-# 赛道元素状态枚举
-# 赛道元素状态枚举
-class RoadElement:
-    stop = -1
-    normal = 0
-    l0 = 23
-    l1 = 1
-    l2 = 2
-    r1 = 5
-    r2 = 4
-    l3_not = 14
-    r3_not = 15
-    l3 = 3
-    r3 = 6
-    lin = 7
-    lout = 8
-    loutcoming = 88
-    loutout = 888
-    rin = 9
-    rout = 10
-    routcoming = 89
-    routout = 999
-    zebrain = 11
-    zebraout = 111
-    ramp = 12
-    barrier = 13
-    crossroad_coming = 16
-
 
 class ElementDetector:
     """赛道元素检测器"""
@@ -466,11 +411,6 @@ class ElementDetector:
         # if self._check_normal():
         #         self.state = RoadElement.normal
 
-        
-        if self._check_zebra():
-            self.state = RoadElement.zebrain
-            element_distance.clear()
-            #exit(0)
             
         if self.state == RoadElement.l0:
             if self._left_1( ):
@@ -491,14 +431,6 @@ class ElementDetector:
 #             if self._crossroad_out():
 #                 self.state = RoadElement.normal
 
-        elif self.state == RoadElement.zebrain:
-            if self._check_zebra_out():
-                self.zebra_count -= 1
-                self.state = RoadElement.normal
-                if self.zebra_count < 0:
-                    motor_l.duty(0)
-                    motor_r.duty(0)
-                    quit()
 
         elif self.state == RoadElement.l1:
             if self._left_2( ):
@@ -538,41 +470,41 @@ class ElementDetector:
         # 出圆环
         elif self.state == RoadElement.loutout:
             self.state = RoadElement.normal
-# 
-#         # 在update方法中添加右圆环状态转换：
-#         if self.state == RoadElement.normal:
-#             if self._right_1():
-#                 self.state = RoadElement.r1
-# 
-#         elif self.state == RoadElement.r1:
-#             if self._crossroad_coming():
-#                 self.state = RoadElement.normal
-#             elif self._right_2():
-#                 self.state = RoadElement.r2
-# 
-#         elif self.state == RoadElement.r2:
-#             if self._right_3():
-#                 self.state = RoadElement.r3
-# 
-#         elif self.state == RoadElement.r3:
-#             if movementtype.mode == MOVEMENTTYPE.Mode_1:
-#                 if self._right_in_not():
-#                     self.state = RoadElement.normal
-#             elif movementtype.mode == MOVEMENTTYPE.Mode_2:
-#                 if self._right_in():
-#                     self.state = RoadElement.rin
-# 
-#         elif self.state == RoadElement.rin:
-#             if self._right_outcoming():
-#                 self.state = RoadElement.routcoming
-# 
-#         elif self.state == RoadElement.routcoming:
-#             if self._right_out():
-#                 self.state = RoadElement.rout
-# 
-#         elif self.state == RoadElement.rout:
-#             if self._right_out_out():
-#                 self.state = RoadElement.routout 
+
+        # 在update方法中添加右圆环状态转换：
+        if self.state == RoadElement.r0:
+            if self._right_1():
+                self.state = RoadElement.r1
+
+        elif self.state == RoadElement.r1:
+            if self._crossroad_coming():
+                self.state = RoadElement.normal
+            elif self._right_2():
+                self.state = RoadElement.r2
+
+        elif self.state == RoadElement.r2:
+            if self._right_3():
+                self.state = RoadElement.r3
+
+        elif self.state == RoadElement.r3:
+            if movementtype.mode == MOVEMENTTYPE.Mode_1:
+                if self._right_in_not():
+                    self.state = RoadElement.normal
+            elif movementtype.mode == MOVEMENTTYPE.Mode_2:
+                if self._right_in():
+                    self.state = RoadElement.rin
+
+        elif self.state == RoadElement.rin:
+            if self._right_outcoming():
+                self.state = RoadElement.routcoming
+
+        elif self.state == RoadElement.routcoming:
+            if self._right_out():
+                self.state = RoadElement.rout
+
+        elif self.state == RoadElement.rout:
+            if self._right_out_out():
+                self.state = RoadElement.routout 
 
         # 十字
 #         elif self.state == RoadElement.crossroad_1:
@@ -586,6 +518,21 @@ class ElementDetector:
         #     beep.start('short')
         return self.state
     
+    def update_zebra(self):
+        if self._check_zebra():
+            self.state = RoadElement.zebrain
+            element_distance.clear()
+            #exit(0)
+
+        elif self.state == RoadElement.zebrain:
+            if self._check_zebra_out():
+                self.zebra_count -= 1
+                self.state = RoadElement.normal
+                if self.zebra_count < 0:
+                    motor_l.duty(0)
+                    motor_r.duty(0)
+                    quit()
+
     def _element_operations(self):
         # 如果状态没有变化,直接返回,降低时间复杂度
         if self.prev_state == self.state:
@@ -639,8 +586,10 @@ class ElementDetector:
 
 #         elif self.state == RoadElement.crossroad_1:
 #             ccd_controller.far = True
-#         elif self.state == RoadElement.r1:
-#             ccd_controller.follow = self.ccd_near_length
+        elif self.state == RoadElement.r0:
+            ccd_controller.follow = -self.ccd_near_length
+        elif self.state == RoadElement.r1:
+            ccd_controller.follow = self.ccd_near_length
             
         elif self.state == RoadElement.r2:
             ccd_controller.follow = self.ccd_near_length

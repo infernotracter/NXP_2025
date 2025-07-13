@@ -104,6 +104,7 @@ class RoadElement:
     l0 = 23
     l1 = 1
     l2 = 2
+    r0 = 24
     r1 = 5
     r2 = 4
     l3_not = 14

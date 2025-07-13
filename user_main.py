@@ -460,6 +460,7 @@ while True:
 #     if elementdetector.state==RoadElement.stop:
 #         stop_flag=0
     error=ccd_controller.get_error() + 10
+    elementdetector.update_zebra() # 斑马线
     if elementdetector_flag:
         elementdetector.update()
         if elementdetector.state == RoadElement.normal:
@@ -482,12 +483,20 @@ while True:
         ticker_flag_pid = False
         
     if (ticker_flag_menu):
-        if read_detection_data_new() == 'green' or read_detection_data_new() == 'yellow':
+        if read_detection_data_new() == 'yellow': 
+            '''左圆环'''
             beep.start('short')
             elementdetector_flag = True
             openart_distance.data = 0
             if elementdetector.state == RoadElement.normal:
                 elementdetector.state = RoadElement.l0
+        if read_detection_data_new() == 'red':
+            '''右圆环'''
+            beep.start('short')
+            elementdetector_flag = True
+            openart_distance.data = 0
+            if elementdetector.state == RoadElement.normal:
+                elementdetector.state = RoadElement.r0
         if abs(openart_distance.data) > 800:
             elementdetector.state = 0
             openart_distance.data = 0
