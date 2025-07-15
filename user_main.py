@@ -463,7 +463,7 @@ while True:
     elementdetector.update_zebra() # 斑马线
     if elementdetector_flag:
         elementdetector.update()
-        if elementdetector.state == RoadElement.normal:
+        if elementdetector.state == RoadElement.normal: # 出环后立即加速
             elementdetector_flag = False
     if end_switch.value() == 1:
         break  # 跳出判断
