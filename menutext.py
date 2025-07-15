@@ -13,6 +13,7 @@ class MenuText:
         self.value = 31
         self.string_size = 16
         self.point = 30
+        self.start_flag = 0
         self.turn_out_kp_move = 0
     def key_update(self, key_data):
         self.key = key_data
@@ -132,12 +133,22 @@ class MenuText:
                 key.clear(4)
                 speed_controller.tmp_speed -= 1
                 lcd.clear(0x0000)
-        if self.point == 46 and self.key[2]:
-            key.clear(3)
-            if speed_controller.start_flag == 0:
-                speed_controller.start_flag=1
+        if self.point == 46 and self.key[3]:
+            key.clear(4)
+            if self.start_flag == 0:
+                ccd_controller.fix_error_value = 0
+                ccd_controller.follow = 0
+                ccd_controller.far = True
+                element_gyro.data = 0
+                element_distance.data = 0
+                self.start_flag=1
             else:
-                speed_controller.start_flag=0
+                ccd_controller.fix_error_value = 0
+                ccd_controller.follow = 0
+                ccd_controller.far = True
+                element_gyro.data = 0
+                element_distance.data = 0
+                self.start_flag=0
             lcd.clear(0x0000)
         
         if self.point == 62 and self.key[2]:
