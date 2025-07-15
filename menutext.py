@@ -76,18 +76,18 @@ class MenuText:
     def show_ccd_menu(self):
         lcd.wave(0,  0, 128, 64, ccd_near.data, max = 255)
         lcd.wave(0,  64, 128, 64, ccd_far.data, max = 255)
-        lcd.str16(16 , 170, "value={}".format(self.value), 0xFFFF)
+        lcd.str16(16 , 170, "value={}".format(ccd_controller.value), 0xFFFF)
         lcd.str16(16, 186,"return" , 0xFFFF)
         lcd.str16(0, self.point, ">", 0xF800)
         self.point_move(186, 170,16)
         if self.point == 170:
             if self.key[2]:
                 key.clear(3)
-                self.value += 1
+                ccd_controller.value += 1
                 lcd.clear(0x0000)
             if self.key[3]:
                 key.clear(4)
-                self.value -= 1
+                ccd_controller.value -= 1
                 lcd.clear(0x0000)
         if self.point == 186 and self.key[2]:
             key.clear(3)
