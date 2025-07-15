@@ -483,14 +483,15 @@ while True:
         ticker_flag_pid = False
         
     if (ticker_flag_menu):
-        if read_detection_data_new() == 'yellow': 
+        tmp_color = read_detection_data_new()
+        if tmp_color == 'yellow':
             '''左圆环'''
             beep.start('short')
             elementdetector_flag = True
             openart_distance.data = 0
             if elementdetector.state == RoadElement.normal:
                 elementdetector.state = RoadElement.l0
-        if read_detection_data_new() == 'red':
+        elif tmp_color == 'red':
             '''右圆环'''
             beep.start('short')
             elementdetector_flag = True
