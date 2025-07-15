@@ -11,7 +11,32 @@ def check_tuple(data, count_up, count_down):
     if under_count >= OVER_THRESHOLD:
         return -1
     return 0
-
+class RoadElement:
+    stop = -1
+    normal = 0
+    l0 = 23
+    l1 = 1
+    l2 = 2
+    r0 = 24
+    r1 = 5
+    r2 = 4
+    l3_not = 14
+    r3_not = 15
+    l3 = 3
+    r3 = 6
+    lin = 7
+    lout = 8
+    loutcoming = 88
+    loutout = 888
+    rin = 9
+    rout = 10
+    routcoming = 89
+    routout = 999
+    zebrain = 11
+    zebraout = 111
+    ramp = 12
+    barrier = 13
+    crossroad_coming = 16
 class CCD_Controller:
     """CCD控制器, 远近端, follow跟随偏移"""
     def __init__(self):
