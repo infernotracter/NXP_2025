@@ -478,8 +478,8 @@ while True:
         #debug += (encoder_l.get() - encoder_r.get()) * 0.01
         vel_loop_callback(pit1)
         turn_loop_callback(pit1)
-        motor_l.duty(my_limit(death_pwm(pwm_l_value - turn_output),-6000,6000))
-        motor_r.duty(my_limit(death_pwm(pwm_r_value + turn_output),-6000,6000))
+        motor_l.duty(my_limit(death_pwm(pwm_l_value - turn_output),-6000,6000)*menu_controller.start_flag)
+        motor_r.duty(my_limit(death_pwm(pwm_r_value + turn_output),-6000,6000)*menu_controller.start_flag)
         ticker_flag_pid = False
         
     if (ticker_flag_menu):
