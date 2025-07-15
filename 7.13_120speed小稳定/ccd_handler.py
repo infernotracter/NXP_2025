@@ -639,8 +639,8 @@ class ElementDetector:
 
 #         elif self.state == RoadElement.crossroad_1:
 #             ccd_controller.far = True
-#         elif self.state == RoadElement.r1:
-#             ccd_controller.follow = self.ccd_near_length
+        elif self.state == RoadElement.r1:
+            ccd_controller.follow = self.ccd_near_length
             
         elif self.state == RoadElement.r2:
             ccd_controller.follow = self.ccd_near_length
@@ -843,8 +843,6 @@ class ElementDetector:
         if abs(element_distance.data) > self.DISTANCE_ring_outcoming_data:
             if (ccd_near.left<self.ccd_near_l_lost and ccd_near.right>self.ccd_near_r_lost)or (ccd_far.left <self.ccd_far_l_lost and ccd_far.right >self.ccd_far_r_lost):
                 return True
-        if abs(element_distance.data) > self.DISTANCE_ring3_data * 3.5:
-            self.state = RoadElement.normal
 
     def _right_out(self):
         """出右圆环（对称于_left_out）"""
@@ -857,8 +855,6 @@ class ElementDetector:
         if abs(element_distance.data) > self.DISTANCE_ring_out_out_data:
             if ccd_near.left > self.ccd_near_l_lost :
                 return True
-        if abs(element_distance.data) > self.DISTANCE_ring3_data * 1.5:
-            self.state = RoadElement.normal
 #     def find_barrier(self):
 #         """障碍物检测"""
 #         self.last_lenth=self.lenth
