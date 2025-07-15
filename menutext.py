@@ -164,12 +164,13 @@ class MenuText:
         lcd.str16(16, 62, "DISTANCE_outcoming_data={}".format(elementdetector.DISTANCE_ring_outcoming_data), 0xFFFF)
         lcd.str16(16, 78, "DISTANCE_ring_out_data={}".format(elementdetector.DISTANCE_ring_out_data), 0xFFFF)
         lcd.str16(16, 94, "ERROR_l_out_value={}".format(elementdetector.ERROR_l_out_value), 0xFFFF)
-        lcd.str16(16, 110, "return", 0xFFFF)
+        lcd.str16(16, 110, "ring_speed={}".format(speed_controller.ring_speed), 0xFFFF)
+        lcd.str16(16, 126, "return", 0xFFFF)
         lcd.str16(0, self.point, ">", 0xF800)
-        lcd.str24(0, 134, "gyro={:.2f}".format(element_gyro.data), 0xFFFF)
-        lcd.str24(0, 158, "dis={:.2f}".format(element_distance.data), 0xFFFF)
-        lcd.str24(0, 182, "state={}".format(elementdetector.state), 0xFFFF)
-        self.point_move(110, 30,16)
+        lcd.str32(0, 150, "gyro={:.2f}".format(element_gyro.data), 0xFFFF)
+        lcd.str32(0, 186, "dis={:.2f}".format(element_distance.data), 0xFFFF)
+        lcd.str32(0, 222, "state={}".format(elementdetector.state), 0xFFFF)
+        self.point_move(126, 30,16)
         if self.point == 30:
             if self.key[2]:
                 key.clear(3)
@@ -215,7 +216,18 @@ class MenuText:
                 key.clear(4)
                 elementdetector.ERROR_l_out_value -= 1
                 lcd.clear(0x0000)
-        if self.point == 110 and self.key[2]:
+
+        if self.point == 110:
+            if self.key[2]:
+                key.clear(3)
+                speed_controller.ring_speed += 1
+                lcd.clear(0x0000)
+            if self.key[3]:
+                key.clear(4)
+                speed_controller.ring_speed -= 1
+                lcd.clear(0x0000)
+
+        if self.point == 126 and self.key[2]:
             key.clear(3)
             self.ring_menu = False
             self.main_menu = True

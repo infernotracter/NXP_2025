@@ -747,6 +747,7 @@ class Speed_controller:
     def __init__(self):
         self.start_flag = 0
         self.tmp_speed = 100
+        self.ring_speed = 100
         self.target_speed=self.tmp_speed    #turn_out_kp=-125.73     turn_in_kp=-5.18
         self.fast_speed=-300
         self.slow_speed=-60
@@ -783,7 +784,7 @@ class Speed_controller:
 
     def start_update(self, elementdetector_flag):
         if elementdetector_flag:
-            self.target_speed=100
+            self.target_speed=self.ring_speed
         else:
             self.target_speed=self.tmp_speed*self.start_flag
     def slower_distance_connect(self):

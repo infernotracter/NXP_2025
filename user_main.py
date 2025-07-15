@@ -336,7 +336,7 @@ counter_turn_out = 0
 counter_turn_in = 0
 turn_out_last_error = 0
 turn_in_last_error = 0
-turn_out_kp = -71.4
+turn_out_kp = -71.4 + menu_controller.turn_out_kp_move
 turn_out_ki = 0
 turn_out_kd = -13.89
 turn_in_kp = -2.3
@@ -507,7 +507,7 @@ while True:
             ccd_controller.fix_error_value = 0
             elementdetector_flag = False
         key_data = key.get()
-        speed_controller.start_update(key_data[0], elementdetector_flag)
+        speed_controller.start_update(elementdetector_flag)
         menu_controller.show_controll()
         menu_controller.key_update(key_data)
         #menu(key_data)
