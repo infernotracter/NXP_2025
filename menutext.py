@@ -121,7 +121,7 @@ class MenuText:
         lcd.str16(16, 30, "tmp_speed={}".format(speed_controller.tmp_speed), 0xFFFF)
         lcd.str16(16, 46, "start",0xFFFF)
         lcd.str16(16, 62, "return", 0xFFFF)
-        lcd.str24(16, 100,"start_flag={}".format(speed_controller.start_flag),0xFFFF)
+        lcd.str24(16, 100,"start_flag={}".format(self.start_flag),0xFFFF)
         lcd.str16(0, self.point, ">", 0xF800)
         self.point_move(62, 30,16)
         if self.point == 30:
