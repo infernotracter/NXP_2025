@@ -802,6 +802,7 @@ class Speed_controller:
                     self.faster_flag_1 = True
                     speed_fast_distance.clear()
                     speed_fast_distance.start()
+                    beep.start("short")
         self.faster_distance_connect()
         self.update()
     
