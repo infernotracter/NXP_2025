@@ -41,7 +41,7 @@ ccd = TSL1401(5)
 # 实例化 KEY_HANDLER 模块
 key = KEY_HANDLER(10)
 imu = IMU963RA()
-tof = DL1B()
+
 def scale_value(x, x_min, x_max):
     """
     将输入x从范围[x_min, x_max]线性映射到[0.4, 1]

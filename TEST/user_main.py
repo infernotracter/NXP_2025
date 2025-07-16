@@ -61,7 +61,7 @@ def time_pit_imu_handler(time):
 
 
 pit1 = ticker(1)
-pit1.capture_list(imu, encoder_l, encoder_r, tof)
+pit1.capture_list(imu, encoder_l, encoder_r)
 pit1.callback(time_pit_imu_handler)
 pit1.start(5)
 
@@ -475,7 +475,6 @@ while True:
         openart_distance.update(encl_data+encr_data,0.01)
         speed_slow_distance.update(encl_data+encr_data, 0.01)
         #debug += (encoder_l.get() - encoder_r.get()) * 0.01
-        tof_hander.update()
         print(tof_hander.state, tof_hander.data)
         speed_fast_distance.update(encl_data+encr_data, 0.01)
         speed_controller.faster()
