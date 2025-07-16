@@ -745,6 +745,7 @@ def is_circus():
 
 class Speed_controller:
     def __init__(self):
+        self.tof_mode = False
         self.tmp_speed = 100
         self.ring_speed = 100
         self.target_speed=self.tmp_speed    #turn_out_kp=-125.73     turn_in_kp=-5.18
@@ -793,13 +794,15 @@ class Speed_controller:
             self.slower_flag = False
 
     def faster(self):
-        if tof_hander.state:
-            if not self.has_triggered_fast:
+        if self.tof_mode:
+            if tof_hander.state:
+                if not self.has_triggered_fast:
                 # 只在第一次触发时设置标志
-                self.has_triggered_fast = True
-                self.faster_flag_1 = True
-                speed_fast_distance.clear()
-                speed_fast_distance.start()
+                    self.has_triggered_fast = True
+                    self.faster_flag_1 = True
+                    speed_fast_distance.clear()
+                    speed_fast_distance.start()
+                    beep.start("short")
         self.faster_distance_connect()
         self.update()
     

@@ -120,10 +120,12 @@ class MenuText:
     def show_speed_menu(self):
         lcd.str16(16, 30, "tmp_speed={}".format(speed_controller.tmp_speed), 0xFFFF)
         lcd.str16(16, 46, "start",0xFFFF)
-        lcd.str16(16, 62, "return", 0xFFFF)
+        lcd.str16(16, 62,"tof_mode={}".format(speed_controller.tof_mode), 0xFFFF)
+        lcd.str16(16, 78, "return", 0xFFFF)
         lcd.str24(16, 100,"start_flag={}".format(self.start_flag),0xFFFF)
+        lcd.str24(16, 124,"tof_data={:.2f}".format(tof_hander.data),0xFFFF)
         lcd.str16(0, self.point, ">", 0xF800)
-        self.point_move(62, 30,16)
+        self.point_move(78, 30,16)
         if self.point == 30:
             if self.key[2]:
                 key.clear(3)
@@ -142,6 +144,9 @@ class MenuText:
                 element_gyro.data = 0
                 element_distance.data = 0
                 turn_in_pid.sum_error= 0.0
+                speed_controller.has_triggered_fast = False
+                speed_controller.faster_flag_1 = False
+                speed_controller.faster_flag_2 = False
                 self.start_flag=1
             else:
                 ccd_controller.fix_error_value = 0
@@ -150,10 +155,19 @@ class MenuText:
                 element_gyro.data = 0
                 element_distance.data = 0
                 turn_in_pid.sum_error=0.0
+                speed_controller.has_triggered_fast = False
+                speed_controller.faster_flag_1 = False
+                speed_controller.faster_flag_2 = False
                 self.start_flag=0
             lcd.clear(0x0000)
         
-        if self.point == 62 and self.key[2]:
+        if self.point == 62:
+            if self.key[2]:
+                key.clear(3)
+                speed_controller.tof_mode = not speed_controller.tof_mode
+                lcd.clear(0x0000)
+
+        if self.point == 78 and self.key[2]:
             key.clear(3)
             self.speed_meun = False
             self.main_menu = True
