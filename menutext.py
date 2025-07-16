@@ -167,7 +167,7 @@ class MenuText:
                 speed_controller.tof_mode = not speed_controller.tof_mode
                 lcd.clear(0x0000)
 
-        if self.point == 62 and self.key[2]:
+        if self.point == 78 and self.key[2]:
             key.clear(3)
             self.speed_meun = False
             self.main_menu = True
