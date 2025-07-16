@@ -331,7 +331,7 @@ target_turn_angle = 0.0       # 目标转向角度（由遥控器设置）
 current_turn_angle = 0.0      # 当前转向角度（通过陀螺仪积分）
 target_yaw_vel = 0.0          # 外环输出的目标角速度
 turn_out_sum_error = 0.0      # 外j环积分累积
-turn_in_sum_error = 0.0       # 内环积分累积
+turn_in_pid.sum_error = 0.0       # 内环积分累积
 counter_turn_out = 0
 counter_turn_in = 0
 turn_out_last_error = 0
@@ -347,7 +347,7 @@ error = 0
 # ----------------- 转向控制回调函数 -----------------
 def turn_loop_callback(pit1):
     global current_turn_angle, target_yaw_vel, turn_output
-    global turn_out_sum_error, turn_out_last_error, turn_in_sum_error, turn_in_last_error
+    global turn_out_sum_error, turn_out_last_error,  turn_in_last_error
     global counter_turn_out, yaw_vel
     global turn_out_kp, turn_out_ki, turn_out_kd
     global turn_in_kp, turn_in_ki, turn_in_kd
@@ -371,10 +371,10 @@ def turn_loop_callback(pit1):
     if counter_turn_in >= 20:
         counter_turn_in = 0
         imu_data = imu.get()
-        turn_output, turn_in_sum_error, turn_in_last_error = pid_controller(
+        turn_output, turn_in_pid.sum_error, turn_in_last_error = pid_controller(
             turn_in_disturbance, imu_data[4] - gyro_bias_x,
             turn_in_kp, turn_in_ki, turn_in_kd,
-            turn_in_sum_error, turn_in_last_error
+            turn_in_pid.sum_error, turn_in_last_error
         )
     #turn_output = max(min(turn_output, 3999), -3999)
 

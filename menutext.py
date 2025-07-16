@@ -141,6 +141,7 @@ class MenuText:
                 ccd_controller.far = True
                 element_gyro.data = 0
                 element_distance.data = 0
+                turn_in_pid.sum_error= 0.0
                 self.start_flag=1
             else:
                 ccd_controller.fix_error_value = 0
@@ -148,6 +149,7 @@ class MenuText:
                 ccd_controller.far = True
                 element_gyro.data = 0
                 element_distance.data = 0
+                turn_in_pid.sum_error=0.0
                 self.start_flag=0
             lcd.clear(0x0000)
         

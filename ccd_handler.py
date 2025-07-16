@@ -745,7 +745,6 @@ def is_circus():
 
 class Speed_controller:
     def __init__(self):
-        self.start_flag = 0
         self.tmp_speed = 100
         self.ring_speed = 100
         self.target_speed=self.tmp_speed    #turn_out_kp=-125.73     turn_in_kp=-5.18
@@ -786,7 +785,7 @@ class Speed_controller:
         if elementdetector_flag:
             self.target_speed=self.ring_speed
         else:
-            self.target_speed=self.tmp_speed*self.start_flag
+            self.target_speed=self.tmp_speed
     def slower_distance_connect(self):
         """检查是否达到慢速距离阈值，如果是则恢复正常速度"""
         if self.slower_flag and abs(speed_slow_distance.data) >= self.slow_distance_threshold:

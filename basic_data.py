@@ -95,7 +95,10 @@ encr_data = 0  # 右数据编码器
 out_l = 0  # 左轮输出值
 out_r = 0  # 右轮输出值
 speed_d = 50  # 速度增量(调试用)
-
+class turn_in:
+    def __init__(self):
+        self.sum_error = 0.0
+turn_in_pid=turn_in()
 # 赛道元素状态枚举
 # 赛道元素状态枚举
 class RoadElement:
