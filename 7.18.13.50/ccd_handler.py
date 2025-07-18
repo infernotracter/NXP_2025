@@ -235,20 +235,20 @@ class ElementDetector:
 
         # l3
         self.GYRO_Z_ring3_data = 900
-        self.DISTANCE_ring3_data = 120
+        self.DISTANCE_ring3_data = 110
 
         # lin
         self.GYRO_Z_ring_in_data = 1700
         self.DISTANCE_ring_in_data = 100
 
-        self.DISTANCE_ring_out_data = 100
+        self.DISTANCE_ring_out_data = 70
         self.DISTANCE_ring_out_out_data = 200
         self.ccd_near_length = 60
         self.ccd_far_length = 60
         self.DISTANCE_ring_outcoming_data = 200
         self.DISTANCE_ring3_not_data = 300
         self.DISTANCE_zebra_out_data = 100      #斑马线
-        self.ERROR_l_out_value = -25
+        self.ERROR_l_out_value = -20
         #crossroad
         self.DISTANCE_crossroad_data = 80  #十字路口
 
@@ -473,7 +473,6 @@ class ElementDetector:
 
         elif self.state == RoadElement.lin:
             ccd_controller.follow = 0
-            # self.tmperror=stage_error.get_tmp()
 
         elif self.state == RoadElement.loutcoming:
             ccd_controller.fix_error_value = self.ERROR_l_out_value
@@ -484,7 +483,7 @@ class ElementDetector:
 #         elif self.state == RoadElement.crossroad_1:
 #             ccd_controller.far = True
         elif self.state == RoadElement.r0:
-            ccd_controller.follow = -self.ccd_near_length
+            ccd_controller.follow = self.ccd_near_length
         elif self.state == RoadElement.r1:
             ccd_controller.follow = self.ccd_near_length
             
@@ -689,7 +688,7 @@ class ElementDetector:
         if abs(element_distance.data) > self.DISTANCE_ring_outcoming_data:
             if (ccd_near.left<self.ccd_near_l_lost and ccd_near.right>self.ccd_near_r_lost)or (ccd_far.left <self.ccd_far_l_lost and ccd_far.right >self.ccd_far_r_lost):
                 return True
-        if abs(element_distance.data) > self.DISTANCE_ring3_data * 3.5:
+        if abs(element_distance.data) > self.DISTANCE_ring3_data * 8.5:
             self.state = RoadElement.normal
 
     def _right_out(self):
@@ -703,7 +702,7 @@ class ElementDetector:
         if abs(element_distance.data) > self.DISTANCE_ring_out_out_data:
             if ccd_near.left > self.ccd_near_l_lost :
                 return True
-        if abs(element_distance.data) > self.DISTANCE_ring3_data * 1.5:
+        if abs(element_distance.data) > self.DISTANCE_ring3_data * 4.5:
             self.state = RoadElement.normal
 #     def find_barrier(self):
 #         """障碍物检测"""
@@ -745,9 +744,8 @@ def is_circus():
 
 class Speed_controller:
     def __init__(self):
-        self.start_flag = 0
         self.tmp_speed = 100
-        self.ring_speed = 100
+        self.ring_speed = 110
         self.target_speed=self.tmp_speed    #turn_out_kp=-125.73     turn_in_kp=-5.18
         self.fast_speed=-300
         self.slow_speed=-60
