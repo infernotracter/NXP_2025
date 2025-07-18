@@ -79,6 +79,7 @@ class MenuText:
         lcd.wave(0,  64, 128, 64, ccd_far.data, max = 255)
         lcd.str16(16 , 170, "value={}".format(ccd_controller.value), 0xFFFF)
         lcd.str16(16, 186,"return" , 0xFFFF)
+        lcd.str16(16, 202,"error={:03}".format(ccd_controller.error),0xFFFF)
         lcd.str16(0, self.point, ">", 0xF800)
         self.point_move(186, 170,16)
         if self.point == 170:
