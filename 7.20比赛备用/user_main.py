@@ -1,12 +1,53 @@
 # 基础库、NXP库、第三方库
 import gc
 import utime
+import math
 from basic_data import *
 from ccd_handler import *
-from menutext import *
+#from menutext import *
 #from tof_hander import *
-from uart import *
+import utime
 
+
+
+# class Beeper:
+#     def __init__(self, beerpin = 'C9'):
+#         self.beep_pin = Pin(beerpin , Pin.OUT, pull = Pin.PULL_UP_47K, value = False)
+#         self.start_time = 0       # 鸣叫开始时间戳
+#         self.duration = 0         # 当前鸣叫持续时间
+#         self.is_active = False    # 鸣叫状态标志
+#         self.long_duration = 30  # 长鸣时长(ms)
+#         self.short_duration = 10 # 短鸣时长(ms)
+#         self._last_update = 0     # 上次更新时间戳
+# 
+#     def start(self, duration_type):
+#         """触发蜂鸣器鸣叫
+#         :param duration_type: 'long' 或 'short'
+#         """
+#         self.duration = self.long_duration if duration_type == 'long' else self.short_duration
+#         self.start_time = utime.ticks_ms()
+#         self.beep_pin.high()
+#         self.is_active = True
+# 
+#     def update(self):
+#         """需在循环中定期调用，建议调用间隔<=10ms"""
+#         if not self.is_active:
+#             return
+#             
+#         current = utime.ticks_ms()
+#         elapsed = utime.ticks_diff(current, self.start_time)
+#         
+#         # 持续时间达到后关闭
+#         if elapsed >= self.duration:
+#             self.beep_pin.low()
+#             self.is_active = False
+#             self.duration = 0
+# 
+#     def set_durations(self, long=None, short=None):
+#         """动态修改鸣叫时长"""
+#         if long is not None: self.long_duration = long
+#         if short is not None: self.short_duration = short
+# beep = Beeper()
 
 
 def create_roll_checker():
@@ -331,12 +372,12 @@ target_turn_angle = 0.0       # 目标转向角度（由遥控器设置）
 current_turn_angle = 0.0      # 当前转向角度（通过陀螺仪积分）
 target_yaw_vel = 0.0          # 外环输出的目标角速度
 turn_out_sum_error = 0.0      # 外j环积分累积
-turn_in_pid.sum_error = 0.0       # 内环积分累积
+turn_in_sum_error = 0.0       # 内环积分累积
 counter_turn_out = 0
 counter_turn_in = 0
 turn_out_last_error = 0
 turn_in_last_error = 0
-turn_out_kp = -71.4 + menu_controller.turn_out_kp_move
+turn_out_kp = -71.4 
 turn_out_ki = 0
 turn_out_kd = -13.89
 turn_in_kp = -2.3
@@ -347,7 +388,7 @@ error = 0
 # ----------------- 转向控制回调函数 -----------------
 def turn_loop_callback(pit1):
     global current_turn_angle, target_yaw_vel, turn_output
-    global turn_out_sum_error, turn_out_last_error,  turn_in_last_error
+    global turn_out_sum_error, turn_out_last_error, turn_in_sum_error, turn_in_last_error
     global counter_turn_out, yaw_vel
     global turn_out_kp, turn_out_ki, turn_out_kd
     global turn_in_kp, turn_in_ki, turn_in_kd
@@ -371,10 +412,10 @@ def turn_loop_callback(pit1):
     if counter_turn_in >= 20:
         counter_turn_in = 0
         imu_data = imu.get()
-        turn_output, turn_in_pid.sum_error, turn_in_last_error = pid_controller(
+        turn_output, turn_in_sum_error, turn_in_last_error = pid_controller(
             turn_in_disturbance, imu_data[4] - gyro_bias_x,
             turn_in_kp, turn_in_ki, turn_in_kd,
-            turn_in_pid.sum_error, turn_in_last_error
+            turn_in_sum_error, turn_in_last_error
         )
     #turn_output = max(min(turn_output, 3999), -3999)
 
@@ -448,23 +489,18 @@ def death_pwm(value):
 #     
     
 movementtype.mode=MOVEMENTTYPE.Mode_2
+elementdetector.state = RoadElement.normal
 alldistance.start()
 print("""   ____   _           _   _           /\/|
   / ___| (_)   __ _  | | | |   ___   |/\/ 
  | |     | |  / _` | | | | |  / _ \       
  | |___  | | | (_| | | | | | | (_) |      
   \____| |_|  \__,_| |_| |_|  \___/       """)
-elementdetector.state = RoadElement.normal
-elementdetector_flag = False
 while True:
+    error=ccd_controller.get_error()+6
+    elementdetector.update()
 #     if elementdetector.state==RoadElement.stop:
 #         stop_flag=0
-    error=ccd_controller.get_error() + 10
-    elementdetector.update_zebra() # 斑马线
-    if elementdetector_flag:
-        elementdetector.update()
-        if elementdetector.state == RoadElement.normal: # 出环后立即加速
-            elementdetector_flag = False
     if end_switch.value() == 1:
         break  # 跳出判断
         
@@ -473,47 +509,23 @@ while True:
         imu_data = imu.get()
         element_gyro.update(imu_data[5],0.01)
         element_distance.update(encl_data+encr_data,0.01)
-        openart_distance.update(encl_data+encr_data,0.01)
-        #speed_slow_distance.update(encl_data+encr_data, 0.01)
+        alldistance.update(encl_data+encr_data,0.01)
+        speed_slow_distance.update(encl_data+encr_data, 0.01)
         #debug += (encoder_l.get() - encoder_r.get()) * 0.01
         vel_loop_callback(pit1)
         turn_loop_callback(pit1)
-        motor_l.duty(my_limit(death_pwm(pwm_l_value - turn_output),-6000,6000)*menu_controller.start_flag)
-        motor_r.duty(my_limit(death_pwm(pwm_r_value + turn_output),-6000,6000)*menu_controller.start_flag)
+        speed_controller.slower()
+        #speed_controller.update()
+        motor_l.duty(my_limit(death_pwm(pwm_l_value - turn_output),-6000,6000))
+        motor_r.duty(my_limit(death_pwm(pwm_r_value + turn_output),-6000,6000))
         ticker_flag_pid = False
         
     if (ticker_flag_menu):
-        tmp_color = read_detection_data_new()
-        print(tmp_color)
-        if tmp_color == 'green':
-            '''左圆环'''
-            beep.start('short')
-            elementdetector_flag = True
-            openart_distance.data = 0
-            if elementdetector.state == RoadElement.normal:
-                elementdetector.state = RoadElement.l0
-        elif tmp_color == 'red':
-            '''右圆环'''
-            beep.start('short')
-            elementdetector_flag = True
-            openart_distance.data = 0
-            if elementdetector.state == RoadElement.normal:
-                elementdetector.state = RoadElement.r0
-        if abs(openart_distance.data) > 800:
-            elementdetector.state = 0
-            openart_distance.data = 0
-            ccd_controller.follow = 0
-            ccd_controller.far = True
-            ccd_controller.fix_error_value = 0
-            elementdetector_flag = False
         key_data = key.get()
-        speed_controller.start_update(elementdetector_flag)
-        menu_controller.show_controll()
-        menu_controller.key_update(key_data)
         #menu(key_data)
         # # 弯道减速
-#         if abs(ccd_far.mid - ccd_near.mid) > 15:
-#             speed_controller.target_speed = int(speed_controller.tmp_speed * 0.85)
+        # if abs(ccd_far.mid - ccd_near.mid) > 15:
+        #     speed_controller.target_speed = int(speed_controller.tmp_speed * 0.6)
         # if abs(alldistance.data)<2000:
         #     speed_controller.target_speed = -24
         # elif (alldistance.data)>8000:
@@ -524,7 +536,6 @@ while True:
 
     if (ticker_flag_8ms):
         # profiler_8ms.update()
-        beep.update()
         data_flag = wireless.data_analysis()
         for i in range(0, 8):
             # 判断哪个通道有数据更新
@@ -540,10 +551,14 @@ while True:
 #                 elif i == 1:
 #                     vel_ki = data_wave[i]
 #                 elif i == 2:
-#                     angle_kp = data_wave[i]
+#                     vel_kd = data_wave[i]
 #                 elif i == 3:
-#                     angle_kd = data_wave[i]
+#                     angle_kp = data_wave[i]
 #                 elif i == 4:
+#                     angle_ki = data_wave[i]
+#                 elif i == 5:
+#                     angle_kd = data_wave[i]
+#                 elif i == 6:
 #                     speed_kp = data_wave[i]
 #                 elif i == 7:
 #                     balance_angle = data_wave[i]
@@ -563,18 +578,27 @@ while True:
 #                 elif i == 7:
 #                     balance_angle = data_wave[i]
                 if i == 0:
-                    speed_controller.tmp_speed = data_wave[i]
+                    speed_controller.target_speed = data_wave[i]
                 elif i == 1:
                     turn_in_kp = data_wave[i]
                 elif i == 2:
-                    turn_out_kp = data_wave[i]
+                    turn_in_ki = data_wave[i]
                 elif i == 3:
-                    speed_kp = data_wave[i]
+                    turn_out_kp = data_wave[i]
+                elif i == 4:
+                    turn_out_ki = data_wave[i]
+                elif i == 5:
+                    turn_out_kd = data_wave[i]
+                elif i == 6:
+                    elementdetector.state = data_wave[i]
+                elif i == 7:
+                    balance_angle = data_wave[i]
+
         # 将数据发送到示波器
         wireless.send_ccd_image(WIRELESS_UART.ALL_CCD_BUFFER_INDEX)
         wireless.send_oscilloscope(
-        #vel_kp, vel_ki, vel_kd, angle_kp, vel_disturbance, angle_disturbance, current_angle
-          elementdetector.state,speed_controller.target_speed, element_gyro.data, element_distance.data, ccd_controller.follow 
+        #     #vel_kp, vel_ki, vel_kd, angle_kp, vel_disturbance, angle_disturbance, motor_l.duty(), current_angle
+              elementdetector.state,speed_controller.target_speed, abs(ccd_near.mid - ccd_far.mid), speed_slow_distance.data
         #     #imu_data[3], imu_data[4], imu_data[5]
         #     #turn_in_disturbance,turn_output, error
         #     #gyro_bias_x , gyro_bias_y, gyro_bias_z
@@ -582,6 +606,9 @@ while True:
         gc.collect()
         ticker_flag_8ms = False
     gc.collect()
+
+
+
 
 
 
