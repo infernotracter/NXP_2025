@@ -151,3 +151,5 @@
 ---
 
 **祝你在智能车比赛中取得好成绩！** 🏁
+
+<iframe src="//player.bilibili.com/player.html?isOutside=true&aid=115124484447152&bvid=BV1DjajztELk&cid=32079151369&p=1" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"></iframe>
